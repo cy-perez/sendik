@@ -33,10 +33,10 @@ test.describe('registro', () => {
     await page.goto('/registro');
 
     await expect(page.getByRole('checkbox')).toHaveCount(2);
-    await expect(page.getByLabel('Acepto los términos y condiciones')).toBeVisible();
+    await expect(page.getByLabel('He leído y acepto los términos y condiciones.')).toBeVisible();
     await expect(
       page.getByLabel(
-        'Autorizo el tratamiento de mis datos personales según la política de privacidad',
+        'Autorizo de forma libre, previa y expresa el tratamiento de mis datos personales para las finalidades descritas arriba y en la política de tratamiento de datos.',
       ),
     ).toBeVisible();
   });

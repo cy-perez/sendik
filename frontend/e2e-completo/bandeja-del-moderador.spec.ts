@@ -59,10 +59,12 @@ async function registrar(page: Page, correo: string, nombre = 'Ana María'): Pro
   await page.getByLabel('Nombre').fill(nombre);
   await page.getByLabel('Contraseña').fill(CONTRASENA);
   await page.getByLabel('Fecha de nacimiento').fill('1990-03-04');
-  await page.getByLabel('Acepto los términos y condiciones').check();
-  await page
-    .getByLabel('Autorizo el tratamiento de mis datos personales según la política de privacidad')
-    .check();
+  // Por identificador y no por texto: la redaccion de los dos consentimientos
+  // la fija el regimen de datos personales y se retoca sin avisar. Lo que este
+  // recorrido necesita es marcar las casillas; de comprobar como estan
+  // redactadas responde e2e/registro.spec.ts, que para eso existe.
+  await page.locator('#terminos').check();
+  await page.locator('#privacidad').check();
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await expect(page.getByRole('heading', { name: 'Revisa tu correo' })).toBeVisible();
 
