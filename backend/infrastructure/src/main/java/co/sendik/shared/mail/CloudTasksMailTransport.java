@@ -9,8 +9,6 @@ import com.google.cloud.tasks.v2.OidcToken;
 import com.google.cloud.tasks.v2.QueueName;
 import com.google.cloud.tasks.v2.Task;
 import com.google.protobuf.ByteString;
-import jakarta.annotation.PreDestroy;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,12 +56,19 @@ public class CloudTasksMailTransport implements MailTransport {
     private final ObjectMapper json;
     private final QueueName cola;
 
-    public CloudTasksMailTransport(MailQueueProperties propiedades, ObjectMapper json) throws IOException {
-        this(propiedades, json, CloudTasksClient.create());
-    }
-
-    /** Para las pruebas, que traen su propio cliente contra un servidor local. */
-    CloudTasksMailTransport(MailQueueProperties propiedades, ObjectMapper json, CloudTasksClient cliente) {
+    /**
+     * Un solo constructor, y el cliente entra por parametro.
+     *
+     * <p>Habia dos -uno que creaba el cliente y otro para las pruebas- y ninguno anotado.
+     * Con dos constructores y sin anotacion, Spring no elige: busca el vacio, no lo
+     * encuentra y no arranca. Se descubrio el 6 de septiembre de 2026, al encender la cola
+     * por primera vez, porque este bean no se construye con la cola apagada y ninguna
+     * prueba lo construia por Spring.
+     *
+     * <p>Quien crea y cierra el cliente es {@link CloudTasksClientConfig}, que es de quien
+     * es esa responsabilidad: aqui se usa, no se administra.
+     */
+    public CloudTasksMailTransport(MailQueueProperties propiedades, ObjectMapper json, CloudTasksClient cliente) {
         this.propiedades = propiedades;
         this.json = json;
         this.cliente = cliente;
@@ -103,10 +108,5 @@ public class CloudTasksMailTransport implements MailTransport {
                 .build();
 
         return Task.newBuilder().setHttpRequest(peticion).build();
-    }
-
-    @PreDestroy
-    void cerrar() {
-        cliente.close();
     }
 }
