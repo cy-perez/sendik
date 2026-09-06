@@ -53,3 +53,4 @@ la referencia.
 | 0028 | Las acciones del CI suben de versión mayor en bloque | Aceptada con riesgo abierto |
 | 0029 | Volver al sitio después de ingresar: destino en la URL, intención en `sessionStorage` | Aceptada |
 | 0030 | La carrera del refresco se nombra, y no cierra la sesión | Aceptada |
+| 0031 | La entrega del correo transaccional se saca del contenedor: Cloud Tasks | Aceptada, pendiente de implementar |

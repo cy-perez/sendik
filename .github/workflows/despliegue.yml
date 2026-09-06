@@ -183,6 +183,11 @@ jobs:
             --set-env-vars "COMMISSION_RATE=${{ vars.COMMISSION_RATE }}" \
             --set-env-vars "MAIL_PROVIDER=resend" \
             --set-env-vars "MAIL_FROM=${{ vars.MAIL_FROM }}" \
+            --set-env-vars "MAIL_QUEUE_ENABLED=${{ vars.MAIL_QUEUE_ENABLED }}" \
+            --set-env-vars "MAIL_QUEUE_LOCATION=${{ vars.GCP_REGION }}" \
+            --set-env-vars "MAIL_QUEUE_NAME=${{ vars.MAIL_QUEUE_NAME }}" \
+            --set-env-vars "MAIL_QUEUE_HANDLER_URL=${{ vars.MAIL_QUEUE_HANDLER_URL }}" \
+            --set-env-vars "MAIL_QUEUE_SERVICE_ACCOUNT=${{ vars.MAIL_QUEUE_SERVICE_ACCOUNT }}" \
             --set-env-vars "LEGAL_TERMS_VERSION=${{ vars.LEGAL_TERMS_VERSION }}" \
             --set-env-vars "LEGAL_PRIVACY_VERSION=${{ vars.LEGAL_PRIVACY_VERSION }}" \
             --set-env-vars "STORAGE_PROVIDER=${{ vars.STORAGE_PROVIDER }}" \

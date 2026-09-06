@@ -60,6 +60,11 @@
       [errorKey]="birthDateError()"
     />
 
+    <!-- Antes de las casillas y no despues: el regimen pide informar las
+         finalidades **antes** de recoger el dato, y una casilla que se marca
+         encima de un aviso que viene luego se marca sin haberlo leido. -->
+    <sendik-privacy-notice />
+
     <!-- Dos casillas separadas: una sola para ambos documentos no es
          consentimiento valido segun la Ley 1581. Y cada una con el enlace a lo
          que acepta: el consentimiento tambien tiene que ser informado, y no lo

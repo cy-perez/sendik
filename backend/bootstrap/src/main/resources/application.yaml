@@ -125,12 +125,42 @@ sendik:
       # a esto. Lo que corta es el guion que repite una lectura sin freno.
       max-requests: ${RATE_LIMIT_ACCOUNT_MAX:120}
       window: ${RATE_LIMIT_ACCOUNT_WINDOW:PT1M}
+    listings:
+      # Las rutas de publicacion, contadas por sujeto y con una sola cuenta para
+      # todo el grupo, no una por ruta. Lo que se acota es el bucle enviar ->
+      # retirar -> enviar, que engorda el rastro de moderacion sin cota y recorre
+      # dos URI distintas: una cuenta por ruta le daria el cupo entero a cada
+      # mitad del ciclo.
+      #
+      # Noventa deja pasar de sobra lo que hace una persona publicando: las ocho
+      # tomas van en ocho peticiones, y editar, cambiar precio y enviar a revision
+      # son unas pocas mas. La ficha publica no entra en esta cuenta, porque sin
+      # sesion no hay sujeto al que atribuirla.
+      max-requests: ${RATE_LIMIT_LISTINGS_MAX:90}
+      window: ${RATE_LIMIT_LISTINGS_WINDOW:PT1M}
     # Techo de origenes en memoria: sin el, variar la IP a voluntad haria crecer
     # el mapa hasta agotarla y la defensa seria la via de ataque.
     max-tracked-keys: ${RATE_LIMIT_MAX_KEYS:50000}
   mail:
     # console imprime el enlace en el registro; resend envia de verdad (ADR-0012).
     provider: ${MAIL_PROVIDER:resend}
+    queue:
+      # La cola por la que sale el correo (ADR-0031). Apagada por omision para que
+      # `local` y las pruebas entreguen en el hilo de la peticion: ahi el proveedor
+      # es la consola y no hay red que esperar.
+      #
+      # Encendida en Cloud Run, y ahi no es opcional: el envio fuera de una peticion
+      # muere cuando el contenedor se congela.
+      enabled: ${MAIL_QUEUE_ENABLED:false}
+      project: ${GCP_PROJECT_ID:}
+      location: ${MAIL_QUEUE_LOCATION:}
+      queue: ${MAIL_QUEUE_NAME:}
+      # Absoluta: quien hace esta peticion es Cloud Tasks desde fuera.
+      handler-url: ${MAIL_QUEUE_HANDLER_URL:}
+      # La cuenta con la que Cloud Tasks firma, y la misma que el endpoint exige.
+      service-account: ${MAIL_QUEUE_SERVICE_ACCOUNT:}
+      # Vacia significa la propia handler-url, que es lo que hace Cloud Tasks.
+      audience: ${MAIL_QUEUE_AUDIENCE:}
     from: ${MAIL_FROM}
     provider-api-key: ${MAIL_PROVIDER_API_KEY}
     api-url: ${MAIL_API_URL:https://api.resend.com/emails}

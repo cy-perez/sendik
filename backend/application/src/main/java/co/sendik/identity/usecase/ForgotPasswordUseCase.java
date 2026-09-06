@@ -27,9 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
  * {@code orElseThrow}: cuando no hay cuenta, aqui no pasa nada, y el borde
  * responde lo mismo que si hubiera pasado todo.
  *
- * <p>El envio del correo es asincrono (AsyncMailSender), asi que tampoco hay una
- * diferencia de tiempo medible entre los dos caminos. Sin eso, el criterio 19 se
- * cumpliria en el texto de la respuesta y se incumpliria con un cronometro.
+ * <p>El correo no se entrega en el hilo de la peticion: se encola (ADR-0031), asi que
+ * la diferencia de tiempo entre los dos caminos es la de crear una tarea y no la de
+ * esperar al proveedor. Sin eso, el criterio 19 se cumpliria en el texto de la
+ * respuesta y se incumpliria con un cronometro. Es un residuo conocido y aceptado en
+ * la ADR: encolar cuesta decenas de milisegundos y **tiene que ocurrir antes de
+ * responder**, porque diferirlo a un hilo propio es exactamente el fallo que ADR-0031
+ * viene a corregir -Cloud Run congela el contenedor en cuanto la respuesta sale-.
  *
  * <p>No hay limite de reenvios propio como en el criterio 8: aqui no se puede
  * informar de uno sin revelar que la cuenta existe. Quien protege este endpoint es

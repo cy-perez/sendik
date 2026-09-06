@@ -452,8 +452,38 @@ estados y las pantallas de ese flujo se definen allí y no aquí.
   reportar un producto no conforme. Es la ventana de reclamo. Confirmar la
   entrega la cierra: quien confirma da por buena la prenda.
 - **RN-052** Si al vencer la ventana el comprador no ha confirmado ni reportado,
-  la entrega se da por confirmada y el pago se libera. Sin esta regla un
-  comprador inactivo dejaría al vendedor sin cobrar de forma indefinida.
+  la entrega se da por confirmada. Sin esta regla un comprador inactivo dejaría al
+  vendedor sin cobrar de forma indefinida.
+
+  **Dar la entrega por confirmada no libera el pago por sí solo.** Lo que libera
+  el pago es RN-075, que exige además que haya vencido el plazo de retracto.
+  Hasta el 5 de septiembre de 2026 esta regla decía que el pago se liberaba aquí
+  mismo, y eso abría el agujero que RN-075 cierra.
+
+- **RN-075** **El pago no se libera antes de que venza el derecho de retracto.**
+  La liberación exige las dos cosas: que la entrega esté confirmada —por RN-051 o
+  por RN-052— y que hayan pasado **cinco (5) días hábiles desde la entrega**, que
+  es el plazo que la ley colombiana le da al comprador para retractarse.
+
+  El motivo es aritmético y no de criterio. La ventana de reclamo dura tres días
+  hábiles y el retracto cinco, así que **los días cuarto y quinto el comprador
+  conserva un derecho legal sobre un dinero que ya se había liberado**. En esos
+  dos días la promesa de RN-054 —«el reintegro sale de la retención, nunca del
+  bolsillo del vendedor»— dejaba de ser cierta: no quedaba retención de la que
+  sacarlo, y Sendik tendría que poner el dinero o perseguir al vendedor.
+
+  Consecuencia asumida: **el vendedor cobra dos días hábiles más tarde** de lo que
+  decía la regla anterior. Es el precio de que el respaldo sea verdad, y no hay
+  forma de bajarlo sin que alguien asuma el riesgo del retracto tardío.
+
+  Un retracto ejercido dentro de esos cinco días hábiles suspende la liberación
+  igual que lo hace un reporte abierto (RN-053), y el reintegro se rige por el
+  plazo legal: **máximo quince (15) días calendario** desde que se ejerce el
+  derecho, contados una vez el comprador devuelve el producto y entrega los datos
+  que se le piden para el reintegro.
+
+  El retracto y el reporte de producto no conforme son cosas distintas y no se
+  confunden: RN-050 define el segundo, RN-057 remite al primero.
 - **RN-053** Un reporte abierto suspende la liberación del pago. La transición
   del pedido a `RELEASED` no ocurre mientras el reporte esté sin resolver, y el
   reporte no puede abrirse una vez liberado el pago.
@@ -461,6 +491,10 @@ estados y las pantallas de ese flujo se definen allí y no aquí.
   como el pago no se ha liberado, el dinero que se le devuelve al comprador es el
   que la pasarela todavía retiene. Es lo que hace que el respaldo no dependa de
   que el vendedor colabore.
+
+  Esta regla **solo se sostiene si la retención dura más que los derechos que
+  puede ejercer el comprador**, y de eso responde RN-075. Vale tanto para el
+  reintegro por producto no conforme como para el del retracto.
 - **RN-055** Si el reporte se acepta, se le reintegra al comprador el valor del
   producto y el envío que pagó, y el flete de regreso lo asume el vendedor. La
   comisión de Sendik no se cobra sobre un pedido reintegrado.

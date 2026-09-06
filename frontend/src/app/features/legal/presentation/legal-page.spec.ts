@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { LegalContent } from '../application/legal-content.resolver';
 import { LegalPage } from './legal-page';
@@ -96,5 +96,112 @@ describe('LegalPage', () => {
     const fixture = await render(conTexto(null));
 
     expect(fixture.nativeElement.textContent).toContain('No pudimos cargar este documento');
+  });
+
+  /**
+   * El recorte de los documentos largos (HU pendiente de numerar, 5/9/2026).
+   *
+   * <p>Lo que se prueba aqui no es el aspecto sino **la garantia**: que el recorte
+   * no pueda dejar un contrato a medias. De ahi que la prueba que mas importa sea
+   * la negativa.
+   */
+  describe('recorte de los documentos largos', () => {
+    const alto = (pixeles: number) =>
+      vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(pixeles);
+
+    /**
+     * jsdom no maqueta ni resuelve variables CSS heredadas, asi que declarar la
+     * medida en el documento no llega al componente. Se simula el unico dato que
+     * el componente pide, y el resto de `getComputedStyle` sigue siendo el real
+     * para no romper lo que Angular consulte por su cuenta.
+     */
+    const conMedidaDeclarada = (valor: string) => {
+      const original = window.getComputedStyle.bind(window);
+      vi.spyOn(window, 'getComputedStyle').mockImplementation(((
+        elemento: Element,
+        pseudo?: string | null,
+      ) => {
+        const real = original(elemento, pseudo ?? undefined);
+        return new Proxy(real, {
+          get(objetivo, propiedad) {
+            if (propiedad === 'getPropertyValue') {
+              return (nombre: string) =>
+                nombre === '--altura-recorte-legal' ? valor : objetivo.getPropertyValue(nombre);
+            }
+            const leido = Reflect.get(objetivo, propiedad);
+            return typeof leido === 'function' ? leido.bind(objetivo) : leido;
+          },
+        });
+      }) as typeof window.getComputedStyle);
+    };
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('ofrece ver mas cuando el documento pasa de la altura de recorte', async () => {
+      conMedidaDeclarada('100px');
+      alto(5000);
+
+      const fixture = await render(conTexto('<p>Un documento muy largo.</p>'));
+
+      const boton = fixture.nativeElement.querySelector('button.ver-mas');
+      expect(boton?.textContent?.trim()).toBe('Ver más');
+      expect(boton?.getAttribute('aria-expanded')).toBe('false');
+      expect(fixture.nativeElement.querySelector('.texto-del-documento.recortado')).not.toBeNull();
+    });
+
+    it('no recorta un documento que cabe', async () => {
+      conMedidaDeclarada('100px');
+      alto(50);
+
+      const fixture = await render(conTexto('<p>Corto.</p>'));
+
+      expect(fixture.nativeElement.querySelector('button.ver-mas')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.texto-del-documento.recortado')).toBeNull();
+    });
+
+    /**
+     * <strong>La que de verdad importa.</strong> Si la medida no esta declarada, la
+     * unica salida segura es no recortar: un documento largo se lee entero, y un
+     * documento recortado sin boton se queda sin la mitad de un contrato. Ante la
+     * duda, entero.
+     */
+    it('no recorta si la medida del sistema no esta declarada', async () => {
+      alto(5000);
+
+      const fixture = await render(conTexto('<p>Un documento muy largo.</p>'));
+
+      expect(fixture.nativeElement.querySelector('.texto-del-documento.recortado')).toBeNull();
+      expect(fixture.nativeElement.querySelector('button.ver-mas')).toBeNull();
+    });
+
+    it('abre el documento entero al pulsar, y lo dice en aria-expanded', async () => {
+      conMedidaDeclarada('100px');
+      alto(5000);
+
+      const fixture = await render(conTexto('<p>Un documento muy largo.</p>'));
+      fixture.nativeElement.querySelector('button.ver-mas').click();
+      await fixture.whenStable();
+
+      const boton = fixture.nativeElement.querySelector('button.ver-mas');
+      expect(boton?.textContent?.trim()).toBe('Ver menos');
+      expect(boton?.getAttribute('aria-expanded')).toBe('true');
+      expect(fixture.nativeElement.querySelector('.texto-del-documento.recortado')).toBeNull();
+    });
+
+    /**
+     * El texto nunca sale del documento: recortar es visual. Quien lee con
+     * asistencia tecnica tiene delante el contrato entero aunque este recortado,
+     * que es lo que exige el deber de informacion.
+     */
+    it('deja el texto completo en el documento aunque este recortado', async () => {
+      conMedidaDeclarada('100px');
+      alto(5000);
+
+      const fixture = await render(conTexto('<p>Principio.</p><p>Final del contrato.</p>'));
+
+      expect(fixture.nativeElement.textContent).toContain('Final del contrato.');
+    });
   });
 });

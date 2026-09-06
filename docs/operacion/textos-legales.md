@@ -36,13 +36,26 @@ enlazan (RN-057).
 
 ## Estado actual
 
-Los archivos `borrador-local` son **relleno sin valor legal**, puestos para que
-la estructura funcione. No sirven para lanzar: los textos reales de términos,
-tratamiento de datos y cookies los tiene que redactar y revisar quien
-corresponda, con la razón social y el NIT reales.
+**Publicada la versión `2026-09-05` el 5 de septiembre de 2026.** Las tres variables
+apuntan a ella en `dev`, en los seis archivos y en los dos idiomas. Los
+`borrador-local` **siguen en el repositorio y no se tocan**: hay consentimientos cuya
+evidencia apunta a ellos.
 
-Mientras la versión vigente sea `borrador-local`, la página muestra un aviso
-visible diciéndolo.
+Con la versión nueva **desaparece el aviso de «sin valor legal»**, porque
+`esBorrador()` compara exactamente contra `borrador-local`. Es la consecuencia
+buscada de publicar, y conviene tenerla presente: **los textos no los ha revisado un
+abogado colegiado.** Lo que queda por resolver antes de que eso deje de ser un riesgo
+está en `docs/operacion/entrega-textos-legales-2026-09-05.md`, y son cinco puntos de
+criterio profesional más los campos `[[ ]]` que siguen sin dato —nombre completo,
+teléfono, pasarela, transportadoras y plazos de operación—.
+
+Resueltos ya: el NIT (`1054994043-9`, calculado con el algoritmo de la DIAN sobre la
+cédula), la figura jurídica (persona natural, lo que además cierra la duda del
+Registro Nacional de Bases de Datos: no obliga) y el desfase entre la ventana del
+Respaldo y el retracto, que fijó RN-075.
+
+Falta todavía el **aviso de privacidad** y el **texto de las casillas de
+autorización**, que son documentos aparte y no se han escrito.
 
 ## Formato
 

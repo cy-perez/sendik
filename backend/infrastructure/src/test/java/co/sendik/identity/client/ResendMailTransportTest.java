@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import co.sendik.identity.config.MailProperties;
-import co.sendik.identity.config.VerificationProperties;
 import co.sendik.shared.config.AppProperties;
 import java.net.URI;
 import java.time.ZoneId;
@@ -34,7 +33,7 @@ import org.junit.jupiter.api.Test;
  * ({@code verificarCoberturaAgregada} en backend/build.gradle.kts), que es lo que
  * permite medir tambien los adaptadores JDBC sin duplicar el esquema de Flyway.
  */
-class ResendMailSenderTest {
+class ResendMailTransportTest {
 
     private static final AppProperties APP = new AppProperties(
             URI.create("http://localhost:4200"),
@@ -53,8 +52,8 @@ class ResendMailSenderTest {
                 "/confirmar-correo-nuevo");
     }
 
-    private static ResendMailSender construir(MailProperties correo) {
-        return new ResendMailSender(correo, new VerificationLink(APP, correo), APP, new VerificationProperties(2));
+    private static ResendMailTransport construir(MailProperties correo) {
+        return new ResendMailTransport(correo);
     }
 
     @Test

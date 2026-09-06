@@ -654,3 +654,18 @@
 .paginacion .btn[aria-disabled='true']:hover {
   background: transparent;
 }
+
+/* Altura a la que se recortan los documentos legales largos antes de ofrecer
+   "Ver más". Va nombrada aqui y no suelta en el componente porque es una medida
+   del sistema, y sobre todo porque **la lee tambien el componente**: LegalPage
+   pregunta por esta variable para decidir si el documento merece recorte, de
+   modo que el numero vive en un solo sitio. Cambiarlo aqui cambia las dos cosas
+   a la vez y no puede quedar a medias.
+
+   2400px son unas tres pantallas de escritorio: por debajo de eso el recorte
+   esconde el final de un texto que casi cabia y estorba mas de lo que ayuda. La
+   politica de cookies queda por debajo y no se recorta; los terminos, muy por
+   encima. */
+:root {
+  --altura-recorte-legal: 2400px;
+}

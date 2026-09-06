@@ -1,6 +1,5 @@
 package co.sendik.identity.client;
 
-import co.sendik.identity.config.MailProperties;
 import co.sendik.identity.config.VerificationProperties;
 import co.sendik.identity.model.Email;
 import co.sendik.identity.model.RejectionReason;
@@ -10,61 +9,33 @@ import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.port.out.MailSender;
 import co.sendik.shared.config.AppProperties;
 import co.sendik.shared.port.out.MailTransport;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientResponseException;
 
 /**
- * Adaptador de correo transaccional con Resend (ADR-0012).
+ * Arma los correos de {@code identity} y los manda por el transporte (ADR-0012, ADR-0023).
  *
- * <p>Con {@code RestClient} y sin el SDK del proveedor: son dos mensajes y un
- * POST, y una dependencia menos es una dependencia menos que actualizar.
+ * <p><strong>Solo compone.</strong> El POST a Resend vivia aqui hasta ADR-0031 y ahora
+ * esta en {@code ResendMailTransport}. Se separaron porque lo que se encola es el mensaje
+ * ya armado -destinatario, asunto y cuerpo, que es justo la forma de {@link MailTransport}-,
+ * y para poder encolar hace falta un sitio entre componer y entregar donde ponerse.
  *
- * <p><strong>Ningun metodo lanza.</strong> Un correo que no sale no debe impedir
- * crear la cuenta: la persona siempre puede pedir el reenvio, y perder el
- * registro entero por una caida del proveedor es peor que llegar tarde.
+ * <p>Consecuencia practica: esta clase ya no sabe si el correo sale ahora mismo o entra en
+ * una cola, y no deberia saberlo. Lo decide la configuracion, eligiendo que adaptador
+ * ocupa {@link MailTransport}.
+ *
+ * <p><strong>Ningun metodo lanza.</strong> Un correo que no sale no debe impedir crear la
+ * cuenta: la persona siempre puede pedir el reenvio, y perder el registro entero por una
+ * caida del proveedor es peor que llegar tarde.
  */
-// Mismo nombre que ConsoleMailSender: solo uno de los dos esta activo, y
-// AsyncMailSender pide "transporteDeCorreo" sin saber cual le toco.
-@Component("transporteDeCorreo")
+// Uno solo de los dos compositores esta activo, igual que antes: este arma HTML y el de
+// consola imprime. Lo que cambio en ADR-0031 es que ninguno de los dos entrega.
+@Component
 @ConditionalOnProperty(prefix = "sendik.mail", name = "provider", havingValue = "resend", matchIfMissing = true)
-public class ResendMailSender implements MailSender, MailTransport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ResendMailSender.class);
-    private static final Duration TIEMPO_DE_ESPERA = Duration.ofSeconds(10);
-
-    /**
-     * Cuantas veces se intenta un envio, contando el primero.
-     *
-     * <p><strong>Solo se reintenta lo transitorio</strong>: un corte de red o un 5xx del
-     * proveedor. Un 4xx no se reintenta nunca, porque significa que el proveedor entendio
-     * la peticion y la rechaza -remitente sin verificar, clave sin permiso-, y mandar tres
-     * veces lo mismo solo sirve para recibir tres veces el mismo no.
-     *
-     * <p>Esto llego despues de perder un correo de verificacion en `dev` por un
-     * {@code ResourceAccessException} de un segundo. Quien lo esperaba no tenia salida: el
-     * reenvio exige el token caducado, y ese token viajaba en el correo que no salio.
-     *
-     * <p>Tres y no mas: el envio es asincrono pero ocupa un hilo del ejecutor de correo, y
-     * un proveedor caido de verdad no se arregla insistiendo.
-     */
-    private static final int INTENTOS = 3;
-
-    /** Se multiplica por el numero de intento: 300 ms, luego 600 ms. */
-    private static final Duration ESPERA_ENTRE_INTENTOS = Duration.ofMillis(300);
+public class ResendMailSender implements MailSender {
 
     /**
      * Solo horas y minutos, sin nombre de zona ni formato regional: "15:42" se
@@ -73,44 +44,22 @@ public class ResendMailSender implements MailSender, MailTransport {
      */
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
 
-    private final RestClient cliente;
-    private final MailProperties propiedades;
     private final VerificationLink enlaces;
-
     private final VerificationProperties verificacion;
+    private final MailTransport transporte;
 
     /** Para dar la hora de desbloqueo en la zona de operacion y no en UTC. */
     private final ZoneId zona;
 
     public ResendMailSender(
-            MailProperties propiedades,
             VerificationLink enlaces,
             AppProperties app,
-            VerificationProperties verificacion) {
-        this.verificacion = verificacion;
-        // La clave se exige aqui y no en MailProperties porque aqui es donde se
-        // usa: con el proveedor de consola no hace falta ninguna, y validarla
-        // para todos obligaba a inventarse una para arrancar en local. Sigue
-        // siendo un fallo de arranque, que es lo que importa: este bean se
-        // construye antes de que el servidor atienda la primera peticion.
-        if (propiedades.providerApiKey() == null || propiedades.providerApiKey().isBlank()) {
-            throw new IllegalStateException("Falta MAIL_PROVIDER_API_KEY y el proveedor de correo es Resend. "
-                    + "Define la clave, o pon MAIL_PROVIDER=console para imprimir el enlace "
-                    + "en el registro en vez de enviarlo (docs/operacion/configuracion.md).");
-        }
-
-        this.propiedades = propiedades;
+            VerificationProperties verificacion,
+            MailTransport transporte) {
         this.enlaces = enlaces;
+        this.verificacion = verificacion;
+        this.transporte = transporte;
         this.zona = app.timeZone();
-
-        JdkClientHttpRequestFactory fabrica = new JdkClientHttpRequestFactory();
-        fabrica.setReadTimeout(TIEMPO_DE_ESPERA);
-
-        this.cliente = RestClient.builder()
-                .baseUrl(propiedades.apiUrl().toString())
-                .requestFactory(fabrica)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + propiedades.providerApiKey())
-                .build();
     }
 
     @Override
@@ -118,7 +67,7 @@ public class ResendMailSender implements MailSender, MailTransport {
         boolean espanol = destinatario.locale() == UserLocale.ES;
         String enlace = enlaces.para(tokenEnClaro);
 
-        enviar(
+        transporte.enviar(
                 destinatario.email().value(),
                 espanol ? "Confirma tu correo en Sendik" : "Confirm your email on Sendik",
                 espanol
@@ -138,7 +87,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     public void enviarAvisoDeRegistroConCorreoExistente(User titular) {
         boolean espanol = titular.locale() == UserLocale.ES;
 
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 espanol ? "Alguien intento registrarse con tu correo" : "Someone tried to register with your email",
                 espanol
@@ -155,7 +104,7 @@ public class ResendMailSender implements MailSender, MailTransport {
         boolean espanol = titular.locale() == UserLocale.ES;
         String hora = HORA.format(desbloqueoEn.atZone(zona));
 
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 espanol ? "Bloqueamos el acceso a tu cuenta" : "We locked access to your account",
                 espanol
@@ -173,7 +122,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     public void enviarAvisoDeSesionRevocadaPorSeguridad(User titular) {
         boolean espanol = titular.locale() == UserLocale.ES;
 
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 espanol ? "Cerramos tus sesiones por seguridad" : "We closed your sessions for safety",
                 espanol
@@ -191,7 +140,7 @@ public class ResendMailSender implements MailSender, MailTransport {
         boolean espanol = destinatario.locale() == UserLocale.ES;
         String enlace = enlaces.paraRestablecer(tokenEnClaro);
 
-        enviar(
+        transporte.enviar(
                 destinatario.email().value(),
                 espanol ? "Restablece tu contrasena en Sendik" : "Reset your Sendik password",
                 espanol
@@ -219,7 +168,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     public void enviarAvisoDeContrasenaCambiada(User titular) {
         boolean espanol = titular.locale() == UserLocale.ES;
 
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 espanol ? "Tu contrasena cambio" : "Your password changed",
                 espanol
@@ -238,7 +187,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     public void enviarAvisoDeCuentaCerrada(User titular) {
         boolean espanol = titular.locale() == UserLocale.ES;
 
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 espanol ? "Tu cuenta de Sendik quedo cerrada" : "Your Sendik account is closed",
                 espanol
@@ -256,7 +205,7 @@ public class ResendMailSender implements MailSender, MailTransport {
 
     @Override
     public void enviarAvisoDeVerificacionRecibida(User titular) {
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 VerificationMailTexts.asuntoDeRecibida(titular.locale()),
                 VerificationMailTexts.cuerpoDeRecibida(titular.locale(), verificacion.reviewDays()));
@@ -264,7 +213,7 @@ public class ResendMailSender implements MailSender, MailTransport {
 
     @Override
     public void enviarAvisoDeVerificacionAprobada(User titular) {
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 VerificationMailTexts.asuntoDeAprobada(titular.locale()),
                 VerificationMailTexts.cuerpoDeAprobada(titular.locale()));
@@ -273,7 +222,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     @Override
     public void enviarAvisoDeVerificacionRechazada(
             User titular, RejectionReason motivo, String nota, int intentosRestantes) {
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 VerificationMailTexts.asuntoDeRechazada(titular.locale()),
                 VerificationMailTexts.cuerpoDeRechazada(titular.locale(), motivo, nota, intentosRestantes));
@@ -281,7 +230,7 @@ public class ResendMailSender implements MailSender, MailTransport {
 
     @Override
     public void enviarAvisoDeVerificacionRevocada(User titular, RevocationReason motivo, String nota) {
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 VerificationMailTexts.asuntoDeRevocada(titular.locale()),
                 VerificationMailTexts.cuerpoDeRevocada(titular.locale(), motivo, nota));
@@ -293,7 +242,7 @@ public class ResendMailSender implements MailSender, MailTransport {
         boolean espanol = titular.locale() == UserLocale.ES;
         String enlace = enlaces.paraCambioDeCorreo(tokenEnClaro);
 
-        enviar(
+        transporte.enviar(
                 destino.value(),
                 espanol ? "Confirma tu correo nuevo en Sendik" : "Confirm your new Sendik email",
                 espanol
@@ -316,7 +265,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     public void enviarAvisoDeIntentoDeCambioAEsteCorreo(User titular) {
         boolean espanol = titular.locale() == UserLocale.ES;
 
-        enviar(
+        transporte.enviar(
                 titular.email().value(),
                 espanol ? "Alguien intento usar tu correo" : "Someone tried to use your email",
                 espanol
@@ -335,7 +284,7 @@ public class ResendMailSender implements MailSender, MailTransport {
     public void enviarAvisoDeCorreoCambiado(User titular, Email anterior) {
         boolean espanol = titular.locale() == UserLocale.ES;
 
-        enviar(
+        transporte.enviar(
                 anterior.value(),
                 espanol ? "El correo de tu cuenta cambio" : "Your account email changed",
                 espanol
@@ -352,89 +301,5 @@ public class ResendMailSender implements MailSender, MailTransport {
     private static String cuerpo(String titulo, String texto, String enlace, String etiquetaDelBoton) {
         return "<h1>" + titulo + "</h1><p>" + texto + "</p><p><a href=\"" + enlace + "\">" + etiquetaDelBoton
                 + "</a></p>";
-    }
-
-    /**
-     * El envio de verdad. Es tambien {@link MailTransport}: lo que hace es exactamente lo
-     * que ese puerto promete, y asi cualquier contexto puede mandar un correo sin pasar
-     * por el puerto de identidad (ADR-0023).
-     */
-    @Override
-    public void enviar(String destinatario, String asunto, String html) {
-        Map<String, Object> peticion =
-                Map.of("from", propiedades.from(), "to", List.of(destinatario), "subject", asunto, "html", html);
-
-        for (int intento = 1; intento <= INTENTOS; intento++) {
-            try {
-                cliente.post()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(peticion)
-                        .retrieve()
-                        .toBodilessEntity();
-                return;
-            } catch (RestClientResponseException e) {
-                // Solo el codigo de estado. El mensaje de esta excepcion incluye parte
-                // del cuerpo que devolvio el proveedor, y ese cuerpo puede repetir la
-                // direccion de destino (docs/operacion/datos-personales.md).
-                int estado = e.getStatusCode().value();
-
-                if (!e.getStatusCode().is5xxServerError()) {
-                    // 4xx: el proveedor entendio la peticion y la rechaza. Reintentar
-                    // manda tres veces lo mismo para recibir tres veces el mismo no.
-                    LOG.error(
-                            "El proveedor rechazo un correo transaccional con estado {}."
-                                    + " Es configuracion, no una caida: revisa el remitente,"
-                                    + " la clave y la verificacion del dominio"
-                                    + " (docs/operacion/entornos.md)",
-                            estado);
-                    return;
-                }
-                if (!esperarAntesDeReintentar(intento, "estado " + estado)) {
-                    return;
-                }
-            } catch (ResourceAccessException e) {
-                // Ni siquiera hubo respuesta: se agoto la espera, o la conexion no se
-                // pudo abrir. Es justo lo que un reintento arregla.
-                if (!esperarAntesDeReintentar(intento, e.getClass().getSimpleName())) {
-                    return;
-                }
-            } catch (RuntimeException e) {
-                // Sin el asunto, sin el cuerpo y sin el mensaje: el registro no debe
-                // llevar el enlace de verificacion, que es una credencial, ni la
-                // direccion de nadie.
-                LOG.error(
-                        "No se pudo enviar un correo transaccional: {}",
-                        e.getClass().getName());
-                return;
-            }
-        }
-    }
-
-    /**
-     * Espera antes del siguiente intento, o se rinde si ya no quedan.
-     *
-     * @return {@code true} si hay que volver a intentarlo
-     */
-    private static boolean esperarAntesDeReintentar(int intento, String causa) {
-        if (intento == INTENTOS) {
-            LOG.error(
-                    "No se pudo enviar un correo transaccional tras {} intentos. Ultima causa: {}."
-                            + " El correo se perdio: no hay buzon de reintentos",
-                    INTENTOS,
-                    causa);
-            return false;
-        }
-
-        LOG.warn("Fallo transitorio al enviar un correo ({}). Reintento {} de {}", causa, intento + 1, INTENTOS);
-
-        try {
-            Thread.sleep(ESPERA_ENTRE_INTENTOS.multipliedBy(intento));
-        } catch (InterruptedException e) {
-            // Alguien esta apagando el servicio. Se restaura la marca y se deja de
-            // insistir: un correo no vale retrasar un apagado.
-            Thread.currentThread().interrupt();
-            return false;
-        }
-        return true;
     }
 }

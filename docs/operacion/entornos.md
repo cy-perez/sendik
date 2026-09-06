@@ -45,9 +45,10 @@ correo de verdad ni una sola vez.
 
 `AsyncMailSender` difiere el envío a un ejecutor de dos hilos, de modo que el correo
 sale **después** de que la petición haya respondido. El servicio corre con
-`run.googleapis.com/cpu-throttling` sin fijar —o sea, activa— y sin `minScale`, así que
-Cloud Run **solo asigna CPU mientras procesa una petición**. Devuelto el 202, el
-contenedor se congela, y la llamada saliente a Resend que estaba a medias expira:
+`run.googleapis.com/cpu-throttling` sin fijar —o sea, activa— y con
+`CLOUD_RUN_MIN_INSTANCES` en `0`, así que Cloud Run **solo asigna CPU mientras procesa
+una petición**. Devuelto el 202, el contenedor se congela, y la llamada saliente a
+Resend que estaba a medias expira:
 
 ```
 ERROR c.s.identity.client.ResendMailSender : No se pudo enviar un correo transaccional: ...ResourceAccessException
@@ -61,13 +62,48 @@ peticiones llegaban a Resend, las peticiones sueltas morían.
 **Y la petición suelta es el caso normal**: alguien que se registra solo. Los reintentos
 de `ResendMailSender` no lo salvan, porque los tres ocurren en el mismo hilo congelado.
 
-Tres salidas, ninguna gratis:
+**Decidido el 5 de septiembre de 2026 en ADR-0031: Cloud Tasks.** El caso de uso
+encola, Cloud Tasks reintenta con espera exponencial, y el envío al proveedor ocurre
+dentro de una petición HTTP al propio backend, que es la única condición bajo la cual
+Cloud Run asigna CPU. **La decisión está tomada y el código está escrito.** Lo que falta es la
+infraestructura, y hasta que exista el fallo sigue abierto:
 
-| Opción | Lo que cuesta |
+```
+gcloud tasks queues create correo-transaccional --location=us-east1
+
+gcloud iam service-accounts create sendik-cola \
+  --display-name="Firma las tareas de correo"
+
+# La cuenta del backend puede encolar.
+gcloud tasks queues add-iam-policy-binding correo-transaccional \
+  --location=us-east1 \
+  --member=serviceAccount:sendik-backend@sendik-col.iam.gserviceaccount.com \
+  --role=roles/cloudtasks.enqueuer
+
+# Y puede pedir que la tarea se firme como la cuenta de la cola.
+gcloud iam service-accounts add-iam-policy-binding \
+  sendik-cola@sendik-col.iam.gserviceaccount.com \
+  --member=serviceAccount:sendik-backend@sendik-col.iam.gserviceaccount.com \
+  --role=roles/iam.serviceAccountUser
+```
+
+Y las variables del entorno `dev`: `MAIL_QUEUE_ENABLED=true`,
+`MAIL_QUEUE_NAME=correo-transaccional`,
+`MAIL_QUEUE_HANDLER_URL=https://api-dev.sendik.co/internal/mail/deliveries` y
+`MAIL_QUEUE_SERVICE_ACCOUNT=sendik-cola@sendik-col.iam.gserviceaccount.com`. La
+región la hereda de `GCP_REGION`.
+
+**Encenderla sin la cola creada no arranca el servicio**, y es a propósito:
+`MailQueueProperties` exige lo que falta al construirse. Descubrir un fallo de
+configuración al mandar el primer correo es exactamente como se perdió el primero.
+
+Lo que se descartó, y por qué, está entero en la ADR. En resumen:
+
+| Opción | Por qué no |
 |---|---|
-| `--no-cpu-throttling` | Se paga CPU mientras el contenedor viva, no solo mientras atiende. Rompe el «`dev` cuesta cero» de más abajo |
-| Enviar de forma síncrona | La respuesta tarda lo que tarde el proveedor, y desaparece `AsyncMailSender` |
-| Cola real (Cloud Tasks o Pub/Sub) | Lo correcto a plazo. Es una ADR |
+| `--no-cpu-throttling` | Se paga CPU mientras el contenedor viva, no solo mientras atiende. Rompe el «`dev` cuesta cero» de más abajo. **Subir `CLOUD_RUN_MIN_INSTANCES` no es un sustituto**: con la limitación activa, una instancia ociosa tampoco tiene CPU |
+| Enviar de forma síncrona | Reabre el oráculo de tiempos del criterio 11, que es justo lo que `AsyncMailSender` vino a cerrar. Se cambiaría un fallo de entrega por una fuga de información |
+| Tabla de salida drenada por Cloud Scheduler | Más correcta —el encolado sería atómico con la transacción—, pero cuesta tabla, migración, concurrencia entre las dos instancias y hasta un minuto de espera en el correo de verificación. Queda como la opción a la que se vuelve si aparece un envío dentro de una transacción que aún puede deshacerse |
 
 **Un fallo transitorio ya no pierde el correo**, que es otra cosa. `enviar()` registraba
 el fallo y seguía, sin reintentar, y quien esperaba el enlace no tenía salida porque el

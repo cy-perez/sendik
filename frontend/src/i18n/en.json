@@ -266,6 +266,22 @@
     },
     "cookies": {
       "title": "Cookie policy"
+    },
+    "expand": {
+      "more": "Show more",
+      "less": "Show less",
+      "hint": "This document is long. It is shown trimmed so you can skim it; open it to read it in full."
+    },
+    "notice": {
+      "title": "How we handle your data",
+      "controller": "Controller: {{responsable}}, NIT {{identificacion}}, Medellín, Colombia.",
+      "purpose": {
+        "account": "We use this data to create and manage your account, confirm your email, keep your session secure and help you when you write to us. We do not sell it or pass it on for advertising.",
+        "verification": "We use your identity document, the photograph of your face and your bank account for one thing only: to confirm you are who you say you are before letting you list, and to be able to pay you for what you sell. They are not shown to anyone else and are not used for anything else."
+      },
+      "sensitive": "You are not required to provide this data. You can hold an account, browse and buy without it; it is only needed if you decide to sell, because without knowing who is selling, the guarantee would mean nothing.",
+      "rights": "You can access, update, correct and delete your data, and withdraw this authorisation, by writing to {{correo}}.",
+      "readPolicy": "Read the full data processing policy"
     }
   },
   "auth": {
@@ -278,8 +294,8 @@
         "displayName": "Name",
         "password": "Password",
         "birthDate": "Date of birth",
-        "acceptsTerms": "I accept the terms and conditions",
-        "acceptsPrivacy": "I authorise the processing of my personal data under the privacy policy"
+        "acceptsTerms": "I have read and accept the terms and conditions.",
+        "acceptsPrivacy": "I freely, previously and expressly authorise the processing of my personal data for the purposes described above and in the data processing policy."
       },
       "hints": {
         "displayName": "This is how people will see you on your listings.",

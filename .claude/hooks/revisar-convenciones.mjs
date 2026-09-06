@@ -18,10 +18,22 @@ const es = (...ext) => ext.some((e) => ruta.endsWith(e));
 const enFrontend = ruta.includes('frontend/');
 const enBackend = ruta.includes('backend/');
 
+// Los documentos legales de `public/legal/` no son plantillas de Angular ni
+// hojas de estilo: son contenido, y el unico .html del frontend que se lee como
+// prosa. Ninguna regla de este archivo les aplica, y aplicarselas da falsos
+// positivos garantizados: la palabra inglesa "document." dispara la regla de API
+// del navegador, y su texto visible dispara la de Transloco —que ademas seria
+// imposible de cumplir, porque su idioma va en el nombre del archivo,
+// `terms.<version>.es.html` y `.en.html`, que es el mecanismo que define
+// docs/operacion/textos-legales.md—. Sin esta excepcion la regla rechaza los
+// seis archivos que ya estaban en el repositorio, que es exactamente el falso
+// positivo que la cabecera de este archivo dice no admitir.
+const esDocumentoLegal = /frontend\/public\/legal\//.test(ruta);
+
 // --- Estilos: ningun valor visual suelto ---------------------------------
 const esHojaDelSistema = /(src\/styles|docs\/ui)\/(tokens|tipografia|marca|fuentes)\.css$/.test(ruta);
 
-if (enFrontend && es('.css', '.scss', '.html') && !esHojaDelSistema) {
+if (enFrontend && es('.css', '.scss', '.html') && !esHojaDelSistema && !esDocumentoLegal) {
   // Fuera de la revision: los comentarios, y el unico sitio donde un HEX no
   // puede ir por variable. `<meta name="theme-color">` lo lee el navegador para
   // tenir su propia interfaz antes de aplicar ninguna hoja de estilos, asi que
@@ -51,7 +63,7 @@ if (enFrontend && es('.css', '.scss', '.html') && !esHojaDelSistema) {
 }
 
 // --- Angular: API vigentes ------------------------------------------------
-if (enFrontend && es('.ts', '.html')) {
+if (enFrontend && es('.ts', '.html') && !esDocumentoLegal) {
   // Fuera de la revision: los comentarios, igual que en el bloque de estilos de arriba.
   // Este codigo se documenta explicando por que NO se hace algo —"con document.querySelector
   // el foco podia acabar en otro sitio", "en IndexedDB y no en localStorage"—, y castigar
@@ -125,7 +137,7 @@ if (enBackend && es('.java') && !esCatalogoDeApisProhibidas) {
 }
 
 // --- Textos visibles sin traducir ----------------------------------------
-if (enFrontend && es('.html')) {
+if (enFrontend && es('.html') && !esDocumentoLegal) {
   const conTexto = texto.replace(/<!--[\s\S]*?-->/g, '').match(/>\s*[A-Za-zÁÉÍÓÚÑáéíóúñ][^<>{}]{3,}</g);
   if (conTexto && !/transloco/i.test(texto)) {
     hallazgos.push('Texto visible escrito en la plantilla. Todo texto pasa por una clave de Transloco, en es y en en.');

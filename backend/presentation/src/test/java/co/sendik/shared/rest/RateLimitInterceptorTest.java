@@ -2,6 +2,7 @@ package co.sendik.shared.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.security.core.authority.AuthorityUtils.createAuthorityList;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Clock;
@@ -12,6 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -29,8 +31,12 @@ class RateLimitInterceptorTest {
     private static final Clock RELOJ = Clock.fixed(Instant.parse("2026-09-04T15:00:00Z"), ZoneOffset.UTC);
     private static final Duration MINUTO = Duration.ofMinutes(1);
 
+    /** Cualquiera sirve: el interceptor decide por prefijo y no mira el identificador. */
+    private static final String UUID_DE_PRUEBA = "0199b0f0-0000-7000-8000-000000000001";
+
     /** Uno por grupo, con dos peticiones de margen para que agotarlo quepa en una prueba. */
     private final RateLimitInterceptor interceptor = new RateLimitInterceptor(
+            new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
@@ -58,11 +64,11 @@ class RateLimitInterceptorTest {
     }
 
     @Test
-    void deberia_ignorar_lo_que_no_es_de_cuenta_ni_de_sesion() {
-        HttpServletRequest catalogo = peticion("/api/v1/listings", "10.0.0.1");
+    void deberia_ignorar_lo_que_no_cae_en_ningun_grupo() {
+        HttpServletRequest categorias = peticion("/api/v1/categories", "10.0.0.1");
 
         for (int i = 0; i < 10; i++) {
-            assertThat(dejaPasar(catalogo)).isTrue();
+            assertThat(dejaPasar(categorias)).isTrue();
         }
     }
 
@@ -127,6 +133,79 @@ class RateLimitInterceptorTest {
     void deberia_dejar_pasar_una_ruta_de_cuenta_sin_sesion() {
         for (int i = 0; i < 5; i++) {
             assertThat(dejaPasar(peticion("/api/v1/users/me/listings", "10.0.0.1")))
+                    .isTrue();
+        }
+    }
+
+    /**
+     * <strong>La que justifica el grupo de publicaciones.</strong>
+     *
+     * <p>El bucle que dejo a la vista HU-013: enviar a revision, retirar y volver a enviar
+     * engorda el rastro de moderacion sin cota. Recorre dos URI distintas -{@code POST} y
+     * {@code DELETE} sobre la misma ruta-, asi que se cuenta por grupo y no por ruta. Con
+     * una cuenta por ruta, cada mitad del ciclo tendria el cupo entero y el ciclo no se
+     * frenaria nunca.
+     */
+    @Test
+    void deberia_acotar_el_ciclo_de_enviar_y_retirar_con_una_sola_cuenta() {
+        entrarComo("ana");
+        String envio = "/api/v1/listings/" + UUID_DE_PRUEBA + "/submission";
+
+        assertThat(dejaPasar(peticion(envio, "10.0.0.1"))).isTrue();
+        assertThat(dejaPasar(peticion(envio, "10.0.0.1"))).isTrue();
+
+        assertThatThrownBy(() -> dejaPasar(peticion(envio, "10.0.0.1")))
+                .as("la tercera vuelta del ciclo ya no pasa")
+                .isInstanceOf(RateLimitExceededException.class);
+    }
+
+    /**
+     * Y agotar una ruta de publicacion cierra las demas del grupo, al reves que en cuenta.
+     * Es la diferencia deliberada: si no, bastaria repartir el bucle entre rutas.
+     */
+    @Test
+    void deberia_contar_todas_las_rutas_de_publicacion_juntas() {
+        entrarComo("ana");
+        dejaPasar(peticion("/api/v1/listings/" + UUID_DE_PRUEBA + "/submission", "10.0.0.1"));
+        dejaPasar(peticion("/api/v1/listings/" + UUID_DE_PRUEBA + "/price", "10.0.0.1"));
+
+        assertThatThrownBy(() -> dejaPasar(peticion("/api/v1/listings/" + UUID_DE_PRUEBA + "/pause", "10.0.0.1")))
+                .as("otra ruta, la misma cuenta")
+                .isInstanceOf(RateLimitExceededException.class);
+    }
+
+    /** Crear tambien cuenta: la coleccion no lleva barra final y aun asi entra en el grupo. */
+    @Test
+    void deberia_limitar_la_creacion_de_publicaciones() {
+        entrarComo("ana");
+
+        assertThat(dejaPasar(peticion("/api/v1/listings", "10.0.0.1"))).isTrue();
+        assertThat(dejaPasar(peticion("/api/v1/listings", "10.0.0.1"))).isTrue();
+
+        assertThatThrownBy(() -> dejaPasar(peticion("/api/v1/listings", "10.0.0.1")))
+                .isInstanceOf(RateLimitExceededException.class);
+    }
+
+    /**
+     * <strong>La que evita convertir la defensa en el ataque.</strong>
+     *
+     * <p>El catalogo y la ficha son publicos y cuelgan del mismo prefijo. La cadena no
+     * desactiva el filtro anonimo, asi que llegan con un {@code AnonymousAuthenticationToken}
+     * que responde {@code true} a {@code isAuthenticated()} y se llama {@code anonymousUser}.
+     * Si contara como sujeto, todo el trafico anonimo del sitio compartiria un unico cupo.
+     */
+    @Test
+    void no_deberia_contar_el_catalogo_publico_que_llega_como_anonimo() {
+        SecurityContextHolder.getContext()
+                .setAuthentication(new AnonymousAuthenticationToken(
+                        "clave", "anonymousUser", createAuthorityList("ROLE_ANONYMOUS")));
+
+        for (int i = 0; i < 10; i++) {
+            assertThat(dejaPasar(peticion("/api/v1/listings", "10.0.0.1")))
+                    .as("el catalogo publico no se cuenta")
+                    .isTrue();
+            assertThat(dejaPasar(peticion("/api/v1/listings/" + UUID_DE_PRUEBA, "10.0.0.1")))
+                    .as("la ficha publica tampoco")
                     .isTrue();
         }
     }

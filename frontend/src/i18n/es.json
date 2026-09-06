@@ -266,6 +266,22 @@
     },
     "cookies": {
       "title": "Política de cookies"
+    },
+    "expand": {
+      "more": "Ver más",
+      "less": "Ver menos",
+      "hint": "Este documento es largo. Se muestra recortado para que puedas ojearlo; ábrelo para leerlo entero."
+    },
+    "notice": {
+      "title": "Cómo tratamos tus datos",
+      "controller": "Responsable: {{responsable}}, NIT {{identificacion}}, Medellín, Colombia.",
+      "purpose": {
+        "account": "Usamos estos datos para crear y administrar tu cuenta, confirmar tu correo, mantener tu sesión segura y atenderte cuando escribas. No los vendemos ni los cedemos con fines publicitarios.",
+        "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más."
+      },
+      "sensitive": "No estás obligado a entregar estos datos. Puedes tener cuenta, navegar y comprar sin ellos; solo hacen falta si decides vender, porque sin saber quién vende el respaldo no significaría nada.",
+      "rights": "Puedes conocer, actualizar, rectificar y suprimir tus datos, y retirar esta autorización, escribiendo a {{correo}}.",
+      "readPolicy": "Leer la política de tratamiento de datos completa"
     }
   },
   "auth": {
@@ -278,8 +294,8 @@
         "displayName": "Nombre",
         "password": "Contraseña",
         "birthDate": "Fecha de nacimiento",
-        "acceptsTerms": "Acepto los términos y condiciones",
-        "acceptsPrivacy": "Autorizo el tratamiento de mis datos personales según la política de privacidad"
+        "acceptsTerms": "He leído y acepto los términos y condiciones.",
+        "acceptsPrivacy": "Autorizo de forma libre, previa y expresa el tratamiento de mis datos personales para las finalidades descritas arriba y en la política de tratamiento de datos."
       },
       "hints": {
         "displayName": "Así te verán quienes visiten tus publicaciones.",

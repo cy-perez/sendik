@@ -5,7 +5,6 @@ import co.sendik.identity.model.RejectionReason;
 import co.sendik.identity.model.RevocationReason;
 import co.sendik.identity.model.User;
 import co.sendik.identity.port.out.MailSender;
-import co.sendik.shared.port.out.MailTransport;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +23,12 @@ import org.springframework.stereotype.Component;
  * {@code sendik.mail.provider} vale {@code console}, algo que los perfiles
  * {@code dev} y {@code prod} no hacen.
  */
-// El nombre lo comparte con ResendMailSender a proposito: solo uno de los dos
-// esta activo, y AsyncMailSender pide "transporteDeCorreo" sin tener que saber
-// cual de ellos le toco.
-@Component("transporteDeCorreo")
+// Uno solo de los dos compositores esta activo. Desde ADR-0031 ninguno entrega: el
+// envio generico se fue a ConsoleMailTransport, y lo que se queda aqui es el registro
+// por tipo de correo, que es lo que imprime el enlace entero de verificacion.
+@Component
 @ConditionalOnProperty(prefix = "sendik.mail", name = "provider", havingValue = "console")
-public class ConsoleMailSender implements MailSender, MailTransport {
+public class ConsoleMailSender implements MailSender {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConsoleMailSender.class);
 
@@ -162,23 +161,6 @@ public class ConsoleMailSender implements MailSender, MailTransport {
     @Override
     public void enviarAvisoDeVerificacionRevocada(User titular, RevocationReason motivo, String nota) {
         registrar("VERIFICACION REVOCADA (RN-013)", titular, "Motivo: " + motivo);
-    }
-
-    /**
-     * El envio generico, que aqui es imprimirlo. Ver {@link MailTransport} y ADR-0023.
-     *
-     * <p>Imprime el asunto y no el cuerpo: el cuerpo es HTML y llena la consola. Quien
-     * prueba un correo en desarrollo necesita saber que salio y para quien.
-     */
-    @Override
-    public void enviar(String destinatario, String asunto, String html) {
-        LOG.info("""
-
-                ================ CORREO ({}) =================================================
-                Para:   {}
-                Asunto: {}
-                ===============================================================================
-                """, "adaptador de consola", destinatario, asunto);
     }
 
     /**

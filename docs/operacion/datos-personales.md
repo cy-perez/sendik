@@ -5,7 +5,7 @@ documento, imagen del rostro, cuenta bancaria y direccion de residencia. Aplica
 la **Ley 1581 de 2012** y el Decreto 1074 de 2015. Este documento es la regla
 operativa; no sustituye asesoria juridica.
 
-Responsable del tratamiento: Sendik, NIT 1054994043-1, Medellin, Colombia.
+Responsable del tratamiento: Sendik, NIT 1054994043-9, Medellin, Colombia.
 
 ## Principio de partida
 
@@ -57,6 +57,32 @@ Si alguna no tiene respuesta, el campo no se crea.
   cuando la persona quiera; al reemplazarla y al cerrar la cuenta, el archivo
   anterior se borra del almacen.
 
+## Aviso de privacidad
+
+El **aviso de privacidad** no es la politica de tratamiento y no la sustituye. La
+politica es el documento completo y publico, vive en su ruta y se versiona; el aviso
+es el parrafo corto que se muestra **en el momento de recoger el dato**, para que
+quien lo entrega sepa quien lo va a tratar, para que y como se echa atras. El regimen
+pide informar las finalidades **antes** de recoger, y una politica enlazada a la que
+nadie entra no informa nada.
+
+Lo implementa `sendik-privacy-notice`, en `shared/ui/form`, con **dos variantes**
+porque los datos no son los mismos:
+
+| Variante | Donde | Que dice de mas |
+|---|---|---|
+| `cuenta` | Registro, encima de las casillas | — |
+| `verificacion` | Antes de empezar la verificacion de vendedor | Que **nadie esta obligado** a entregar documento, rostro y cuenta bancaria, y para que sirven exactamente |
+
+La segunda es la que cumple la linea de mas abajo sobre explicar la finalidad de la
+verificacion en el momento de pedirla. La variante se elige a mano y no se deduce de
+la ruta: quien anada una pantalla que pida datos tiene que decidir cual le toca, y
+equivocarse por omision daria el aviso mas flojo justo donde hace falta el otro.
+
+El responsable, su NIT y el canal salen de la configuracion, nunca del texto: son
+datos de negocio (`docs/operacion/configuracion.md`). Si faltan, la linea se omite en
+vez de escribir un valor inventado.
+
 ## Consentimiento
 
 - El registro exige aceptacion expresa y separada de los terminos y de la
@@ -73,6 +99,17 @@ Si alguna no tiene respuesta, el campo no se crea.
   enseño.
 - Se guarda la evidencia: version del documento aceptado, fecha, hora y direccion
   IP.
+- **El texto de las casillas vive en Transloco y no se versiona.** Es una limitacion
+  conocida y conviene tenerla por escrito: la evidencia apunta a la version de la
+  politica, no a la frase exacta que se mostro junto a la casilla. Mientras esa frase
+  solo remita al documento, la cadena se sostiene; el dia que la casilla diga algo
+  que el documento no dice, deja de sostenerse. Si el texto de una casilla cambia de
+  fondo, se publica una version nueva del documento aunque el documento no cambie, y
+  asi la evidencia vuelve a apuntar a algo comprobable.
+- **No hay tercera casilla de comunicaciones comerciales, y es a proposito.** Sin
+  mecanismo de baja no puede enviarse publicidad (Ley 1581 y Ley 2300 de 2023), y una
+  casilla que recoge un consentimiento que no se puede ejercer es peor que no
+  tenerla: acumula autorizaciones para algo que no existe.
 - La finalidad de la verificacion de identidad se explica en el momento de
   pedirla, no solo en la politica.
 

@@ -40,6 +40,11 @@ dependencies {
     // libreria no se toca.
     implementation(libs.google.cloud.storage)
 
+    // Cloud Tasks: la cola del correo transaccional (ADR-0031). Solo se carga con
+    // `sendik.mail.queue.enabled=true`; en local el bean no se crea y la libreria
+    // no se toca, igual que Cloud Storage con el almacen local.
+    implementation(libs.google.cloud.tasks)
+
     // La configuracion se declara en clases @ConfigurationProperties validadas:
     // si falta una variable obligatoria, la aplicacion no arranca
     // (docs/operacion/configuracion.md).

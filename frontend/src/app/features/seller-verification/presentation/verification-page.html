@@ -12,6 +12,12 @@
       {{ 'sellerVerification.intro.reviewTime' | transloco: { dias: diasDeRevision } }}
     </p>
 
+    <!-- Antes del boton que empieza el tramite, porque lo que se pide detras son
+         datos sensibles -documento, rostro y cuenta bancaria- y la finalidad hay
+         que explicarla en el momento de pedirlos, no solo en la politica
+         (docs/operacion/datos-personales.md). -->
+    <sendik-privacy-notice variante="verificacion" />
+
     <div class="acciones">
       <button
         type="button"

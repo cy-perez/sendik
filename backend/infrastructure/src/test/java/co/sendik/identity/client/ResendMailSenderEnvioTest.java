@@ -124,7 +124,11 @@ class ResendMailSenderEnvioTest {
                 "/restablecer-contrasena",
                 "/confirmar-correo-nuevo");
 
-        return new ResendMailSender(correo, new VerificationLink(app(), correo), app(), new VerificationProperties(2));
+        return new ResendMailSender(
+                new VerificationLink(app(), correo),
+                app(),
+                new VerificationProperties(2),
+                new ResendMailTransport(correo));
     }
 
     private User cuenta(UserLocale idioma) {

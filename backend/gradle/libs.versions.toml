@@ -24,6 +24,7 @@ jacoco = "0.8.15"
 spotless = "8.10.1"
 bouncycastle = "1.85.2"
 google-cloud-storage = "2.72.0"
+google-cloud-tasks = "2.66.0"
 palantir-java-format = "2.97.0"
 
 [libraries]
@@ -69,15 +70,26 @@ spring-security-oauth2-jose = { module = "org.springframework.security:spring-se
 bouncycastle-provider = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
 
 # Cloud Storage, los dos almacenes de archivos (ADR-0018). Aprobada el 21 de agosto
-# de 2026: es la unica dependencia de un proveedor de nube en todo el backend, y
-# entra detras de dos puertos, asi que cambiar de proveedor es escribir otro
-# adaptador y no tocar ningun caso de uso.
+# de 2026. Entra detras de dos puertos, asi que cambiar de proveedor es escribir
+# otro adaptador y no tocar ningun caso de uso.
 #
 # Version fijada aqui porque el BOM de Spring Boot no gestiona las librerias de
 # Google. Se usa el artefacto solo, sin el libraries-bom de GCP: es la unica que se
 # necesita, y una plataforma entera para una dependencia arrastra la version de
 # decenas que no estan.
 google-cloud-storage = { module = "com.google.cloud:google-cloud-storage", version.ref = "google-cloud-storage" }
+
+# Cloud Tasks, la cola por la que sale el correo transaccional. Aprobada el 5 de
+# septiembre de 2026 en ADR-0031, que explica por que una cola y no las otras dos
+# salidas. Es la segunda dependencia de nube del backend -la linea de arriba decia
+# "la unica" y dejo de ser cierta aqui- y entra con la misma condicion: detras del
+# puerto MailTransport, de modo que cambiar Cloud Tasks por Pub/Sub o por una tabla
+# de salida es escribir otro adaptador.
+#
+# Version fijada a mano por lo mismo que la anterior: el BOM de Spring Boot no
+# gestiona las librerias de Google, y se usa el artefacto solo, sin el
+# libraries-bom de GCP.
+google-cloud-tasks = { module = "com.google.cloud:google-cloud-tasks", version.ref = "google-cloud-tasks" }
 
 # --- presentation ----------------------------------------------------------
 # El starter monolitico spring-boot-starter no se usa: en Boot 4 cada pieza

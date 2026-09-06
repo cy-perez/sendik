@@ -18,6 +18,7 @@ import { esCorreoValido } from '../domain/credentials';
 import { cumpleElLargoMinimo, fuerzaDe } from '../domain/password-policy';
 import { esMayorDeEdad } from '../domain/registration';
 import { CheckboxField } from '../../../shared/ui/form/checkbox-field';
+import { PrivacyNotice } from '../../../shared/ui/form/privacy-notice';
 import { SubmitButton } from '../../../shared/ui/form/submit-button';
 import { TextField } from '../../../shared/ui/form/text-field';
 
@@ -34,7 +35,14 @@ import { TextField } from '../../../shared/ui/form/text-field';
  */
 @Component({
   selector: 'sendik-register-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, TextField, CheckboxField, SubmitButton],
+  imports: [
+    ReactiveFormsModule,
+    TranslocoPipe,
+    TextField,
+    CheckboxField,
+    SubmitButton,
+    PrivacyNotice,
+  ],
   templateUrl: './register-page.html',
   styleUrl: './register-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

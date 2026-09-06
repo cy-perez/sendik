@@ -40,6 +40,8 @@ correo, ningún NIT, ningún porcentaje de comisión.
 | `RATE_LIMIT_SESSION_WINDOW` | `PT1M` | no, `PT1M` por omisión |
 | `RATE_LIMIT_ACCOUNT_MAX` | `120` | no, `120` por omisión |
 | `RATE_LIMIT_ACCOUNT_WINDOW` | `PT1M` | no, `PT1M` por omisión |
+| `RATE_LIMIT_LISTINGS_MAX` | `90` | no, `90` por omisión |
+| `RATE_LIMIT_LISTINGS_WINDOW` | `PT1M` | no, `PT1M` por omisión |
 | `RATE_LIMIT_MAX_KEYS` | `50000` | no, `50000` por omisión |
 | `APP_BASE_URL` | `https://sendik.co` | sí |
 | `APP_API_BASE_URL` | `https://api.sendik.co/api/v1` | sí |
@@ -48,6 +50,12 @@ correo, ningún NIT, ningún porcentaje de comisión.
 | `COMMISSION_RATE` | `0.05` | sí |
 | `CLAIM_WINDOW_DAYS` | `3` | Fase 3 |
 | `MAIL_PROVIDER` | `resend` o `console` | no, `resend` por omisión |
+| `MAIL_QUEUE_ENABLED` | `true` en Cloud Run | no, `false` por omisión |
+| `MAIL_QUEUE_LOCATION` | `us-east1` | sí, si la cola está encendida |
+| `MAIL_QUEUE_NAME` | `correo-transaccional` | sí, si la cola está encendida |
+| `MAIL_QUEUE_HANDLER_URL` | `https://api-dev.sendik.co/internal/mail/deliveries` | sí, si la cola está encendida |
+| `MAIL_QUEUE_SERVICE_ACCOUNT` | cuenta que firma el token OIDC | sí, si la cola está encendida |
+| `MAIL_QUEUE_AUDIENCE` | vacío | no, por omisión la propia `MAIL_QUEUE_HANDLER_URL` |
 | `MAIL_PROVIDER_API_KEY` | clave de Resend, ver ADR-0012 | sí |
 | `MAIL_FROM` | `hola@sendik.co` | sí |
 | `MAIL_API_URL` | `https://api.resend.com/emails` | no |
@@ -75,7 +83,7 @@ correo, ningún NIT, ningún porcentaje de comisión.
 | `TYPESENSE_API_KEY` | | Fase 3 |
 | `CARRIER_*_API_KEY` | uno por transportadora | Fase 3 |
 | `COMPANY_NAME` | `Sendik` | sí |
-| `COMPANY_TAX_ID` | `1054994043-1` | sí |
+| `COMPANY_TAX_ID` | `1054994043-9` | sí |
 | `COMPANY_ADDRESS` | | sí |
 | `SUPPORT_EMAIL` | | sí |
 
@@ -98,15 +106,23 @@ backend no arranca sin ellas. El frontend las trata como opcionales por lo que s
 explica más abajo, en su propia tabla.
 
 `CLAIM_WINDOW_DAYS` se cuenta en días **hábiles** desde la entrega y gobierna dos
-cosas a la vez: hasta cuándo puede reportar el comprador y cuándo se da la
-entrega por confirmada si no hace nada (RN-051, RN-052). Cambiarla mueve las dos.
+cosas: hasta cuándo puede reportar el comprador y cuándo se da la entrega por
+confirmada si no hace nada (RN-051, RN-052). Cambiarla mueve las dos.
+
+**Lo que ya no gobierna es cuándo cobra el vendedor.** Desde RN-075 esas son dos
+fechas distintas: la entrega se confirma al vencer esta ventana, pero el pago no se
+libera hasta que pasan los cinco días hábiles del derecho de retracto. Antes eran la
+misma fecha, y por eso los días cuarto y quinto el comprador conservaba un derecho
+legal sobre un dinero que ya se había entregado.
 
 **Hoy la lee solo el frontend**, para escribir la cifra en las páginas
 informativas. En el backend figura como de Fase 3 porque no hay ninguna clase de
 propiedades que la lea todavía: la ventana no se aplica hasta que existan los
 pedidos. Cuando entre, las dos tienen que valer lo mismo, igual que las versiones
-de los documentos legales: una página que anuncie tres días y un sistema que
-libere a los cinco es publicidad engañosa.
+de los documentos legales: una página que anuncie una ventana de reclamo de tres
+días y un sistema que la cierre a los cinco es publicidad engañosa. Ojo con no
+confundirlas: que el pago se libere al quinto día hábil no es la ventana de reclamo,
+es RN-075, y los términos lo explican por separado.
 
 `APP_TIME_ZONE` no es cosmética: RN-008 compara fechas de calendario, no
 instantes. Con UTC, alguien en Colombia cumpliría 18 años cinco horas antes de
@@ -400,7 +416,7 @@ para `dev` y para `prod`.
 | `SENTRY_DSN` | opcional | no |
 | `ENABLE_DEVTOOLS` | `false` en producción | no |
 | `COMPANY_NAME` | `Sendik S.A.S.` | no, el pie lo omite si falta |
-| `COMPANY_TAX_ID` | `1054994043-1` | no, el pie lo omite si falta |
+| `COMPANY_TAX_ID` | `1054994043-9` | no, el pie lo omite si falta |
 | `COMPANY_ADDRESS` | `Medellín, Colombia` | no, el pie lo omite si falta |
 | `SUPPORT_EMAIL` | `hola@sendik.co` | no, el pie lo omite si falta |
 | `COMMISSION_RATE` | `0.05` | no, RN-026 por omisión |

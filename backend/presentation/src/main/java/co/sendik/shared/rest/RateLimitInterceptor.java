@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -40,6 +41,12 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * <p>Sin ese tercer grupo, toda ruta autenticada quedaba sin ningun tope: cualquier
  * cuenta registrada podia repetir sin freno una lectura que ejecuta un agregado.
  *
+ * <p><strong>El cuarto grupo, {@code /api/v1/listings}, tambien cuenta por sujeto,</strong>
+ * y llega de lo que dejo a la vista HU-013: el bucle enviar -> retirar -> enviar deja a un
+ * vendedor engordar su propio rastro de moderacion sin cota, y ese prefijo no estaba
+ * cubierto. Es disponibilidad y coste, no fuga. Se diferencia de los otros tres en la
+ * clave, que aqui es solo el sujeto; el motivo esta en {@link #clave}.
+ *
  * <p>Es un {@link HandlerInterceptor} y no un filtro de servlet para que la
  * excepcion pase por {@link ApiExceptionHandler} y el 429 salga con el mismo
  * {@code ProblemDetail} que los demas errores. Un filtro corre fuera del
@@ -62,17 +69,39 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     /** Las rutas de cuenta que exigen sesion. */
     private static final String PREFIJO_DE_CUENTA = "/api/v1/users/";
 
+    /**
+     * Las rutas de publicacion. La ficha publica cuelga de aqui y no se cuenta; ver
+     * {@link #sujetoDelToken}.
+     */
+    private static final String PREFIJO_DE_PUBLICACION = "/api/v1/listings/";
+
+    /**
+     * La coleccion, sin barra final, que es un caso aparte porque **sirve dos cosas
+     * distintas segun el metodo**: {@code GET} es el catalogo publico y {@code POST} crea
+     * una publicacion. Entra en el grupo por el {@code POST} -crear borradores sin cota es
+     * el mismo problema que reenviarlos-, y el {@code GET} no se ve afectado porque llega
+     * sin sujeto.
+     */
+    private static final String COLECCION_DE_PUBLICACIONES = "/api/v1/listings";
+
     private final RateLimiter credenciales;
     private final RateLimiter sesion;
     private final RateLimiter cuenta;
+    private final RateLimiter publicaciones;
     private final ClientIpHasher hasherDeIp;
     private final Clock reloj;
 
     public RateLimitInterceptor(
-            RateLimiter credenciales, RateLimiter sesion, RateLimiter cuenta, ClientIpHasher hasherDeIp, Clock reloj) {
+            RateLimiter credenciales,
+            RateLimiter sesion,
+            RateLimiter cuenta,
+            RateLimiter publicaciones,
+            ClientIpHasher hasherDeIp,
+            Clock reloj) {
         this.credenciales = credenciales;
         this.sesion = sesion;
         this.cuenta = cuenta;
+        this.publicaciones = publicaciones;
         this.hasherDeIp = hasherDeIp;
         this.reloj = reloj;
     }
@@ -84,17 +113,20 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        boolean porSujeto = limite == cuenta || limite == publicaciones;
+
         // Sin a quien contar no se cuenta. En las rutas de cuenta eso significa sin
         // sujeto en el token, que no deberia ocurrir porque la cadena ya exige sesion;
-        // en las de `auth`, sin IP, que pasa en pruebas y en llamadas internas. Dejar
-        // pasar es preferible a rechazar a todo el que no traiga direccion.
-        String quien = limite == cuenta ? sujetoDelToken() : hasherDeIp.hashear(peticion);
+        // en las de publicacion si ocurre y es lo normal -la ficha publica-; en las de
+        // `auth`, sin IP, que pasa en pruebas y en llamadas internas. Dejar pasar es
+        // preferible a rechazar a todo el que no traiga direccion.
+        String quien = porSujeto ? sujetoDelToken() : hasherDeIp.hashear(peticion);
         if (quien == null) {
             return true;
         }
 
         Instant ahora = reloj.instant();
-        Optional<Duration> espera = limite.registrar(clave(quien, peticion), ahora);
+        Optional<Duration> espera = limite.registrar(clave(quien, peticion, limite == publicaciones), ahora);
         if (espera.isPresent()) {
             throw new RateLimitExceededException(espera.get());
         }
@@ -102,14 +134,23 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * Cada ruta cuenta por separado dentro de su grupo.
+     * Cada ruta cuenta por separado dentro de su grupo, salvo en publicaciones.
      *
      * <p>Si compartieran cuenta, agotar el limite entrando mal dejaria sin poder
      * registrarse a todo el que salga por la misma IP, que en una oficina o detras
      * de un operador movil es mucha gente que no ha hecho nada.
+     *
+     * <p><strong>En publicaciones se cuenta al reves: una sola cuenta para todas las
+     * rutas del grupo.</strong> Ese motivo no aplica aqui, porque no se cuenta por IP
+     * sino por sujeto, y un sujeto es una persona: agotar su propio cupo no deja a nadie
+     * mas fuera. Y separar por ruta no acotaria lo que hay que acotar. Lo que se defiende
+     * es el bucle enviar -> retirar -> enviar, que engorda el rastro de moderacion sin
+     * cota; ese bucle recorre {@code POST} y {@code DELETE} sobre
+     * {@code /listings/{id}/submission}, que son dos URI distintas, asi que una cuenta por
+     * ruta le daria el cupo entero a cada mitad del ciclo y no frenaria el ciclo.
      */
-    private static String clave(String quien, HttpServletRequest peticion) {
-        return quien + " " + peticion.getRequestURI();
+    private static String clave(String quien, HttpServletRequest peticion, boolean porGrupo) {
+        return porGrupo ? quien : quien + " " + peticion.getRequestURI();
     }
 
     /**
@@ -118,10 +159,23 @@ public class RateLimitInterceptor implements HandlerInterceptor {
      * <p>Del contexto de seguridad y nunca de un parametro de la peticion, que es lo que
      * exige backend/CLAUDE.md. Si no hay autenticacion no hay a quien contar: la peticion
      * va a salir 401 de todos modos.
+     *
+     * <p><strong>El token anonimo no cuenta como sujeto.</strong> La cadena no desactiva
+     * el filtro anonimo, asi que una peticion sin sesion no llega con {@code null} sino
+     * con un {@code AnonymousAuthenticationToken}, que responde {@code true} a
+     * {@code isAuthenticated()} y da {@code "anonymousUser"} como nombre. Mientras el
+     * unico grupo por sujeto fue {@code /api/v1/users} daba igual, porque ahi no entra
+     * nadie sin sesion. Con las publicaciones si importa: la ficha publica es
+     * {@code permitAll} y cuelga del mismo prefijo, de modo que sin esta comprobacion
+     * todo el catalogo anonimo compartiria un unico cupo bajo ese nombre y el limite
+     * pasaria de proteger el sitio a tumbarlo.
      */
     private static @Nullable String sujetoDelToken() {
         Authentication autenticacion = SecurityContextHolder.getContext().getAuthentication();
-        return autenticacion == null || !autenticacion.isAuthenticated() ? null : autenticacion.getName();
+        if (autenticacion == null || !autenticacion.isAuthenticated()) {
+            return null;
+        }
+        return autenticacion instanceof AnonymousAuthenticationToken ? null : autenticacion.getName();
     }
 
     private @Nullable RateLimiter limiteDe(String ruta) {
@@ -133,6 +187,11 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         if (ruta.startsWith(PREFIJO_DE_SESION)) {
             return sesion;
         }
-        return ruta.startsWith(PREFIJO_DE_CUENTA) ? cuenta : null;
+        if (ruta.startsWith(PREFIJO_DE_CUENTA)) {
+            return cuenta;
+        }
+        return ruta.startsWith(PREFIJO_DE_PUBLICACION) || ruta.equals(COLECCION_DE_PUBLICACIONES)
+                ? publicaciones
+                : null;
     }
 }

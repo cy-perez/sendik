@@ -16,12 +16,18 @@ donde corresponde:
   con las dos piezas, y sigue costando cero. **Producción sigue aplazada**, ahora
   por lo que de verdad la bloquea: los textos legales del punto siguiente y las
   piezas que cobran por hora encendida (`docs/operacion/entornos.md`).
-- **Los tres textos legales siguen siendo `borrador-local`**, que es relleno sin
-  valor legal (`docs/operacion/textos-legales.md`). El mecanismo completo está: las
-  tres rutas, el resolutor que sirve el texto dentro del HTML renderizado, la
-  versión que se guarda con el consentimiento y un aviso visible en la página
-  mientras la versión sea un borrador. Lo que falta es el contenido, que no es
-  trabajo de código y que **bloquea el lanzamiento, no el cierre de la fase**.
+- ~~**Los tres textos legales siguen siendo `borrador-local`**~~ **Redactados y
+  publicados el 5 de septiembre de 2026**, versión `2026-09-05`, en los seis archivos
+  y en los dos idiomas (`docs/operacion/textos-legales.md`). Cubren identificación,
+  condición de portal de contacto, cuenta, verificación, publicación, compra, envío,
+  Respaldo, retracto, garantías, comisión, datos personales y cookies.
+
+  **Publicados sin revisión de abogado colegiado, por decisión expresa.** Al dejar de
+  ser `borrador-local` desaparece el aviso de «sin valor legal», así que el texto se
+  presenta como vigente. Lo que sigue abierto —cinco puntos de criterio profesional,
+  las excepciones al retracto sin transcribir, y los campos sin dato— está en
+  `docs/operacion/entrega-textos-legales-2026-09-05.md`. Falta además el aviso de
+  privacidad y el texto de las casillas de autorización.
 
 **Plataforma**
 - Monorepo con backend y frontend, Gradle multi-módulo y Angular con SSR.
@@ -282,9 +288,20 @@ durante quince segundos. El recorrido entero de arriba se hizo con ese truco.
 
 **Una petición aislada es el caso normal**: alguien que se registra solo. Los
 reintentos que se añadieron ese día no lo salvan, porque los tres ocurren en el mismo
-hilo congelado. Las opciones —`--no-cpu-throttling`, enviar de forma síncrona, o una
-cola real con ADR— tienen coste y son una decisión pendiente. Está en
-`docs/operacion/entornos.md`.
+hilo congelado.
+
+**Decidido e implementado el 5 de septiembre de 2026: ADR-0031, Cloud Tasks.** El
+envío ocurre dentro de una petición al propio backend, que es donde Cloud Run sí
+asigna CPU, y los reintentos los hace el servicio gestionado en vez de un hilo
+congelado —con lo que se cierra de paso el buzón de reintentos que faltaba—.
+
+El código está completo: `AsyncMailSender` se retiró, la composición del texto se
+separó del transporte, el encolado entra detrás del puerto `MailTransport` y el
+endpoint `/internal/mail/deliveries` entrega verificando el token OIDC de la cuenta de
+servicio. **Lo que falta no es código sino infraestructura**: crear la cola y la
+cuenta de servicio en Google Cloud y declarar las cinco variables. Hasta que eso se
+haga, `MAIL_QUEUE_ENABLED` sigue en falso y el correo se entrega en el hilo de la
+petición, que es como está hoy.
 
 **Esto bloquea el lanzamiento**, porque `prod` tiene la misma configuración.
 
@@ -294,10 +311,18 @@ cola real con ADR— tienen coste y son una decisión pendiente. Está en
   aparte, después de los textos legales.
 - **La frase de la garantía del fabricante en la ficha (RN-067)**, aplazada a la
   tanda legal el 26 de agosto y que arrastran HU-009 y esta línea.
-- **Límite de tasa sobre `/api/v1/listings/**`.** HU-013 dejó a la vista que el
-  bucle enviar → retirar → enviar deja a un vendedor engordar su propio rastro sin
-  cota, y ese prefijo no está cubierto por el interceptor. Es disponibilidad y
-  coste, no fuga.
+- ~~**Límite de tasa sobre `/api/v1/listings/**`.**~~ **Hecho el 5 de septiembre de
+  2026.** El prefijo entra en el interceptor como un cuarto grupo, contado por sujeto
+  del token y con **una sola cuenta para todas sus rutas**, no una por ruta: el bucle
+  enviar → retirar → enviar recorre dos URI distintas, así que contar por ruta le
+  habría dado el cupo entero a cada mitad del ciclo. Entra también la colección
+  `POST /api/v1/listings`, porque crear borradores sin cota es el mismo problema.
+
+  Escribirlo destapó un defecto que no era suyo: `sujetoDelToken()` daba por bueno el
+  token anónimo. Mientras el único grupo por sujeto fue `/api/v1/users` no se notaba,
+  porque ahí nadie entra sin sesión; con las publicaciones sí, porque la ficha pública
+  cuelga del mismo prefijo, y todo el catálogo anónimo habría compartido un único cupo
+  bajo `anonymousUser`. Arreglado, con la prueba que sí puede verlo.
 
 ## Fase 3 — transacción
 

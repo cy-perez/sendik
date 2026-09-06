@@ -25,7 +25,30 @@
          atributos ejecutables. El texto es un archivo nuestro, no algo que mande
          nadie de fuera, y aun asi no se usa bypassSecurityTrust: no hace falta y
          seria abrir la puerta por costumbre. -->
-    <div class="texto-del-documento tipo-cuerpo" [innerHTML]="texto"></div>
+    <div
+      #textoDelDocumento
+      id="texto-del-documento"
+      class="texto-del-documento tipo-cuerpo"
+      [class.recortado]="recortado()"
+      [innerHTML]="texto"
+    ></div>
+
+    <!-- El boton solo existe si el documento de verdad es largo, y solo aparece
+         despues de hidratar. Sin JavaScript no hay boton porque tampoco hay
+         recorte: el texto sale entero del servidor. -->
+    @if (recortable()) {
+      <p class="pista-del-recorte tipo-secundario">{{ 'legal.expand.hint' | transloco }}</p>
+
+      <button
+        type="button"
+        class="btn-secundario ver-mas"
+        [attr.aria-expanded]="expandido()"
+        aria-controls="texto-del-documento"
+        (click)="alternar()"
+      >
+        {{ claveDelBoton() | transloco }}
+      </button>
+    }
   } @else {
     <!-- Tampoco es una alerta que llega: es el estado de la pantalla, presente
          desde el primer renderizado, y es lo unico que hay debajo del titulo. -->
