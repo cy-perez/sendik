@@ -50,6 +50,7 @@ correo, ningún NIT, ningún porcentaje de comisión.
 | `COMMISSION_RATE` | `0.05` | sí |
 | `CLAIM_WINDOW_DAYS` | `3` | Fase 3 |
 | `MAIL_PROVIDER` | `resend` o `console` | no, `resend` por omisión |
+| `GCP_PROJECT_ID` | `sendik-col` | sí, si la cola está encendida |
 | `MAIL_QUEUE_ENABLED` | `true` en Cloud Run | no, `false` por omisión |
 | `MAIL_QUEUE_LOCATION` | `us-east1` | sí, si la cola está encendida |
 | `MAIL_QUEUE_NAME` | `correo-transaccional` | sí, si la cola está encendida |

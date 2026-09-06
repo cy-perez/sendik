@@ -151,6 +151,11 @@ jobs:
       # por omisión solo entra cuando la variable no está definida, no cuando está
       # definida y vacía. Un booleano vacío tumba el arranque al enlazarlo.
       #
+      # `GCP_PROJECT_ID` se pasa al contenedor y no solo al flujo: hasta ahora solo servía
+      # para armar la ruta de la imagen y decidir si hay dónde publicar, pero
+      # `sendik.mail.queue.project` lo lee de la misma variable, y sin él `QueueName.of`
+      # no puede nombrar la cola. Encender la cola sin esto tumba el arranque.
+      #
       # `MAIL_QUEUE_ENABLED` cayó en esa misma trampa el 6 de septiembre de 2026: se
       # añadió sin respaldo, ninguna variable del entorno la define y la revisión murió
       # al enlazar `sendik.mail.queue.enabled`. Vale para cualquier booleano que se
@@ -188,6 +193,7 @@ jobs:
             --set-env-vars "COMMISSION_RATE=${{ vars.COMMISSION_RATE }}" \
             --set-env-vars "MAIL_PROVIDER=resend" \
             --set-env-vars "MAIL_FROM=${{ vars.MAIL_FROM }}" \
+            --set-env-vars "GCP_PROJECT_ID=${{ vars.GCP_PROJECT_ID }}" \
             --set-env-vars "MAIL_QUEUE_ENABLED=${{ vars.MAIL_QUEUE_ENABLED || 'false' }}" \
             --set-env-vars "MAIL_QUEUE_LOCATION=${{ vars.GCP_REGION }}" \
             --set-env-vars "MAIL_QUEUE_NAME=${{ vars.MAIL_QUEUE_NAME }}" \

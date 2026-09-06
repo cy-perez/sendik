@@ -87,11 +87,21 @@ gcloud iam service-accounts add-iam-policy-binding \
   --role=roles/iam.serviceAccountUser
 ```
 
+**Creada el 6 de septiembre de 2026**: la API de Cloud Tasks estaba sin habilitar en
+`sendik-col`, y con ella se crearon la cola, la cuenta `sendik-cola` y las dos
+asignaciones de arriba.
+
 Y las variables del entorno `dev`: `MAIL_QUEUE_ENABLED=true`,
 `MAIL_QUEUE_NAME=correo-transaccional`,
 `MAIL_QUEUE_HANDLER_URL=https://api-dev.sendik.co/internal/mail/deliveries` y
 `MAIL_QUEUE_SERVICE_ACCOUNT=sendik-cola@sendik-col.iam.gserviceaccount.com`. La
 región la hereda de `GCP_REGION`.
+
+**Y el proyecto lo hereda de `GCP_PROJECT_ID`, que hasta el 6 de septiembre de 2026 no
+llegaba al contenedor**: el flujo la usaba para armar la ruta de la imagen y para decidir
+si había dónde publicar, pero nunca la pasaba como variable del servicio. Sin ella
+`QueueName.of` no puede nombrar la cola, así que encender la bandera habría tumbado el
+arranque igual que una cola inexistente.
 
 **Encenderla sin la cola creada no arranca el servicio**, y es a propósito:
 `MailQueueProperties` exige lo que falta al construirse. Descubrir un fallo de
