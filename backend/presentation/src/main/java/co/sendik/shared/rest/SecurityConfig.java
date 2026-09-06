@@ -1,5 +1,6 @@
 package co.sendik.shared.rest;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,6 +9,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -47,8 +49,16 @@ public class SecurityConfig {
     /** La forma de un UUID. Un identificador de publicacion, y nada mas. */
     private static final String UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 
+    /**
+     * @param decodificadorDeSesion el de {@code SessionSecurityWiring}, pedido por nombre.
+     *     Pedirlo por tipo funcionó mientras hubo uno solo; con la cola de correo
+     *     encendida aparece el de Cloud Tasks y la cadena no arranca por ambigüedad
+     *     (6 de septiembre de 2026). La cadena interna ya lo pedía calificado.
+     */
     @Bean
-    SecurityFilterChain cadenaDeFiltros(HttpSecurity http, ExposedFeatures expuestas) throws Exception {
+    SecurityFilterChain cadenaDeFiltros(
+            HttpSecurity http, ExposedFeatures expuestas, @Qualifier("jwtDecoder") JwtDecoder decodificadorDeSesion)
+            throws Exception {
         // Con FEATURE_PUBLISHING apagada no se declara la regla de rol de las rutas de
         // moderacion. Sin esto respondian 403 con la bandera apagada, y un 403 confirma
         // que la funcionalidad esta ahi: el criterio 3 pide 404. Ver ExposedFeatures.
@@ -286,9 +296,10 @@ public class SecurityConfig {
                             .denyAll();
                 })
                 // El decodificador lo aporta infrastructure, que es quien tiene el
-                // secreto de firma. Aqui solo se declara que la cadena lo use.
-                .oauth2ResourceServer(
-                        recursos -> recursos.jwt(jwt -> jwt.jwtAuthenticationConverter(deJwtAAutoridades())))
+                // secreto de firma. Aqui se declara cual, y no se deja que lo resuelva el
+                // tipo: en este contexto hay dos y el otro valida tokens de Google.
+                .oauth2ResourceServer(recursos -> recursos.jwt(
+                        jwt -> jwt.decoder(decodificadorDeSesion).jwtAuthenticationConverter(deJwtAAutoridades())))
                 // Ni formulario de acceso ni autenticacion basica: esto es una API.
                 .httpBasic(basica -> basica.disable())
                 .formLogin(formulario -> formulario.disable());

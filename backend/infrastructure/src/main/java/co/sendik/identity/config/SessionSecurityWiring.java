@@ -14,8 +14,10 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
  *
  * <p>Vive aqui y no en {@code presentation} por lo mismo que el origen de CORS vive
  * en {@code bootstrap}: necesita el secreto de firma, que es configuracion, y
- * {@code presentation} no ve la capa de configuracion. La cadena de seguridad se
- * limita a pedir un {@link JwtDecoder} por tipo.
+ * {@code presentation} no ve la capa de configuracion. La cadena de seguridad lo pide
+ * por nombre, {@code jwtDecoder}, y no por tipo: desde ADR-0031 hay un segundo
+ * {@link JwtDecoder} en el contexto -el que valida los tokens de Google con los que
+ * Cloud Tasks firma sus peticiones- y pedirlo por tipo dejo de arrancar.
  *
  * <p><strong>El algoritmo se fija explicitamente.</strong> Un decodificador que
  * acepte cualquier algoritmo de la cabecera es la puerta de la confusion de
