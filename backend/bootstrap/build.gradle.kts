@@ -53,6 +53,12 @@ dependencies {
     // ni se pueda importar desde otro modulo por descuido (ADR-0018).
     testImplementation(libs.google.cloud.storage)
 
+    // Y lo mismo con el cliente de Cloud Tasks, por el mismo motivo y con la misma
+    // forma: la prueba que levanta la aplicacion con la cola encendida (ADR-0031)
+    // necesita sustituirlo por un doble, porque crear el de verdad resuelve
+    // credenciales de Google al construir el bean.
+    testImplementation(libs.google.cloud.tasks)
+
     // Los post-procesadores `jwt()` con los que se prueba la autorizacion por rol de
     // las rutas de revision (HU-002). Es la unica forma de comprobar @PreAuthorize y la
     // regla de la cadena: sin contexto de seguridad, un montaje autonomo responde 200 a
