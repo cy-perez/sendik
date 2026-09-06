@@ -36,10 +36,19 @@ enlazan (RN-057).
 
 ## Estado actual
 
-**Publicada la versión `2026-09-05` el 5 de septiembre de 2026.** Las tres variables
-apuntan a ella en `dev`, en los seis archivos y en los dos idiomas. Los
-`borrador-local` **siguen en el repositorio y no se tocan**: hay consentimientos cuya
-evidencia apunta a ellos.
+**Publicada la versión `2026-09-06` el 6 de septiembre de 2026.** Corrige la anterior
+en lo único que se podía corregir sin abogado: los datos del negocio que estaban en
+`[[ ]]` y quedaron a la vista del público durante unas horas —teléfono, horario, plazo
+de respuesta, preaviso, cobertura, pasarela, transportadoras, proveedor de base de
+datos y los plazos de conservación—. Lo verificado y lo que se decidió está en
+`entrega-textos-legales-2026-09-05.md`.
+
+**Siguen sin resolver seis marcadores por idioma**, y son los que no se rellenan con un
+dato: los cinco de criterio profesional y los días hábiles de desembolso, que RN-034
+deja explícitamente para la Fase 3.
+
+La versión `2026-09-05` y los `borrador-local` **siguen en el repositorio y no se
+tocan**: hay consentimientos cuya evidencia apunta a ellos.
 
 Con la versión nueva **desaparece el aviso de «sin valor legal»**, porque
 `esBorrador()` compara exactamente contra `borrador-local`. Es la consecuencia

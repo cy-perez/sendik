@@ -53,6 +53,25 @@ se puede ejercer es peor que no recogerlo.
 
 ## Campos por completar
 
+**Resueltos el 6 de septiembre de 2026 en la versión `2026-09-06`**, todos menos
+`[[DÍAS HÁBILES DE DESEMBOLSO]]` y los cinco de criterio profesional. La tabla se deja
+como estaba porque describe la versión `2026-09-05`, que sigue publicada y consentida.
+
+De lo resuelto, tres valores no los puso el negocio sino la norma o el sistema, y por
+eso se dejan anotados con su fuente:
+
+| Campo | Valor | De dónde sale |
+|---|---|---|
+| Plazo de respuesta a PQR | 15 días hábiles | Artículo 58 de la Ley 1480 de 2011, reclamación directa |
+| Conservación contable | 10 años | Artículo 28 de la Ley 962 de 2005, que derogó el término de 20 años del artículo 60 del Código de Comercio |
+| Retención de registros técnicos | 30 días | **Lo que hace el sistema**: el bucket `_Default` de Cloud Logging en `sendik-col` tiene `retentionDays: 30`. No hay plazo legal que fijar aquí; lo que hay es un principio de minimización, y el documento dice lo que de verdad ocurre |
+
+Los días de preaviso —quince— **no son un plazo legal**: no existe uno. El artículo 38
+de la Ley 1480 prohíbe en los contratos de adhesión las cláusulas que permiten
+modificar el contrato unilateralmente, así que lo que protege no es la cifra sino que
+el cambio rija solo hacia adelante y que quien no lo acepte pueda cerrar su cuenta.
+Ambas cosas ya estaban en el numeral 23.
+
 Todo lo marcado con `[[ ]]` en los seis archivos. Ninguno se inventó.
 
 | Marca | Qué falta | Dónde |
