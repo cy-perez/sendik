@@ -306,6 +306,11 @@ jobs:
       # `--network host` para que el contenedor alcance el PostgreSQL del servicio en
       # localhost, y para que su puerto quede accesible desde los pasos siguientes sin
       # publicar nada.
+      #
+      # Las variables van en la misma forma que las pasa el despliegue, vacías incluidas.
+      # No basta con omitir las que no se usan: una variable sin definir y una definida y
+      # vacía no significan lo mismo, y el 6 de septiembre de 2026 la revisión murió por
+      # una `MAIL_QUEUE_ENABLED` vacía que aquí, al no pasarse, nunca se probó.
       - name: Arrancar el backend y esperar a que responda
         run: |
           docker run -d --name backend --network host \
@@ -325,6 +330,11 @@ jobs:
             -e MAIL_PROVIDER=resend \
             -e MAIL_FROM=no-responder@example.test \
             -e MAIL_PROVIDER_API_KEY=sin-clave-en-el-ensayo \
+            -e MAIL_QUEUE_ENABLED=false \
+            -e MAIL_QUEUE_LOCATION=us-east1 \
+            -e MAIL_QUEUE_NAME= \
+            -e MAIL_QUEUE_HANDLER_URL= \
+            -e MAIL_QUEUE_SERVICE_ACCOUNT= \
             -e LEGAL_TERMS_VERSION=ensayo \
             -e LEGAL_PRIVACY_VERSION=ensayo \
             -e STORAGE_PROVIDER=local \

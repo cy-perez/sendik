@@ -151,6 +151,11 @@ jobs:
       # por omisión solo entra cuando la variable no está definida, no cuando está
       # definida y vacía. Un booleano vacío tumba el arranque al enlazarlo.
       #
+      # `MAIL_QUEUE_ENABLED` cayó en esa misma trampa el 6 de septiembre de 2026: se
+      # añadió sin respaldo, ninguna variable del entorno la define y la revisión murió
+      # al enlazar `sendik.mail.queue.enabled`. Vale para cualquier booleano que se
+      # agregue aquí: se pasa con respaldo o no se pasa.
+      #
       # `VERIFICATION_REVIEW_DAYS` se pasaba solo al frontend, y el backend se quedaba con
       # su valor por omisión: la pantalla lo dice y el correo de «recibimos tu solicitud»
       # también, así que podían decir números distintos sin que nada fallara.
@@ -183,7 +188,7 @@ jobs:
             --set-env-vars "COMMISSION_RATE=${{ vars.COMMISSION_RATE }}" \
             --set-env-vars "MAIL_PROVIDER=resend" \
             --set-env-vars "MAIL_FROM=${{ vars.MAIL_FROM }}" \
-            --set-env-vars "MAIL_QUEUE_ENABLED=${{ vars.MAIL_QUEUE_ENABLED }}" \
+            --set-env-vars "MAIL_QUEUE_ENABLED=${{ vars.MAIL_QUEUE_ENABLED || 'false' }}" \
             --set-env-vars "MAIL_QUEUE_LOCATION=${{ vars.GCP_REGION }}" \
             --set-env-vars "MAIL_QUEUE_NAME=${{ vars.MAIL_QUEUE_NAME }}" \
             --set-env-vars "MAIL_QUEUE_HANDLER_URL=${{ vars.MAIL_QUEUE_HANDLER_URL }}" \
