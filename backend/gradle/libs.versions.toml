@@ -24,7 +24,7 @@ jacoco = "0.8.15"
 spotless = "8.10.1"
 bouncycastle = "1.85.2"
 google-cloud-storage = "2.72.0"
-google-cloud-tasks = "2.66.0"
+google-cloud-tasks = "2.96.0"
 palantir-java-format = "2.97.0"
 
 [libraries]
