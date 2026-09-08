@@ -18,8 +18,9 @@ import { laConfirmacionCoincide } from '../domain/account';
 import { AvatarForm } from './avatar-form';
 import { EmailChangeForm } from './email-change-form';
 import { ProfileForm } from './profile-form';
-import { SubmitButton } from '../../../shared/ui/form/submit-button';
-import { TextField } from '../../../shared/ui/form/text-field';
+import { SubmitButton } from '../../../shared/ui/field/submit-button';
+import { TextField } from '../../../shared/ui/field/text-field';
+import { Button } from '../../../shared/ui/button/button';
 
 /**
  * Lo que una persona puede hacer sobre su propia cuenta. Criterios 17, 21, 22 y 23.
@@ -45,9 +46,9 @@ import { TextField } from '../../../shared/ui/form/text-field';
     ProfileForm,
     AvatarForm,
     EmailChangeForm,
+    Button,
   ],
   templateUrl: './account-page.html',
-  styleUrl: './account-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountPage {

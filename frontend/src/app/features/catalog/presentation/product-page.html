@@ -1,6 +1,6 @@
 @if (cargando()) {
   <p class="solo-lectores" role="status">{{ 'catalog.detail.loading' | transloco }}</p>
-  <p class="esqueleto ficha__esqueleto"></p>
+  <p class="esqueleto aspect-photo max-w-[420px]"></p>
 } @else if (noEncontrada()) {
   <!--
     Criterio 13. «Ya no está disponible» y no «no existe»: las dos son verdad y la API no
@@ -12,13 +12,13 @@
     <a routerLink="/catalogo">{{ 'catalog.detail.backToCatalog' | transloco }}</a>
   </p>
 } @else if (publicacion(); as producto) {
-  <article class="ficha">
+  <article class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
     <!--
       El carrusel. Es una lista y no un componente con estado: se desplaza con el dedo y
       con la rueda, y el teclado la recorre porque son elementos en el orden del documento.
       Sin botones de anterior y siguiente que haya que replicar para el lector de pantalla.
     -->
-    <section class="ficha__fotos" [attr.aria-label]="'catalog.detail.gallery' | transloco">
+    <section [attr.aria-label]="'catalog.detail.gallery' | transloco">
       <!--
         El visor giratorio (HU-003). Va encima del carrusel y no en su lugar: usa los mismos
         archivos —un solo canal de imagenes, una sola proporcion— y el carrusel sigue siendo
@@ -38,9 +38,9 @@
         />
       }
 
-      <ul class="ficha__tomas">
+      <ul class="m-0 flex list-none snap-x snap-mandatory gap-2 overflow-x-auto p-0 pb-2">
         @for (imagen of tomas(); track imagen.id) {
-          <li class="ficha__toma">
+          <li class="ficha__toma relative w-[min(100%,420px)] flex-none snap-start">
             <img
               [src]="imagen.url"
               width="900"
@@ -58,7 +58,9 @@
               fabricante se lea como el producto que se va a recibir.
             -->
             @if (imagen.kind === 'REFERENCE') {
-              <p class="ficha__referencia tipo-secundario">
+              <p
+                class="ficha__referencia tipo-secundario absolute start-2 top-2 m-0 rounded-sm border border-border bg-surface px-2 py-1"
+              >
                 {{ 'catalog.referenceImage.label' | transloco }}
               </p>
             }
@@ -71,7 +73,7 @@
       }
     </section>
 
-    <div class="ficha__datos">
+    <div class="flex flex-col gap-2 [&>h1]:m-0 [&>h2]:m-0 [&>h2]:mt-4 [&>p]:m-0">
       <h1 class="tipo-h1">{{ producto.product.title }}</h1>
 
       <!--
@@ -85,7 +87,7 @@
       <sendik-favorite-toggle [publicacion]="producto.id" />
 
       @if (precio(); as valor) {
-        <p class="precio ficha__precio">{{ valor }}</p>
+        <p class="precio mt-2">{{ valor }}</p>
       }
 
       @if (producto.product.condition; as estado) {
@@ -97,7 +99,7 @@
         aparición del acento bronce de la pantalla.
       -->
       @if (vendedor(); as quien) {
-        <p class="ficha__vendedor">
+        <p class="ficha__vendedor flex min-h-touch flex-wrap items-center gap-2">
           <span class="tipo-secundario">{{ 'catalog.seller.soldBy' | transloco }}</span>
           <a [routerLink]="['/vendedor', quien.id]">{{ quien.name }}</a>
           @if (quien.verified) {
@@ -107,11 +109,11 @@
       }
 
       @if (producto.product.description; as texto) {
-        <p class="tipo-cuerpo ficha__descripcion">{{ texto }}</p>
+        <p class="tipo-cuerpo mt-4 whitespace-pre-line">{{ texto }}</p>
       }
 
       <h2 class="tipo-titulo-tarjeta">{{ 'catalog.detail.declaredBy' | transloco }}</h2>
-      <dl class="ficha__declarado">
+      <dl class="mt-2 mb-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 [&>dd]:m-0 [&>dt]:m-0">
         <dt class="tipo-secundario">{{ 'catalog.detail.brand' | transloco }}</dt>
         <dd class="tipo-cuerpo">
           {{ producto.product.brand ?? ('catalog.detail.noBrand' | transloco) }}
@@ -133,7 +135,7 @@
       @if (medidas().length > 0) {
         <h2 class="tipo-titulo-tarjeta">{{ 'catalog.detail.measurements' | transloco }}</h2>
         <p class="tipo-secundario">{{ 'catalog.detail.measurementsHint' | transloco }}</p>
-        <dl class="ficha__declarado">
+        <dl class="mt-2 mb-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 [&>dd]:m-0 [&>dt]:m-0">
           @for (medida of medidas(); track medida.clase) {
             <dt class="tipo-secundario">{{ 'listing.measurement.' + medida.clase | transloco }}</dt>
             <dd class="tipo-cuerpo">{{ medida.valor }} cm</dd>
@@ -151,7 +153,7 @@
         no está resuelta ahí. Por eso la acción no existe en el HTML que sale (criterio 2).
       -->
       @if (puedeBajar()) {
-        <section class="ficha__moderacion" aria-labelledby="titulo-moderacion">
+        <section aria-labelledby="titulo-moderacion">
           <h2 id="titulo-moderacion" class="tipo-titulo-tarjeta">
             {{ 'moderation.undo.listing.title' | transloco }}
           </h2>

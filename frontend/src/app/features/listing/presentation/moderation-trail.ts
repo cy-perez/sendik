@@ -17,6 +17,7 @@ import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { ListingStore } from '../application/listing.store';
 import { esAccionDeModeracionConocida, type ModerationEvent } from '../../../shared/domain/listing';
+import { Button } from '../../../shared/ui/button/button';
 
 /** Un paso del rastro, ya listo para pintar. */
 interface PasoDelRastro {
@@ -49,9 +50,8 @@ interface PasoDelRastro {
  */
 @Component({
   selector: 'sendik-moderation-trail',
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, Button],
   templateUrl: './moderation-trail.html',
-  styleUrl: './moderation-trail.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModerationTrail {

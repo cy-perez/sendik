@@ -3,8 +3,8 @@ import { RouterOutlet } from '@angular/router';
 
 import { SessionMenu } from './features/auth/presentation/session-menu';
 import { VerificationNotice } from './features/auth/presentation/verification-notice';
-import { SiteHeader } from './shared/ui/layout/site-header';
-import { SiteFooter } from './shared/ui/layout/site-footer';
+import { SiteHeader } from './layout/site-header';
+import { SiteFooter } from './layout/site-footer';
 
 /**
  * La raiz es el unico sitio que puede juntar `shared` con una funcionalidad: la
@@ -14,7 +14,7 @@ import { SiteFooter } from './shared/ui/layout/site-footer';
   selector: 'sendik-root',
   imports: [RouterOutlet, SiteHeader, SiteFooter, SessionMenu, VerificationNotice],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  host: { class: 'flex min-h-screen flex-col' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {}

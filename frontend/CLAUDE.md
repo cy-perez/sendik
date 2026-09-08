@@ -1,7 +1,8 @@
 # Frontend — convenciones
 
 Angular 21 con SSR e hidratación · TypeScript estricto · Transloco · TanStack
-Query · Vitest · CSS propio sobre los tokens de marca.
+Query · Vitest · **Tailwind 4 + Angular CDK** sobre las primitivas de
+`shared/ui` (ADR-0032).
 
 Lee primero `../CLAUDE.md`. Aquí solo está lo específico del frontend.
 
@@ -17,7 +18,11 @@ src/app/
     i18n/                     configuración de Transloco
     theme/                    modo claro y oscuro
   shared/                     lo que usan dos funcionalidades y no es de ninguna
-    ui/                       botón, campo, tarjeta, sello, visor 360
+    ui/                       primitivas: botón, icono, campo, tarjeta, modal,
+                              sello, visor 360. Tailwind para el estilo y CDK
+                              para el comportamiento. Son componentes tontos:
+                              NO dependen de Transloco ni de TanStack Query,
+                              reciben texto ya traducido por input()
     domain/                   vocabulario común: TypeScript puro, sin Angular
     infrastructure/           servicios que hablan con el navegador, no con la red:
                               cámara, acelerómetro, normalizador de fotos (ADR-0026)
@@ -50,6 +55,34 @@ src/app/
 - `@for` siempre con `track` sobre un identificador estable.
 - Un componente de presentación no llama HTTP. Llama a un caso de uso.
 
+Y desde la ADR-0032, para todo componente nuevo:
+
+- **La estructura sale de `shared/ui`**, el estilo de utilidades de Tailwind y
+  el comportamiento del CDK. No se escribe un botón, un campo, una tarjeta ni un
+  modal desde cero: ya existen como `[sendikButton]`, `<sendik-text-field>`,
+  `<sendik-card>` y `<sendik-icon>`.
+- **No hay primitiva de modal, y es una decisión.** Se construyó una en la Fase 2
+  y se retiró en la Fase 4 sin haberla usado nunca: ninguna pantalla del producto
+  necesita una superposición. Las cuatro confirmaciones del sitio —cerrar cuenta,
+  decidir una moderación, deshacer una decisión y ver una imagen de identidad—
+  son **en línea a propósito**, y cada una lo dice por escrito en su plantilla.
+  Antes de escribir un modal, lee esos cuatro motivos: si el tuyo no los
+  contradice, probablemente tampoco necesitas uno. Si de verdad hace falta, se
+  escribe entonces, con un caso real que lo guíe y sobre `Dialog` del CDK, que
+  ya está instalado.
+- **Nada de archivos `.css` por componente** ni de estilos en línea. Lo que no
+  se pueda expresar con utilidades se declara con `@utility` en `tema.css`.
+- **`shared/ui` es tonta y se mantiene tonta.** No importa Transloco, ni
+  TanStack Query, ni nada de `features`. Recibe por `input()` y emite por
+  `output()`; el texto le llega **ya traducido**, no como clave. Quien traduce es
+  quien la usa. Una primitiva que traduce por dentro no se puede probar sin
+  montar el catálogo entero ni reutilizar con un texto que venga del servidor.
+- Preferir **directiva sobre el elemento nativo** antes que componente que lo
+  envuelve, cuando se trata de un control. `[sendikButton]` es una directiva
+  justamente por eso: envolver un `<button>` obliga a reenviar a mano `type`,
+  `form`, `disabled` y el foco, y cualquier olvido produce un botón que no envía
+  el formulario o que no se puede deshabilitar.
+
 ## Datos remotos
 
 - TanStack Query para todo lo que venga del servidor: `injectQuery` y
@@ -65,56 +98,104 @@ src/app/
 
 ## Estilos
 
-- El orden lo fija `src/styles.css` y no se altera: `fuentes.css`, `tokens.css`,
-  `tipografia.css`, `marca.css`, antes de cualquier estilo del proyecto.
-  **Solo `tokens.css` es generado**: lo escribe `../docs/ui/generador/` y lo copia
-  `publicar.py`. Las otras tres son del proyecto y se editan aquí mismo.
-  Ubicación de cada activo en `../docs/ui/ubicacion-de-activos.md`.
-- **El tipo se aplica con clases de rol**, nunca con `font-size` propio:
-  `.tipo-h1`, `.tipo-cuerpo`, `.tipo-titulo-tarjeta`, `.precio`,
-  `.tipo-secundario`. Dos familias y solo dos: **Archivo** para titulares y
-  precios grandes, **Inter** para todo lo demás, incluidas las cifras. No hay
-  familia monoespaciada: los precios alinean con `font-variant-numeric:
-tabular-nums` sobre Inter. Tres pesos: 400, 500 y 600.
-  `tipografia.css` es la única fuente de verdad del texto y un hook rechaza
-  cualquier `font-size` o `font-family` fuera de ella. El nivel del encabezado lo
-  decide la estructura del documento; el tamaño, la clase.
-- **Ningún HEX ni píxel suelto.** Todo por variable: `var(--color-superficie)`,
-  `var(--esp-16)`, `var(--radio-md)`. Un hook bloquea la escritura si aparece un
-  color literal.
-- Modo oscuro con `data-tema="oscuro"` en el elemento raíz. La preferencia del
-  usuario se guarda y, si no la hay, se sigue la del sistema. En SSR se resuelve
-  antes de pintar para evitar el parpadeo.
+El motor es **Tailwind 4** (ADR-0032). No hay `tailwind.config.ts`: Tailwind 4 se
+configura desde CSS, y lo que en la versión 3 era `darkMode: 'class'` y
+`theme.colors` aquí son `@custom-variant` y `@theme`, en `src/styles/tema.css`.
+
+- **`src/styles/tema.css` es la fuente de verdad** del color, el espaciado, el
+  radio y la sombra. Si falta un valor, se nombra ahí y se documenta.
+- **El orden de `src/styles.css` no se altera**, y la primera línea menos que
+  ninguna: `@layer theme, base, legacy, components, utilities`. En CSS lo que va
+  sin capa gana a lo que va con capa, así que las hojas heredadas van en
+  `layer(legacy)`; sacarlas de ahí deja a Tailwind sin poder sobrescribir nada y
+  la migración se detiene en seco, sin ningún error visible.
+- **No queda ni un `.css` de componente.** Ninguno. Si estás creando uno, para:
+  el estilo va en la plantilla y lo que no se pueda expresar así se declara con
+  `@utility` en `tema.css`.
+- **`marca.css` y `tokens.css` están retiradas.** Ya no se importan. Las seis
+  piezas de marca que seguían vivas —`.esqueleto`, `.vacio`, `.regla-corte`,
+  `.insignia-verificado`, `.paginacion` y `.franja-tinta`— viven en `tema.css`
+  como `@utility`, con sus reglas de contraste intactas. `tokens.css` sigue en
+  disco porque es de escritura denegada, pero **no entra en la compilación**: su
+  escala de tipo se movió a `tipografia.css` y su color, espaciado y radio los
+  tiene `tema.css`.
+- `tipografia.css` **no está retirada**: es la única fuente de verdad del texto y
+  ahora también de la escala. Va en `layer(roles)` —antes `legacy`— para que las
+  utilidades puedan sobrescribirla; el nombre describe lo que es, no de dónde
+  viene.
+- **La franja de tinta redefine las variables de marca dentro de su bloque**, y
+  ahí está el mecanismo: como `@theme inline` mapea cada utilidad a su
+  `--brand-*`, todo lo que entra en la franja se invierte solo. El botón
+  principal pasa a relleno claro con tinta encima sin una regla propia. Los
+  enlaces de la franja se recolorean **menos los botones** (`a:not([data-variant])`):
+  sin esa exclusión la regla le gana a `text-on-primary` y el botón queda
+  ilegible.
+- **La escala numérica de espaciado se calcula, no se declara.** `--spacing-6` no
+  existe: dentro de un `@utility` va `calc(var(--spacing) * 6)`. Escribirlo como
+  variable deja la declaración inválida y el navegador la descarta entera, sin
+  error y sin que ninguna prueba lo vea.
+- **Nada de archivos `.css` por componente.** El estilo va en la plantilla con
+  utilidades. Si una regla no se puede expresar con utilidades —geometría de
+  trazo SVG, por ejemplo— se declara una vez con `@utility` en `tema.css`, no en
+  una hoja suelta.
+- **El tipo se aplica con clases de rol**, y esto no cambió: `.tipo-h1`,
+  `.tipo-cuerpo`, `.tipo-titulo-tarjeta`, `.precio`, `.tipo-secundario`.
+  `tipografia.css` sigue siendo la única fuente de verdad del texto y un hook
+  rechaza cualquier `font-size` o `font-family` fuera de ella. Dos familias y
+  solo dos: **Archivo** para titulares y precios grandes, **Inter** para todo lo
+  demás. Tres pesos: 400, 500 y 600. **No se usan las utilidades de tamaño de
+  texto de Tailwind** (`text-lg`, `text-2xl`): serían una segunda fuente de
+  verdad del tipo.
+- **Ningún HEX ni medida suelta.** Todo por utilidad (`bg-surface`,
+  `text-text-muted`, `p-4`, `rounded-md`) o por `var(--brand-*)`. Un valor
+  arbitrario como `bg-[#fff]` es la misma fuga por otra puerta y el hook lo
+  bloquea igual.
+- **Modo oscuro con la clase `.dark`** en el elemento raíz, y la variante
+  `dark:` en las plantillas. La preferencia se guarda en cookie y, si no la hay,
+  se sigue la del sistema; se resuelve en el servidor antes de pintar. Mientras
+  `tokens.css` siga importado se escribe **también** `data-tema`: son dos
+  marcadores y `ThemeService` pone los dos. Escribir uno solo deja media
+  pantalla en el modo contrario.
+- **Dos puntos de quiebre y solo dos**: `sm:` (640px) y `lg:` (1024px). Los
+  demás están borrados con `--breakpoint-*: initial`, así que `md:` no compila.
+  Es deliberado: el sistema define dos y un tercero no lo decidió nadie.
 - Medidas fijas del sistema: cabecera 72px en escritorio y 56px en móvil, logo a
   34px (y solo el isotipo a 32px por debajo de 640px, porque el lockup tiene un
-  mínimo de 130px de ancho), ancho máximo de contenido 1140px, puntos de quiebre
-  en 640px y 1024px.
-- Destinos táctiles de 44px como mínimo. Sin excepción.
-- **El bronce no es el botón.** El acento bronce aparece una sola vez por
-  pantalla y siempre en lo mismo: la insignia de vendedor verificado
-  (`.insignia-verificado`), como línea superior de 2px y un icono, nunca como
-  relleno grande ni como color de texto. El botón principal va en tinta
-  (`.btn-primario`).
+  mínimo de 130px de ancho), ancho máximo de contenido 1140px.
+- Destinos táctiles de 44px como mínimo (`min-h-touch`). Sin excepción.
+- **El bronce no es el botón.** El acento aparece una sola vez por pantalla y
+  siempre en la insignia de vendedor verificado, nunca como relleno grande ni
+  como color de texto. Por eso `[sendikButton]` tiene cuatro variantes
+  —`primary`, `secondary`, `text` y `ghost`— y **ninguna de acento**: el valor
+  no existe en el tipo, así que un botón bronce no compila.
+- `ghost` es el control neutro: caja de 44 con borde de control y fondo de
+  superficie. Es el botón de icono de la cabecera, las acciones del menú de
+  sesión y las de `/mi-cuenta`. Entró porque esas mismas diez declaraciones
+  estaban copiadas a mano en tres hojas distintas —`avatar-form.css` lo decía
+  por escrito—, y una regla copiada tres veces se corrige en dos.
+- **Un token de color no cambia de papel entre modos.** `--brand-primary` es
+  tinta en claro y un gris medio en oscuro, donde sirve de **fondo** de botón,
+  no de color de texto: sobre la superficie oscura da 3.66:1 y no pasa. Es el
+  mismo error que cruzar los dos bronces, y ya se cometió una vez en el enlace
+  del aviso de privacidad. Lo caza axe, no el compilador.
 - **El bronce tiene dos tonos y no se cruzan.** `#8A6428` solo sobre fondo claro
-  y `#B4884A` solo sobre fondo oscuro. `tokens.css` alterna el correcto por modo;
-  dentro de `.franja-tinta`, que es oscura en los dos modos, lo hace `marca.css`.
-- La regla de corte (`.regla-corte`) es el único elemento decorativo: es el corte
-  del isotipo repetido fuera del logo. No se sustituye por una línea continua, y
-  va una sola vez por pieza —si ya hay una insignia de verificado a la vista, la
-  regla no.
-- **Los iconos se dibujan con `.icono`, nunca con atributos propios de trazo.**
-  Retícula de 24, área viva de 20, trazo de 2 y terminaciones **rectas**
-  (`butt` / `miter`), que es la misma decisión que los cortes rectos del
-  isotipo; `stroke="currentColor"` para que hereden el color y funcionen en
-  claro, oscuro y deshabilitado sin variantes. Todo eso lo pone la clase, que
-  vive en `marca.css`. Un `stroke-width` en el SVG no compite con ella —el CSS
-  gana— pero deja la duda de dónde se decide, así que no se escribe. Mezclar
-  grosores o terminaciones es lo que hace que un set de iconos se vea amateur.
-  Hay dos variantes y solo dos: `.icono-lg` sube el área viva a 24, y
-  `.icono-relleno` rellena el trazo con `currentColor`. La segunda existe por una
-  razón concreta de accesibilidad y no por gusto: un mismo icono que tiene que
-  decir «puesto» y «no puesto» —el control de favorito de HU-011— no puede
-  distinguir los dos estados por color. No se usa para nada más.
+  y `#B4884A` solo sobre fondo oscuro. `tema.css` alterna el correcto por modo;
+  dentro de `.franja-tinta` lo sigue haciendo `marca.css` hasta que se migre.
+- La regla de corte (`.regla-corte`) es el único elemento decorativo y va una
+  sola vez por pieza. Si ya hay una insignia de verificado a la vista, la regla
+  no.
+- **Los iconos van con `<sendik-icon [icon]="...">`**, nunca con
+  `<svg lucideIcon>` suelto ni con atributos propios de trazo. El envoltorio
+  existe por una razón concreta: **Lucide dibuja con terminaciones redondeadas y
+  el sistema las quiere rectas** (`butt`/`miter`), que es la misma decisión que
+  los cortes rectos del isotipo. La geometría la impone el componente y no hay
+  entrada para quitarla; mezclar grosores o terminaciones es lo que hace que un
+  set de iconos se vea amateur. El icono entra como dato
+  (`LucideSearch.icon`), no como cadena: así el compilador avisa de uno que no
+  existe y el empaquetador no incluye los mil del paquete. Es decorativo salvo
+  que se le dé `label`. Dos variantes y solo dos: `large` sube el área viva a 24
+  y `filled` rellena el trazo —esta última solo donde un mismo icono tiene que
+  decir «puesto» y «no puesto» sin depender del color—.
 
 ## Accesibilidad
 
@@ -128,13 +209,20 @@ Es requisito de aceptación, no un extra. Cada componente entra con:
 - Toda imagen con `alt` real, o `alt=""` si es decorativa.
 - Navegación completa por teclado, incluido el menú móvil y el visor 360.
 - Respeto a `prefers-reduced-motion`, ya contemplado en los tokens.
+- Comportamiento complejo con **Angular CDK**, no a mano: `cdkTrapFocus` para
+  ventanas modales, `LiveAnnouncer` para lo que cambia sin mover el foco,
+  `Overlay` para lo que flota. Una trampa de foco escrita a mano funciona con
+  ratón y falla con teclado, que es justo a quien sirve.
 - Contraste mínimo 4.5:1 en texto normal y 3:1 en texto grande, iconos y bordes
-  de control. El informe está en `../docs/ui/contraste.md` y lo regenera
-  `verificar.py` en los dos modos.
-- **Si un componente nuevo usa una combinación de colores que no existía**, se
-  agrega ese par a la lista `PARES` de `../docs/ui/generador/verificar.py`. Un
-  par que no está en la lista no se está comprobando, y por ahí se cuela un texto
-  ilegible.
+  de control.
+- **Atención, y es deuda declarada (ADR-0032):** `../docs/ui/contraste.md` ya no
+  refleja lo que se pinta, porque el color salió del generador y ahora vive en
+  `src/styles/tema.css`. La lista `PARES` de `verificar.py` tampoco se actualiza.
+  Hasta que esa verificación se rehaga sobre la paleta nueva, **la única garantía
+  de contraste es axe** sobre WCAG 2.2 AA en `e2e/accesibilidad.spec.ts`
+  (ADR-0016), que comprueba lo que de verdad se renderiza en los dos modos.
+  Comprueba más, pero solo después de pintar: ya no hay aviso previo. Un color
+  nuevo en `tema.css` se valida ejecutando esa suite, no leyendo un informe.
 - Dentro de la franja del hero y del pie se usa la clase `.franja-tinta`, que
   redefine dentro del bloque el anillo de foco, el acento y el botón primario.
   Sin ella el foco de la acción principal es invisible —tinta sobre tinta—, el

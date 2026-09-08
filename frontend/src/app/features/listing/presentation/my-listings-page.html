@@ -1,7 +1,7 @@
-<section class="mias">
-  <header class="mias__cabecera">
+<section class="flex flex-col gap-6">
+  <header class="flex flex-wrap items-center justify-between gap-4">
     <h1 class="tipo-h1">{{ 'listing.mine.title' | transloco }}</h1>
-    <a class="btn btn-primario" routerLink="/publicar">{{ 'listing.mine.new' | transloco }}</a>
+    <a sendikButton routerLink="/publicar">{{ 'listing.mine.new' | transloco }}</a>
   </header>
 
   <!--
@@ -28,9 +28,9 @@
     ensena «entra» a quien ya entro.
   -->
   @if (resolviendoSesion()) {
-    <div class="mias__cargando" aria-hidden="true">
-      <p class="esqueleto mias__esqueleto"></p>
-      <p class="esqueleto mias__esqueleto"></p>
+    <div class="flex flex-col gap-3" aria-hidden="true">
+      <p class="esqueleto m-0 h-24"></p>
+      <p class="esqueleto m-0 h-24"></p>
     </div>
   } @else if (sinSesion()) {
     <!--
@@ -40,7 +40,7 @@
     -->
     <p class="tipo-cuerpo">{{ 'listing.mine.signedOut' | transloco }}</p>
     <p>
-      <a class="btn btn-primario" routerLink="/ingresar">
+      <a sendikButton routerLink="/ingresar">
         {{ 'listing.mine.signIn' | transloco }}
       </a>
     </p>
@@ -50,20 +50,22 @@
       el foco: tras un reintento, el boton que lo pidio ya no esta, y un destino que cambia de
       rama a veces todavia no existe cuando se le pide el foco. Este si.
     -->
-    <div class="mias__cifras-zona" #zonaDeCifras tabindex="-1">
+    <div class="mias__cifras-zona focus:outline-none" #zonaDeCifras tabindex="-1">
       @if (cifras.isPending()) {
-        <div class="mias__cifras" aria-hidden="true">
+        <div class="m-0 flex flex-wrap gap-3 p-0" aria-hidden="true">
           <!--
             Esqueletos y no ceros provisionales: un cero se lee como un dato, y quien lo vea de
             paso creera que no tiene nada. Siete, los que van a aparecer, y del alto que van a
             tener para que la lista no salte al llegar.
           -->
           @for (hueco of [0, 1, 2, 3, 4, 5, 6]; track hueco) {
-            <p class="esqueleto mias__cifra-esqueleto"></p>
+            <p
+              class="esqueleto mias__cifra-esqueleto m-0 h-24 min-h-24 min-w-stat flex-[1_1_var(--container-stat)]"
+            ></p>
           }
         </div>
       } @else if (cifras.isError()) {
-        <div class="mias__cifras-error">
+        <div class="flex flex-wrap items-center gap-3">
           <!--
             Sin role="alert": el mensaje ya sale por la región viva de arriba, y con los dos se
             anunciaba dos veces.
@@ -76,7 +78,8 @@
           -->
           <button
             type="button"
-            class="btn btn-secundario"
+            sendikButton
+            variant="secondary"
             #reintentarBoton
             (click)="reintentarCifras()"
           >
@@ -89,18 +92,22 @@
           con estados que esta pantalla no conoce: sin esto quedaba una fila vacía donde antes
           había siete esqueletos, sin texto y sin que nadie se enterara.
         -->
-        <p class="tipo-cuerpo mias__cifras-vacio">{{ 'listing.mine.summary.empty' | transloco }}</p>
+        <p class="tipo-cuerpo m-0 text-text-muted">
+          {{ 'listing.mine.summary.empty' | transloco }}
+        </p>
       } @else {
         <!--
           Una lista de descripcion y no una region con nombre: cada cifra se lee sola -«Borrador,
           3»- y el grupo es disposicion, no informacion, asi que no se anuncia como region propia.
           El orden del DOM y el visual son el mismo, que es lo que pide WCAG 1.3.2.
         -->
-        <dl class="mias__cifras">
+        <dl class="m-0 flex flex-wrap gap-3 p-0">
           @for (cifra of porEstado(); track cifra.status) {
-            <div class="mias__cifra">
+            <div
+              class="mias__cifra flex flex-col gap-1 rounded-md border border-control-border p-3 [overflow-wrap:break-word] min-h-24 min-w-stat flex-[1_1_var(--container-stat)]"
+            >
               <dt class="tipo-secundario">{{ 'listing.status.' + cifra.status | transloco }}</dt>
-              <dd class="mias__numero tipo-cifra">{{ cifraFormateada(cifra.count) }}</dd>
+              <dd class="tipo-cifra m-0 text-text">{{ cifraFormateada(cifra.count) }}</dd>
             </div>
           }
         </dl>
@@ -108,25 +115,25 @@
     </div>
 
     @if (consulta.isPending()) {
-      <div class="mias__cargando" aria-hidden="true">
-        <p class="esqueleto mias__esqueleto"></p>
-        <p class="esqueleto mias__esqueleto"></p>
+      <div class="flex flex-col gap-3" aria-hidden="true">
+        <p class="esqueleto m-0 h-24"></p>
+        <p class="esqueleto m-0 h-24"></p>
       </div>
     } @else if (consulta.isError()) {
-      <p class="mias__error tipo-cuerpo" role="alert">
+      <p class="tipo-cuerpo text-error" role="alert">
         {{ claveDeError(consulta.error()) | transloco }}
       </p>
     } @else if (vacio()) {
-      <div class="mias__vacio">
+      <div
+        class="flex flex-col items-start gap-3 rounded-md border border-dashed border-control-border p-6"
+      >
         <p class="tipo-cuerpo">{{ 'listing.mine.empty' | transloco }}</p>
-        <a class="btn btn-primario" routerLink="/publicar">{{
-          'listing.mine.emptyAction' | transloco
-        }}</a>
+        <a sendikButton routerLink="/publicar">{{ 'listing.mine.emptyAction' | transloco }}</a>
       </div>
     } @else {
-      <ul class="mias__lista">
+      <ul class="m-0 flex list-none flex-col gap-4 p-0">
         @for (publicacion of publicaciones(); track publicacion.id) {
-          <li class="mias__fila">
+          <li class="flex flex-wrap gap-4 rounded-md border border-border p-4">
             @if (portadaDe(publicacion); as portada) {
               <!--
                 La primera va con `priority`: esta sobre el pliegue y es la candidata a
@@ -134,7 +141,7 @@
                 acercan, que es lo que hace la directiva por omision.
               -->
               <img
-                class="mias__portada"
+                class="aspect-photo w-24 rounded-sm object-cover"
                 [ngSrc]="portada"
                 [alt]="publicacion.product.title ?? ('listing.mine.untitled' | transloco)"
                 width="120"
@@ -142,17 +149,22 @@
                 [priority]="$index === 0"
               />
             } @else {
-              <div class="mias__portada mias__portada--vacia" aria-hidden="true"></div>
+              <div
+                class="aspect-photo w-24 rounded-sm border border-dashed border-control-border bg-surface object-cover"
+                aria-hidden="true"
+              ></div>
             }
 
-            <div class="mias__datos">
+            <div
+              class="flex min-w-0 flex-[1_1_var(--container-form)] flex-col gap-1 [&_sendik-moderation-trail]:mt-2"
+            >
               <h2 class="tipo-titulo-tarjeta" [id]="'publicacion-' + publicacion.id">
                 <a [routerLink]="['/publicar', publicacion.id]">
                   {{ publicacion.product.title ?? ('listing.mine.untitled' | transloco) }}
                 </a>
               </h2>
 
-              <p class="mias__estado tipo-secundario">
+              <p class="tipo-secundario font-semibold">
                 {{ 'listing.status.' + publicacion.status | transloco }}
               </p>
 
@@ -169,7 +181,7 @@
               </p>
 
               @if (publicacion.requiresAttention) {
-                <p class="mias__atencion tipo-secundario">
+                <p class="tipo-secundario text-warning">
                   {{ 'listing.mine.attention' | transloco }}
                 </p>
               }
@@ -184,7 +196,9 @@
               />
             </div>
 
-            <div class="mias__acciones">
+            <div
+              class="flex flex-col items-stretch justify-start gap-2 [&_[sendikButton]]:border-current"
+            >
               <!--
                 Un solo boton con la etiqueta calculada, y no dos ramas de un @switch: con
                 dos, pulsar «Pausar» destruia el boton que tenia el foco y el foco caia al
@@ -193,7 +207,8 @@
               @if (admitePausa(publicacion)) {
                 <button
                   type="button"
-                  class="btn btn-secundario"
+                  sendikButton
+                  variant="secondary"
                   [disabled]="pausa.isPending() || reanudacion.isPending()"
                   (click)="alternarPausa(publicacion)"
                 >
@@ -206,26 +221,35 @@
 
               @if (publicacion.status !== 'SOLD' && publicacion.status !== 'ARCHIVED') {
                 @if (porArchivar() === publicacion.id) {
-                  <p class="mias__confirmacion tipo-secundario" role="alert">
+                  <p class="tipo-secundario m-0 text-error" role="alert">
                     {{ 'listing.live.archiveConfirm' | transloco }}
                   </p>
                   <button
                     #confirmarBoton
                     type="button"
-                    class="btn btn-secundario mias__confirmar"
+                    sendikButton
+                    variant="secondary"
+                    class="mias__confirmar"
                     [disabled]="archivo.isPending()"
                     (click)="archivar(publicacion.id)"
                   >
                     {{ 'listing.live.archiveYes' | transloco }}
                   </button>
-                  <button type="button" class="btn btn-secundario" (click)="cancelarArchivo()">
+                  <button
+                    type="button"
+                    sendikButton
+                    variant="secondary"
+                    (click)="cancelarArchivo()"
+                  >
                     {{ 'listing.live.archiveNo' | transloco }}
                   </button>
                 } @else {
                   <button
                     #archivarBoton
                     type="button"
-                    class="btn btn-secundario mias__archivar"
+                    sendikButton
+                    variant="secondary"
+                    class="mias__archivar"
                     (click)="pedirConfirmacion(publicacion.id)"
                   >
                     {{ 'listing.live.archive' | transloco }}
@@ -238,7 +262,7 @@
       </ul>
 
       @if (pausa.isError() || reanudacion.isError() || archivo.isError()) {
-        <p class="mias__error tipo-cuerpo" role="alert">
+        <p class="tipo-cuerpo text-error" role="alert">
           {{ claveDeError(pausa.error() ?? reanudacion.error() ?? archivo.error()) | transloco }}
         </p>
       }

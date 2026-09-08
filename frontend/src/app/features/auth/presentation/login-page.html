@@ -1,42 +1,46 @@
 <h1 class="tipo-h1">{{ 'auth.login.title' | transloco }}</h1>
 <p class="tipo-entradilla">{{ 'auth.login.subtitle' | transloco }}</p>
 
-<form class="formulario" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+<form class="mt-8 max-w-form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
   <!-- Un solo mensaje para credenciales incorrectas, cuenta inexistente y
        contrasena equivocada: el servidor responde lo mismo en los tres casos y
        aqui tampoco se puede distinguir (criterio 11). -->
   @if (errorDelServidor(); as error) {
-    <p class="error-general tipo-cuerpo" role="alert">{{ error | transloco }}</p>
+    <sendik-form-error>{{ error | transloco }}</sendik-form-error>
   }
 
   <sendik-text-field
     fieldId="correo"
     type="email"
     autocomplete="email"
-    labelKey="auth.login.fields.email"
+    [label]="'auth.login.fields.email' | transloco"
     [control]="control('email')"
-    [errorKey]="emailError()"
+    [error]="emailError() ? (emailError() | transloco) : null"
   />
 
   <sendik-text-field
     fieldId="contrasena"
     type="password"
     autocomplete="current-password"
-    labelKey="auth.login.fields.password"
+    [label]="'auth.login.fields.password' | transloco"
     [control]="control('password')"
-    [errorKey]="passwordError()"
+    [error]="passwordError() ? (passwordError() | transloco) : null"
   />
 
   <!-- Antes del boton y dentro del formulario: quien no recuerda su contrasena lo
        descubre justo aqui, no despues de fallar. -->
-  <p class="olvido tipo-secundario">
+  <p class="tipo-secundario -mt-2 mb-6 [&_a]:inline-flex [&_a]:min-h-touch [&_a]:items-center">
     <a routerLink="/recuperar-contrasena">{{ 'auth.login.forgotPassword' | transloco }}</a>
   </p>
 
-  <sendik-submit-button labelKey="auth.login.submit" [loading]="ingreso.isPending()" />
+  <sendik-submit-button
+    [label]="'auth.login.submit' | transloco"
+    [loadingLabel]="'form.sending' | transloco"
+    [loading]="ingreso.isPending()"
+  />
 </form>
 
-<p class="alternativa tipo-cuerpo">
+<p class="tipo-cuerpo mt-6 max-w-form">
   {{ 'auth.login.noAccount' | transloco }}
   <a routerLink="/registro">{{ 'auth.login.goToRegister' | transloco }}</a>
 </p>

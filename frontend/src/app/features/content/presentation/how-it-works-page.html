@@ -3,12 +3,12 @@
 
 <!-- Los dos recorridos van uno tras otro y los dos visibles. Nada detras de una
      pestana ni de un acordeon: un buscador no lo sigue y quien duda no lo abre. -->
-<section class="seccion" aria-labelledby="recorrido-comprador">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="recorrido-comprador">
   <h2 class="tipo-h2" id="recorrido-comprador">{{ 'howItWorks.buyer.title' | transloco }}</h2>
 
   <!-- Lista ordenada de verdad: el orden es informacion, no adorno. Un lector de
        pantalla anuncia "3 de 4" sin que haya que escribirlo. -->
-  <ol class="pasos" role="list">
+  <ol class="numbered-steps" role="list">
     @for (paso of pasosDelComprador; track paso) {
       <li>
         <h3 class="tipo-titulo-tarjeta">
@@ -22,7 +22,7 @@
   </ol>
 </section>
 
-<section class="seccion" aria-labelledby="reclamo">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="reclamo">
   <h2 class="tipo-h2" id="reclamo">{{ 'howItWorks.buyer.claim.title' | transloco }}</h2>
   <p class="tipo-cuerpo">
     {{ 'howItWorks.buyer.claim.body' | transloco: { dias: ventanaDeReclamo } }}
@@ -36,7 +36,7 @@
 
 <!-- Decir que NO cubre el respaldo es lo que hace creible lo que si cubre. Una
      garantia que suena ilimitada no se la cree nadie. -->
-<section class="seccion" aria-labelledby="no-cubre">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="no-cubre">
   <h2 class="tipo-h2" id="no-cubre">{{ 'howItWorks.buyer.notCovered.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'howItWorks.buyer.notCovered.body' | transloco }}</p>
   <!-- Los plazos del retracto no se escriben aqui: viven en el documento legal
@@ -45,10 +45,10 @@
   <p class="tipo-cuerpo">{{ 'howItWorks.buyer.notCovered.retracto' | transloco }}</p>
 </section>
 
-<section class="seccion" aria-labelledby="recorrido-vendedor">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="recorrido-vendedor">
   <h2 class="tipo-h2" id="recorrido-vendedor">{{ 'howItWorks.seller.title' | transloco }}</h2>
 
-  <ol class="pasos" role="list">
+  <ol class="numbered-steps" role="list">
     @for (paso of pasosDelVendedor; track paso) {
       <li>
         <h3 class="tipo-titulo-tarjeta">
@@ -62,7 +62,7 @@
   </ol>
 </section>
 
-<section class="seccion" aria-labelledby="deberes">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="deberes">
   <h2 class="tipo-h2" id="deberes">{{ 'howItWorks.seller.duties.title' | transloco }}</h2>
   <ul class="tipo-cuerpo" role="list">
     @for (deber of deberesDelVendedor; track deber) {
@@ -71,7 +71,7 @@
   </ul>
 </section>
 
-<section class="seccion" aria-labelledby="por-que-aqui">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="por-que-aqui">
   <h2 class="tipo-h2" id="por-que-aqui">{{ 'howItWorks.seller.why.title' | transloco }}</h2>
   <ul class="tipo-cuerpo" role="list">
     @for (ventaja of ventajas; track ventaja) {
@@ -94,7 +94,7 @@
 <section class="seccion cierre" aria-labelledby="listo">
   <h2 class="tipo-h2" id="listo">{{ 'howItWorks.cta.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'howItWorks.cta.body' | transloco }}</p>
-  <a class="btn-primario tipo-etiqueta-boton" routerLink="/registro">{{
+  <a sendikButton class="tipo-etiqueta-boton mt-6 px-8" routerLink="/registro">{{
     'howItWorks.cta.action' | transloco
   }}</a>
 </section>

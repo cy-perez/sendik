@@ -11,6 +11,10 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { LucideBookmark } from '@lucide/angular';
+
+import { Button } from '../../../shared/ui/button/button';
+import { Icon } from '../../../shared/ui/icon/icon';
 
 import { FavoritesStore } from '../application/favorites.store';
 
@@ -42,12 +46,18 @@ import { FavoritesStore } from '../application/favorites.store';
 @Component({
   selector: 'sendik-favorite-toggle',
   standalone: true,
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, Button, Icon],
   templateUrl: './favorite-toggle.html',
-  styleUrl: './favorite-toggle.css',
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FavoriteToggle {
+  /**
+   * Contorno o relleno. Es la senal visual del estado que NO depende del color,
+   * junto con el propio texto del boton, que tambien cambia (HU-011, criterio 17).
+   */
+  protected readonly iconoFavorito = LucideBookmark.icon;
+
   private readonly store = inject(FavoritesStore);
   private readonly router = inject(Router);
   private readonly ruta = inject(ActivatedRoute);

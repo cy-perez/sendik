@@ -1,7 +1,7 @@
 <h1 class="tipo-h1">{{ 'about.title' | transloco }}</h1>
 <p class="tipo-entradilla">{{ 'about.intro' | transloco }}</p>
 
-<section class="seccion">
+<section class="mt-12 [&>*+*]:mt-4">
   <p class="tipo-cuerpo">{{ 'about.gathers' | transloco }}</p>
   <!-- "No tocamos el dinero: lo recauda y lo retiene la pasarela" no es un
        matiz de estilo. Sendik no custodia fondos de terceros (RN-031) y decir lo
@@ -10,12 +10,12 @@
 </section>
 
 @if (hayDatosDeEmpresa) {
-  <section class="seccion" aria-labelledby="quienes-somos">
+  <section class="mt-12 [&>*+*]:mt-4" aria-labelledby="quienes-somos">
     <h2 class="tipo-h2" id="quienes-somos">{{ 'about.company.title' | transloco }}</h2>
     <!-- Cada dato se omite por separado: un despliegue al que le falte la
          direccion sigue mostrando la razon social y el NIT. Ninguno se escribe
          en la plantilla. -->
-    <address class="tipo-cuerpo">
+    <address class="tipo-cuerpo flex flex-col gap-1 not-italic">
       @if (empresa.name) {
         <span class="dato">{{ empresa.name }}</span>
       }

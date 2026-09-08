@@ -6,7 +6,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
   selector: 'sendik-not-found-page',
   imports: [RouterLink, TranslocoPipe],
   templateUrl: './not-found-page.html',
-  styleUrl: './not-found-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotFoundPage {}

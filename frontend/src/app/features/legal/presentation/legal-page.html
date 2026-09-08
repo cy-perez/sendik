@@ -1,10 +1,10 @@
-<article class="documento-legal">
+<article class="documento-legal max-w-prose">
   <h1 class="tipo-h1">{{ tituloKey() | transloco }}</h1>
 
   <!-- La version no es un detalle de mantenimiento: es lo que permite comprobar
        que el texto que alguien acepto es este. Va junto al titulo y no en el
        pie, donde nadie la buscaria. -->
-  <p class="version-del-documento tipo-secundario">
+  <p class="tipo-secundario mt-2 text-text-muted">
     {{ 'legal.version' | transloco: { version: documento().version } }}
   </p>
 
@@ -15,7 +15,9 @@
          necesita. Al navegar desde el pie si dispararia, interrumpiendo el
          titulo. La etiqueta en negrita hace el trabajo, y ademas evita que la
          advertencia se distinga solo por el color del borde. -->
-    <aside class="aviso-de-borrador tipo-cuerpo">
+    <aside
+      class="tipo-cuerpo mt-6 rounded-md border border-l-4 border-warning bg-surface px-4 py-3 text-text"
+    >
       <strong>{{ 'legal.draft.label' | transloco }}</strong> {{ 'legal.draft.body' | transloco }}
     </aside>
   }
@@ -28,7 +30,7 @@
     <div
       #textoDelDocumento
       id="texto-del-documento"
-      class="texto-del-documento tipo-cuerpo"
+      class="texto-del-documento tipo-cuerpo mt-8 [overflow-wrap:break-word] [&_h2]:mt-8 [&_h3]:mt-6 [&_p]:mt-4 [&_ul]:mt-4 [&_ol]:mt-4 [&_ul]:pl-6 [&_ol]:pl-6 [&_li]:mt-2 [&_a]:text-primary dark:[&_a]:text-text"
       [class.recortado]="recortado()"
       [innerHTML]="texto"
     ></div>
@@ -37,11 +39,13 @@
          despues de hidratar. Sin JavaScript no hay boton porque tampoco hay
          recorte: el texto sale entero del servidor. -->
     @if (recortable()) {
-      <p class="pista-del-recorte tipo-secundario">{{ 'legal.expand.hint' | transloco }}</p>
+      <p class="tipo-secundario mt-4 text-text-muted">{{ 'legal.expand.hint' | transloco }}</p>
 
       <button
         type="button"
-        class="btn-secundario ver-mas"
+        sendikButton
+        variant="secondary"
+        class="ver-mas mt-2"
         [attr.aria-expanded]="expandido()"
         aria-controls="texto-del-documento"
         (click)="alternar()"

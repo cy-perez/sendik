@@ -207,7 +207,7 @@ describe('la llamada a registrarse', () => {
 
   it('como funciona cierra con un solo boton principal, y lleva al registro', async () => {
     const raiz = await montar(HowItWorksPage);
-    const cta = raiz.querySelectorAll<HTMLAnchorElement>('.btn-primario');
+    const cta = raiz.querySelectorAll<HTMLAnchorElement>('[data-variant="primary"]');
 
     expect(cta).toHaveLength(1);
     expect(cta[0]?.getAttribute('href')).toBe('/registro');
@@ -225,7 +225,7 @@ describe('la llamada a registrarse', () => {
   ] as [string, Type<unknown>][])('%s no lleva llamada a la accion', async (_nombre, Pagina) => {
     const raiz = await montar(Pagina);
 
-    expect(raiz.querySelectorAll('.btn-primario')).toHaveLength(0);
+    expect(raiz.querySelectorAll('[data-variant="primary"]')).toHaveLength(0);
   });
 });
 

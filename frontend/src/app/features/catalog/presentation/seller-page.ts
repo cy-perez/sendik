@@ -10,9 +10,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Button } from '../../../shared/ui/button/button';
 
 import { MOTIVOS_DE_REVOCACION } from '../../../shared/domain/revocation-reason';
-import { UndoAction, type DecisionDeshecha } from '../../../shared/ui/moderation/undo-action';
+import { UndoAction, type DecisionDeshecha } from '../../../shared/moderation/undo-action';
 import { CatalogStore } from '../application/catalog.store';
 import { ModerationStore } from '../application/moderation.store';
 import { ProductCard } from './product-card';
@@ -30,9 +31,10 @@ import { ProductCard } from './product-card';
 @Component({
   selector: 'sendik-seller-page',
   standalone: true,
-  imports: [ProductCard, RouterLink, TranslocoPipe, UndoAction],
+  imports: [ProductCard, RouterLink, TranslocoPipe, UndoAction, Button],
   templateUrl: './seller-page.html',
-  styleUrl: './seller-page.css',
+  // <main> es una rejilla: sin asignar carril la pagina cae en el de sangria.
+  host: { class: 'block [grid-column:content] max-w-content px-4 py-6' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SellerPage {

@@ -2,10 +2,10 @@
      .franja-tinta es tinta en los dos modos y redefine dentro del bloque el
      anillo de foco, el acento y el boton primario, que sobre tinta serian
      invisibles: sin ella el foco del boton principal seria tinta sobre tinta. -->
-<section class="hero a-sangre franja-tinta">
+<section class="hero franja-tinta [grid-column:full] -mt-8 py-12 text-center sm:py-16">
   <div class="contenedor">
     <h1 class="tipo-display">{{ 'home.hero.title' | transloco }}</h1>
-    <p class="tipo-entradilla hero-cuerpo">{{ 'home.hero.body' | transloco }}</p>
+    <p class="tipo-entradilla mx-auto mt-4 max-w-[52ch]">{{ 'home.hero.body' | transloco }}</p>
 
     <!-- La unica llamada a la accion de la pantalla (criterio 2). Va en tinta
          invertida, no en bronce: el manual de Sendik reserva el bronce para lo
@@ -21,25 +21,25 @@
          navegador), asi que cualquier destino condicional dejaria el hero sin
          boton en el HTML servido o lo cambiaria al hidratar. Quien ya entro
          tiene su cuenta en la cabecera, que es donde el sitio la muestra. -->
-    <a class="btn-primario cta tipo-etiqueta-boton" routerLink="/registro">{{
+    <a sendikButton class="tipo-etiqueta-boton mt-6 px-8" routerLink="/registro">{{
       'home.hero.cta' | transloco
     }}</a>
 
-    <p class="tipo-secundario hero-nota">{{ 'home.hero.note' | transloco }}</p>
+    <p class="mt-4 text-inherit opacity-85">{{ 'home.hero.note' | transloco }}</p>
   </div>
 </section>
 
 <!-- Criterios 5 a 7. Ocupa el sitio donde ira la rejilla de producto en Fase 2:
      esta seccion se retira o se baja entonces, sin rehacer el resto. -->
-<section class="bloque" aria-labelledby="pasos-titulo">
+<section class="[grid-column:content] mt-12" aria-labelledby="pasos-titulo">
   <h2 class="tipo-h2" id="pasos-titulo">{{ 'home.steps.title' | transloco }}</h2>
 
-  <ol class="pasos" role="list">
+  <ol class="m-0 mt-6 grid list-none gap-6 p-0 sm:grid-cols-[repeat(3,minmax(0,1fr))]" role="list">
     @for (paso of pasos; track paso.id; let indice = $index) {
-      <li class="paso">
+      <li class="paso [&>h3]:m-0 [&>h3]:mb-2 [&>p]:m-0">
         <!-- El numero es decorativo: el orden ya lo da <ol> y anunciarlo dos
              veces sobra. -->
-        <span class="numero tipo-h3" aria-hidden="true">{{ indice + 1 }}</span>
+        <span class="tipo-h3 mb-2 block text-primary" aria-hidden="true">{{ indice + 1 }}</span>
         <h3 class="tipo-titulo-tarjeta">
           {{ 'home.steps.' + paso.id + '.title' | transloco }}
         </h3>
@@ -54,12 +54,15 @@
 </section>
 
 <!-- Criterios 8 a 10 -->
-<section class="bloque" aria-labelledby="confianza-titulo">
+<section class="[grid-column:content] mt-12" aria-labelledby="confianza-titulo">
   <h2 class="tipo-h2" id="confianza-titulo">{{ 'home.trust.title' | transloco }}</h2>
 
-  <ul class="tarjetas" role="list">
+  <ul
+    class="tarjetas m-0 mt-6 grid list-none gap-6 p-0 sm:grid-cols-[repeat(3,minmax(0,1fr))]"
+    role="list"
+  >
     @for (tarjeta of confianza; track tarjeta.id) {
-      <li class="tarjeta">
+      <li class="rounded-lg border border-border bg-surface p-6 [&>h3]:m-0 [&>h3]:mb-2 [&>p]:m-0">
         <h3 class="tipo-titulo-tarjeta">
           {{ 'home.trust.' + tarjeta.id + '.title' | transloco }}
         </h3>

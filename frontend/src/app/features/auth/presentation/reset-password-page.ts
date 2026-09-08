@@ -17,8 +17,10 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { ApiError } from '../../../core/http/api-error';
 import { AuthStore } from '../application/auth.store';
 import { cumpleElLargoMinimo, fuerzaDe } from '../domain/password-policy';
-import { SubmitButton } from '../../../shared/ui/form/submit-button';
-import { TextField } from '../../../shared/ui/form/text-field';
+import { SubmitButton } from '../../../shared/ui/field/submit-button';
+import { TextField } from '../../../shared/ui/field/text-field';
+import { FormError } from '../../../shared/ui/field/form-error';
+import { Button } from '../../../shared/ui/button/button';
 
 /**
  * Pone la contrasena nueva con el enlace del correo. Criterios 18 y 20.
@@ -37,9 +39,16 @@ import { TextField } from '../../../shared/ui/form/text-field';
  */
 @Component({
   selector: 'sendik-reset-password-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, TextField, SubmitButton],
+  imports: [
+    ReactiveFormsModule,
+    TranslocoPipe,
+    RouterLink,
+    TextField,
+    SubmitButton,
+    FormError,
+    Button,
+  ],
   templateUrl: './reset-password-page.html',
-  styleUrl: './reset-password-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResetPasswordPage {

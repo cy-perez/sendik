@@ -1,14 +1,19 @@
 @if (entidades.isPending()) {
-  <p class="esqueleto barra" aria-hidden="true"></p>
+  <p class="esqueleto mt-4 h-5 max-w-[320px]" aria-hidden="true"></p>
   <p class="solo-lectores" role="status">
     {{ 'sellerVerification.bankForm.loadingEntities' | transloco }}
   </p>
 } @else {
-  <form class="formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <form
+    class="mt-6 flex max-w-form flex-col gap-4"
+    [formGroup]="form"
+    (ngSubmit)="guardar()"
+    novalidate
+  >
     @if (errorDelServidor(); as error) {
-      <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
+      <p class="tipo-cuerpo text-error" role="alert">{{ error | transloco }}</p>
     } @else if (envio.isSuccess()) {
-      <p class="guardado tipo-cuerpo" role="status">
+      <p class="tipo-cuerpo text-success" role="status">
         {{ 'sellerVerification.bankForm.saved' | transloco }}
       </p>
     }
@@ -16,14 +21,14 @@
     <!-- No hay componente de desplegable en el sistema de diseno, asi que va el
          elemento nativo con su etiqueta asociada. Nativo antes que ARIA: un select
          trae navegacion por teclado y lectura correcta sin ayuda. -->
-    <div class="campo">
-      <label class="etiqueta tipo-secundario" for="entidad">
+    <div class="flex flex-col gap-1">
+      <label class="tipo-secundario text-text" for="entidad">
         {{ 'sellerVerification.bankForm.entity' | transloco }}
       </label>
 
       <select
         id="entidad"
-        class="control tipo-cuerpo"
+        class="control-field tipo-cuerpo"
         formControlName="entidad"
         [attr.aria-invalid]="errorDeEntidad() ? 'true' : null"
         [attr.aria-describedby]="errorDeEntidad() ? 'entidad-error' : null"
@@ -35,16 +40,16 @@
       </select>
 
       @if (errorDeEntidad(); as error) {
-        <p id="entidad-error" class="error-campo tipo-secundario">{{ error | transloco }}</p>
+        <p id="entidad-error" class="tipo-secundario text-error">{{ error | transloco }}</p>
       }
     </div>
 
-    <div class="campo">
-      <label class="etiqueta tipo-secundario" for="tipo-de-cuenta">
+    <div class="flex flex-col gap-1">
+      <label class="tipo-secundario text-text" for="tipo-de-cuenta">
         {{ 'sellerVerification.bankForm.accountType' | transloco }}
       </label>
 
-      <select id="tipo-de-cuenta" class="control tipo-cuerpo" formControlName="tipo">
+      <select id="tipo-de-cuenta" class="control-field tipo-cuerpo" formControlName="tipo">
         @if (tiposDisponibles().length !== 1) {
           <option value="">{{ 'sellerVerification.bankForm.accountType' | transloco }}</option>
         }
@@ -58,7 +63,7 @@
       <!-- Se explica por que solo hay una opcion, en lugar de dejar un desplegable de
            un elemento sin motivo aparente. -->
       @if (esBilletera()) {
-        <p class="pista tipo-secundario">
+        <p class="tipo-secundario m-0 text-text-muted">
           {{ 'sellerVerification.bankForm.walletNote' | transloco }}
         </p>
       }
@@ -67,22 +72,23 @@
     <sendik-text-field
       fieldId="numero-de-cuenta"
       autocomplete="off"
-      labelKey="sellerVerification.bankForm.accountNumber"
+      [label]="'sellerVerification.bankForm.accountNumber' | transloco"
       [control]="control('numero')"
-      [errorKey]="errorDeNumero()"
+      [error]="errorDeNumero() ? (errorDeNumero() | transloco) : null"
     />
 
     <sendik-text-field
       fieldId="titular"
       autocomplete="name"
-      labelKey="sellerVerification.bankForm.holderName"
-      hintKey="sellerVerification.bankForm.holderHint"
+      [label]="'sellerVerification.bankForm.holderName' | transloco"
+      [hint]="'sellerVerification.bankForm.holderHint' | transloco"
       [control]="control('titular')"
-      [errorKey]="errorDeTitular()"
+      [error]="errorDeTitular() ? (errorDeTitular() | transloco) : null"
     />
 
     <sendik-submit-button
-      labelKey="sellerVerification.bankForm.submit"
+      [label]="'sellerVerification.bankForm.submit' | transloco"
+      [loadingLabel]="'form.sending' | transloco"
       [loading]="envio.isPending()"
     />
   </form>

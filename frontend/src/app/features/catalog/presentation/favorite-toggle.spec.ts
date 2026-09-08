@@ -414,7 +414,10 @@ describe('FavoriteToggle', () => {
     await responderEstado(fixture, backend, { favorite: true, eligible: true });
 
     expect(nombreDelBoton(fixture)).toBe('Quitar de favoritos');
-    expect(fixture.nativeElement.querySelector('svg')?.classList).toContain('icono-relleno');
+    // La clase la pone <sendik-icon> con [filled]; se llama icon-filled desde la
+    // ADR-0032. Lo que se comprueba sigue siendo lo mismo: que el estado se vea
+    // sin percibir color.
+    expect(fixture.nativeElement.querySelector('svg')?.classList).toContain('icon-filled');
   });
 
   /**

@@ -321,7 +321,7 @@ describe('LoginPage', () => {
       );
     await asentar(fixture);
 
-    const aviso = fixture.nativeElement.querySelector('.error-general') as HTMLElement;
+    const aviso = fixture.nativeElement.querySelector('sendik-form-error') as HTMLElement;
     expect(aviso.textContent).toContain('El correo o la contraseña no coinciden');
     // Ni el texto interno del servidor ni ninguna pista de cual de los dos fallo.
     expect(fixture.nativeElement.textContent).not.toContain('user not found');

@@ -7,7 +7,7 @@
 } @else if (sinEmpezar()) {
   <!-- No haber empezado no es un error: el servidor responde 404 para eso, y aqui se
        traduce en la unica accion que tiene sentido. -->
-  <section class="bloque">
+  <section class="mt-12 max-w-prose [&>p]:mt-2">
     <p class="tipo-cuerpo">
       {{ 'sellerVerification.intro.reviewTime' | transloco: { dias: diasDeRevision } }}
     </p>
@@ -18,10 +18,11 @@
          (docs/operacion/datos-personales.md). -->
     <sendik-privacy-notice variante="verificacion" />
 
-    <div class="acciones">
+    <div class="mt-6 flex flex-wrap items-center gap-4">
       <button
         type="button"
-        class="btn-primario tipo-etiqueta-boton"
+        sendikButton
+        class="tipo-etiqueta-boton"
         [disabled]="trabajando()"
         (click)="empezar()"
       >
@@ -30,7 +31,7 @@
     </div>
   </section>
 } @else if (verificacion(); as actual) {
-  <section class="bloque">
+  <section class="mt-12 max-w-prose [&>p]:mt-2">
     <!-- El estado, en palabras. `role="status"` para que un lector de pantalla lo
          anuncie cuando cambia sin que la persona tenga que ir a buscarlo. -->
     <p class="tipo-cuerpo" role="status">
@@ -43,12 +44,16 @@
       </p>
     }
 
-    <ul class="pasos">
+    <ul class="m-0 mt-6 list-none p-0">
       @for (paso of pasos; track paso) {
-        <li class="paso">
+        <li class="paso flex items-start gap-4 border-t border-border py-4">
           <!-- El estado del paso lleva su palabra, no solo su color: un color no puede
                ser el unico portador de informacion. -->
-          <span class="estado tipo-secundario" [class.estado-listo]="entregado(paso)">
+          <span
+            class="estado tipo-secundario flex-none rounded-sm border border-border px-2 py-1"
+            [class.border-success]="entregado(paso)"
+            [class.text-success]="entregado(paso)"
+          >
             {{
               (entregado(paso)
                 ? 'sellerVerification.steps.done'
@@ -68,12 +73,12 @@
             <!-- Lo que se muestra de cada paso entregado son cuatro digitos, que es lo
                  unico que el servidor manda (criterio 11). -->
             @if (paso === 'document' && actual.documentNumberLastFour) {
-              <p class="detalle tipo-secundario">
+              <p class="tipo-secundario mt-1">
                 {{ actual.documentType }} ····{{ actual.documentNumberLastFour }}
               </p>
             }
             @if (paso === 'bank' && actual.bankAccountLastFour) {
-              <p class="detalle tipo-secundario">
+              <p class="tipo-secundario mt-1">
                 {{ actual.bank }} ····{{ actual.bankAccountLastFour }}
               </p>
             }
@@ -97,7 +102,7 @@
     </ul>
 
     @if (actual.rejectionReason) {
-      <div class="rechazo">
+      <div class="mt-6 rounded-md border border-error p-4">
         <h2 class="tipo-titulo-tarjeta">
           {{ 'sellerVerification.rejected.reasonLabel' | transloco }}
         </h2>
@@ -112,11 +117,12 @@
       </div>
     }
 
-    <div class="acciones">
+    <div class="mt-6 flex flex-wrap items-center gap-4">
       @if (puedeEnviarla()) {
         <button
           type="button"
-          class="btn-primario tipo-etiqueta-boton"
+          sendikButton
+          class="tipo-etiqueta-boton"
           [disabled]="trabajando()"
           (click)="enviar()"
         >
@@ -138,7 +144,7 @@
     </div>
 
     @if (error(); as clave) {
-      <p class="error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
+      <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ clave | transloco }}</p>
     }
   </section>
 }

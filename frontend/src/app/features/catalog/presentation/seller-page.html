@@ -1,23 +1,29 @@
 @if (cargando()) {
   <p class="solo-lectores" role="status">{{ 'catalog.seller.loading' | transloco }}</p>
-  <p class="esqueleto vendedor__esqueleto"></p>
+  <p class="esqueleto h-24 max-w-[320px]"></p>
 } @else if (noEncontrado()) {
   <h1 class="tipo-h1">{{ 'catalog.seller.notFound' | transloco }}</h1>
   <p>
     <a routerLink="/catalogo">{{ 'catalog.detail.backToCatalog' | transloco }}</a>
   </p>
 } @else if (vendedor(); as quien) {
-  <header class="vendedor__cabecera">
+  <header class="mb-8 flex flex-wrap items-center gap-4 [&_h1]:m-0 [&_p]:m-0">
     @if (quien.avatarUrl; as foto) {
       <!-- Decorativa: el nombre está al lado y repetirlo en el alternativo es ruido. -->
-      <img class="vendedor__foto" [src]="foto" width="96" height="96" alt="" />
+      <img
+        class="size-24 rounded-full border border-border object-cover"
+        [src]="foto"
+        width="96"
+        height="96"
+        alt=""
+      />
     }
 
     <div>
       <h1 class="tipo-h1">{{ quien.name }}</h1>
 
       @if (quien.verified) {
-        <p class="vendedor__sello">
+        <p class="mt-2">
           <span class="insignia-verificado">{{ 'catalog.seller.verified' | transloco }}</span>
         </p>
         <!--
@@ -60,15 +66,15 @@
   } @else if (vacio()) {
     <p class="tipo-cuerpo">{{ 'catalog.seller.empty' | transloco }}</p>
   } @else {
-    <ul class="vendedor__rejilla">
+    <ul class="catalog-grid mt-4">
       @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {
         <li><sendik-product-card [publicacion]="publicacion" [primera]="primera" /></li>
       }
     </ul>
 
     @if (hayMas()) {
-      <div class="vendedor__mas">
-        <button type="button" class="btn btn-secundario" (click)="verMas()">
+      <div class="mt-8 flex justify-center">
+        <button type="button" sendikButton variant="secondary" (click)="verMas()">
           {{ 'catalog.list.more' | transloco }}
         </button>
       </div>

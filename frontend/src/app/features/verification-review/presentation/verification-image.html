@@ -1,4 +1,6 @@
-<figure class="imagen">
+<figure
+  class="m-0 flex min-h-review-image min-w-review-image flex-col gap-2 rounded-md border border-border bg-surface p-3 [&_img]:max-h-review-image [&_img]:max-w-full [&_img]:rounded-sm"
+>
   <figcaption class="tipo-secundario">{{ etiqueta() }}</figcaption>
 
   <!-- El botón vive siempre en el DOM y alterna. Si lo sustituyera la imagen, el foco de
@@ -8,7 +10,14 @@
        botones llamados «Ver» y quien navegue por lista de botones no sabría cuál abre
        qué. Va en un <span> oculto y no en aria-label porque el texto visible sigue
        siendo corto. -->
-  <button type="button" class="boton" [disabled]="cargando()" (click)="alternar()">
+  <button
+    type="button"
+    sendikButton
+    variant="ghost"
+    class="border-primary disabled:opacity-60"
+    [disabled]="cargando()"
+    (click)="alternar()"
+  >
     {{
       (visible() ? 'verificationReview.images.hide' : 'verificationReview.images.reveal')
         | transloco

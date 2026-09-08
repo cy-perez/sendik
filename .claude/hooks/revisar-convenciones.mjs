@@ -31,7 +31,11 @@ const enBackend = ruta.includes('backend/');
 const esDocumentoLegal = /frontend\/public\/legal\//.test(ruta);
 
 // --- Estilos: ningun valor visual suelto ---------------------------------
-const esHojaDelSistema = /(src\/styles|docs\/ui)\/(tokens|tipografia|marca|fuentes)\.css$/.test(ruta);
+// tema.css entra en la lista desde la ADR-0032: es la paleta, o sea el unico
+// sitio donde un color de marca se escribe literal. Exigirle que use una
+// variable seria pedirle que se defina a si misma.
+const esHojaDelSistema =
+  /(src\/styles|docs\/ui)\/(tokens|tipografia|marca|fuentes|tema)\.css$/.test(ruta);
 
 if (enFrontend && es('.css', '.scss', '.html') && !esHojaDelSistema && !esDocumentoLegal) {
   // Fuera de la revision: los comentarios, y el unico sitio donde un HEX no

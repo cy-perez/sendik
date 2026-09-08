@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Button } from '../../../shared/ui/button/button';
 
 import { MOTIVOS_DE_RECHAZO, type RejectionReason } from '../../../shared/domain/rejection-reason';
 import { ReviewStore } from '../application/review.store';
@@ -51,9 +52,9 @@ const TEXTOS_DE_IMAGEN = {
  */
 @Component({
   selector: 'sendik-review-detail-page',
-  imports: [TranslocoPipe, RouterLink, VerificationImage],
+  imports: [TranslocoPipe, RouterLink, VerificationImage, Button],
   templateUrl: './review-detail-page.html',
-  styleUrl: './review.css',
+  host: { class: 'block [grid-column:content] max-w-prose' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReviewDetailPage {

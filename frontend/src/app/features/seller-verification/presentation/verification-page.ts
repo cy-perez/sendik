@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { TranslocoPipe } from '@jsverse/transloco';
 
 import { APP_CONFIG } from '../../../core/config/app-config';
-import { PrivacyNotice } from '../../../shared/ui/form/privacy-notice';
+import { Button } from '../../../shared/ui/button/button';
+import { PrivacyNotice } from '../../../shared/legal/privacy-notice';
 import { VerificationStore } from '../application/verification.store';
 import { BankAccountForm } from './bank-account-form';
 import { DocumentCaptureForm } from './document-capture-form';
@@ -32,9 +33,15 @@ import {
  */
 @Component({
   selector: 'sendik-verification-page',
-  imports: [TranslocoPipe, BankAccountForm, DocumentCaptureForm, SelfieCaptureForm, PrivacyNotice],
+  imports: [
+    TranslocoPipe,
+    BankAccountForm,
+    DocumentCaptureForm,
+    SelfieCaptureForm,
+    PrivacyNotice,
+    Button,
+  ],
   templateUrl: './verification-page.html',
-  styleUrl: './verification-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerificationPage {

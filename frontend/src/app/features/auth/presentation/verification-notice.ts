@@ -3,6 +3,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 import { SessionStore } from '../../../core/session/session.store';
 import { AuthStore } from '../application/auth.store';
+import { Button } from '../../../shared/ui/button/button';
 
 /**
  * Aviso de correo sin verificar, con su boton de reenvio. Criterio 13 de HU-001.
@@ -17,9 +18,8 @@ import { AuthStore } from '../application/auth.store';
  */
 @Component({
   selector: 'sendik-verification-notice',
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, Button],
   templateUrl: './verification-notice.html',
-  styleUrl: './verification-notice.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerificationNotice {

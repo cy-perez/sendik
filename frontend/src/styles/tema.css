@@ -1,0 +1,575 @@
+/* Paleta y variantes de Tailwind v4. Fuente de verdad del color a partir de la
+   ADR-0032, que deroga la ADR-0011 y saca el color del generador de kit_ui.py.
+
+   Por que no hay tailwind.config.ts: Tailwind 4 configura desde CSS. El archivo
+   de configuracion en JavaScript es de la version 3 y su motor ya no lo lee mas
+   que por compatibilidad. Lo que alli era `darkMode: "class"` es aqui la
+   variante @custom-variant de abajo, y lo que era `theme.colors` es @theme.
+
+   Los valores son los de la marca y no se inventan aqui: salen del kit auditado.
+   Mientras dure la migracion incremental conviven con tokens.css; cuando la
+   Fase 3 termine de migrar las plantillas, tokens.css deja de importarse y este
+   archivo queda solo. */
+
+/* Modo oscuro por clase, tal como pide el encargo. El servidor escribe la clase
+   en <html> antes de pintar, igual que ya hacia con data-tema, asi que el
+   mecanismo antiparpadeo del renderizado en servidor se conserva entero. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Modo claro. Estos son los mismos valores del kit de Sendik. */
+:root {
+  --brand-background: #f6f6f8;
+  --brand-surface: #ffffff;
+  --brand-surface-raised: #ffffff;
+  --brand-text: #14162b;
+  --brand-text-muted: #6a6e80;
+  --brand-border: #e3e4ea;
+  --brand-primary: #14162b;
+  --brand-primary-hover: #121326;
+  --brand-primary-pressed: #101122;
+  --brand-primary-soft: #e8e8ea;
+  --brand-on-primary: #ffffff;
+  --brand-accent: #8a6428;
+  --brand-on-accent: #ffffff;
+  --brand-success: #1e7a5a;
+  --brand-warning: #9c4a12;
+  --brand-error: #b3261e;
+  --brand-disabled: #b7b9c2;
+  --brand-focus: #14162b;
+  --brand-control-border: #86868b;
+
+  /* El papel no es una pantalla: no tiene modo claro ni oscuro, tiene tinta.
+     Por eso estos dos NO se redefinen en oscuro. Sin ellos, al imprimir la
+     pagina de contacto en modo oscuro el texto —casi blanco— sale invisible, y
+     con el se van el correo de soporte y los plazos de la Ley 1581, que es justo
+     lo que alguien imprime esa pagina para conservar. */
+  --brand-paper: #ffffff;
+  --brand-paper-ink: #14162b;
+
+  /* Guia de la camara. NO es --brand-focus ni se ata a el: eso significa
+     «anillo de foco», y compartir el token haria que cambiar el color del foco
+     cambiara el encuadre de la camara. Ademas el fondo de esta linea no es el
+     tema: es el video, asi que una sola tinta no puede cumplir 3:1 contra lo que
+     haya delante del objetivo. Por eso son dos, linea y contorno, en tonos
+     opuestos: asi se ve sobre una pared blanca y sobre un producto negro. Fijas
+     en los dos modos, por la misma razon. */
+  --brand-camera-guide: #ffffff;
+  --brand-camera-guide-outline: #14162b;
+
+  /* La tinta no cambia con el modo: la franja oscura lo es en los dos. */
+  --brand-ink: #14162b;
+  --brand-on-ink: #ffffff;
+}
+
+/* Modo oscuro. El bronce cambia de tono y no se cruza con el claro: #8A6428
+   solo sobre fondo claro y #B4884A solo sobre fondo oscuro. Cruzarlos da 2.97:1
+   y es la razon de que sean dos variables y no una. */
+.dark {
+  --brand-background: #0d0e1c;
+  --brand-surface: #2c2d40;
+  --brand-surface-raised: #3a3c52;
+  --brand-text: #f9f9fa;
+  --brand-text-muted: #a0a0a1;
+  --brand-border: #48495a;
+  --brand-primary: #83858e;
+  --brand-on-primary: #111111;
+
+  /* El sistema anterior NO definia este token para el modo oscuro: se quedaba en
+     el gris claro del modo claro (#E8E8EA) y se usaba como fondo de hover del
+     boton secundario, con el texto en --brand-primary encima. Eso da 3:1 y lo
+     destapo axe sobre el rastro de moderacion. Aqui se nombra el que faltaba. */
+  --brand-primary-soft: #3a3b50;
+
+  /* El anillo de foco. El kit generado NO lo definia para el modo oscuro: se
+     quedaba en la tinta del modo claro (#14162B) sobre el fondo oscuro, o sea
+     1.08:1 contra el fondo y 1.32:1 contra la tarjeta. El anillo llevaba siendo
+     invisible en oscuro desde la Fase 1 y no lo veia nadie: axe no evalua el
+     contraste del indicador de foco, y la unica prueba que lo medía lo hacia
+     dentro de la franja de tinta, donde si es blanco. Lo destapo la
+     comprobacion de paleta de e2e/contraste.spec.ts.
+
+     Va en el color de texto del modo y no en blanco puro, que es la misma
+     relacion que en claro: el anillo es la tinta del modo. */
+  --brand-focus: #f9f9fa;
+  --brand-accent: #b4884a;
+  --brand-on-accent: #111111;
+  --brand-success: #4fbf92;
+  --brand-warning: #e08a3c;
+  --brand-error: #f2837c;
+}
+
+/* @theme inline y no @theme a secas: el valor es una referencia a otra variable
+   que cambia con el modo. Con @theme normal Tailwind congelaria el valor del
+   modo claro y el oscuro no conmutaria nunca. */
+@theme inline {
+  --color-background: var(--brand-background);
+  --color-surface: var(--brand-surface);
+  --color-surface-raised: var(--brand-surface-raised);
+  --color-text: var(--brand-text);
+  --color-text-muted: var(--brand-text-muted);
+  --color-border: var(--brand-border);
+  --color-primary: var(--brand-primary);
+  --color-primary-hover: var(--brand-primary-hover);
+  --color-primary-pressed: var(--brand-primary-pressed);
+  --color-primary-soft: var(--brand-primary-soft);
+  --color-on-primary: var(--brand-on-primary);
+  --color-accent: var(--brand-accent);
+  --color-on-accent: var(--brand-on-accent);
+  --color-success: var(--brand-success);
+  --color-warning: var(--brand-warning);
+  --color-error: var(--brand-error);
+  --color-disabled: var(--brand-disabled);
+  --color-focus: var(--brand-focus);
+  --color-control-border: var(--brand-control-border);
+  --color-ink: var(--brand-ink);
+  --color-on-ink: var(--brand-on-ink);
+  --color-paper: var(--brand-paper);
+  --color-paper-ink: var(--brand-paper-ink);
+  --color-camera-guide: var(--brand-camera-guide);
+  --color-camera-guide-outline: var(--brand-camera-guide-outline);
+
+  /* Las dos familias del sistema, y son solo dos. Los tamanos siguen siendo
+     competencia de tipografia.css mientras dure la migracion: aqui no se
+     redeclara la escala para no crear una segunda fuente de verdad del tipo. */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Archivo', Georgia, 'Times New Roman', serif;
+
+  /* Medidas fijas del sistema, para no repetirlas sueltas en las plantillas. */
+  --spacing-header: 72px;
+  --spacing-header-mobile: 56px;
+  --spacing-touch: 44px;
+
+  /* Medidas del logo. El lockup tiene un minimo de 130px de ancho segun el
+     manual de marca: a 34px de alto mide 169px, asi que por debajo de 640px se
+     cambia por el isotipo en vez de encogerlo. */
+  --spacing-logo: 34px;
+  --spacing-logo-mark: 32px;
+  --container-content: 1140px;
+
+  /* Ancho minimo de tarjeta en la rejilla del catalogo. Es una medida del
+     sistema y no un numero de una pantalla: es el ancho con el que la foto 3:4
+     sigue siendo legible. La rejilla usa auto-fill con este minimo, asi que el
+     numero de columnas lo decide el ancho disponible y no un punto de quiebre. */
+  --container-card-min: 220px;
+
+  /* Ancho de un formulario. Una linea de campo de 1200px es incomoda de recorrer
+     con la vista, asi que ninguna pantalla de formulario ocupa el ancho entero.
+     Se repetia como 480px suelto en cinco hojas de auth. */
+  --container-form: 480px;
+
+  /* Ancho de una caja de cifra del panel del vendedor. En ch y no en px: la caja
+     tiene que caber un numero, y lo que la mide es el tipo, no la pantalla. */
+  --container-stat: 8ch;
+
+  /* Ancho de lectura comodo, 60-75 caracteres. Sobrescribe el de Tailwind, que
+     trae 65ch: el del sistema es 70 y lo fija tipografia.css. */
+  --container-prose: 70ch;
+
+  /* Altura a la que se recortan los documentos legales largos antes de ofrecer
+     «Ver mas». Va nombrada porque **la lee tambien el componente**: LegalPage
+     pregunta por esta variable para decidir si el documento merece recorte. Son
+     dos usos del mismo numero —el CSS recorta a esa altura y el componente
+     decide si vale la pena—, y si se separan, el documento se recorta a una
+     altura y el boton aparece a otra: quedarian documentos cortados sin boton
+     con el que abrirlos, que se lleva por delante el final de un contrato. */
+  --container-legal-clamp: 2400px;
+
+  /* Miniatura de la cola de moderacion. Respeta el 3:4 de la foto de producto
+     (ADR-0010) y va en el sistema porque el hueco vacio tiene que medir
+     exactamente lo mismo que la foto: si no, las filas con toma y las que no la
+     tienen alinean el titulo en sitios distintos. */
+  /* Toma en la rejilla de revision: minimo de columna y alto del hueco cuando la
+     toma no esta. El hueco ocupa el sitio de la foto que deberia estar, para que
+     la rejilla no se descoloque, y lo dice con palabras. */
+  --container-shot-min: 160px;
+  --spacing-shot-gap: 200px;
+
+  /* Las tres imagenes de una solicitud de verificacion. La caja reserva su sitio
+     —ancho Y alto— para que la ficha no crezca de golpe al llegar la foto y
+     empuje el formulario de decision justo cuando alguien iba a pulsarlo. */
+  --container-review-image: 200px;
+  --spacing-review-image: 260px;
+
+  --spacing-thumb-w: 80px;
+  --spacing-thumb-h: 107px;
+
+  /* La foto de producto es 3:4 y no 1:1 (ADR-0010, RN-018). El kit de interfaz
+     proponia cuadrada y aqui manda la ADR: la ropa se fotografia de pie. El
+     visor 360 usa los mismos fotogramas, asi que la proporcion es una sola. */
+  --aspect-photo: 3 / 4;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 0.12);
+
+  /* Puntos de quiebre del sistema, y son solo dos: 640 y 1024. El asterisco
+     borra ANTES los que trae Tailwind de fabrica, y no es un adorno: sin esa
+     linea siguen existiendo md (768), xl (1280) y 2xl (1536), que no son del
+     sistema. Bastaria que alguien escribiera md:flex una vez para meter un
+     tercer punto de quiebre que nadie decidio y que no esta en ningun CSS del
+     proyecto. Borrarlos convierte ese error en un fallo de compilacion. */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 640px;
+  --breakpoint-lg: 1024px;
+}
+
+/* ---------- Utilidades propias ----------
+   Van aqui y no en una hoja de componente porque son reglas del sistema, no de
+   una pantalla. @utility es la forma de Tailwind 4 de añadir una utilidad que se
+   comporta como las suyas: acepta variantes (dark:, sm:) y participa del mismo
+   orden de capas. */
+
+/* Geometria de los iconos. Es la regla de marca de siempre —reticula 24, area
+   viva 20, trazo 2 y terminaciones RECTAS— y aqui es obligatoria por un motivo
+   nuevo: Lucide dibuja sus iconos con terminaciones REDONDEADAS por omision,
+   asi que sin esta utilidad el set se ve mezclado.
+
+   Funciona porque una declaracion CSS gana a un atributo de presentacion del
+   SVG: lucide escribe stroke-linecap="round" en la etiqueta y esto lo anula sin
+   tener que tocar el paquete. */
+@utility icon-base {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+}
+
+/* La unica variante de tamano. */
+@utility icon-lg {
+  width: 24px;
+  height: 24px;
+}
+
+/* La unica variante de relleno, y existe por accesibilidad, no por gusto: un
+   mismo icono que tiene que decir «puesto» y «no puesto» —el control de
+   favorito— no puede distinguir los dos estados solo por color. */
+@utility icon-filled {
+  fill: currentColor;
+}
+
+/* Aspecto de un control de formulario: campo de texto, select, area de texto.
+   Va aqui y no repetido en cada pantalla porque estaba quince veces solo en
+   publish-page.css, y ademas el campo de shared/ui lo definia por su cuenta: dos
+   definiciones del mismo aspecto que ya habian empezado a separarse.
+
+   El alto es --spacing-touch y no una medida de la escala de espaciado que da la
+   casualidad de cumplirlo: el destino tactil es una regla del sistema y tiene su
+   propio token.
+
+   El borde es el de CONTROL y no el de separador: --brand-border da 1.27:1
+   contra la superficie y no llega al 3:1 que WCAG 1.4.11 pide para el borde de
+   un control. */
+@utility control-field {
+  width: 100%;
+  max-width: var(--container-form);
+  min-height: var(--spacing-touch);
+  padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+  border: 1px solid var(--brand-control-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--brand-surface);
+  color: var(--brand-text);
+
+  /* Un control deshabilitado sigue teniendo que leerse: el contraste minimo
+     tambien aplica cuando la publicacion esta en revision y el formulario no
+     admite cambios. */
+  &:disabled {
+    background-color: var(--brand-background);
+    color: var(--brand-text-muted);
+  }
+
+  /* El error se anuncia por aria-invalid y por el texto; el borde es refuerzo,
+     no la unica senal. */
+  &[aria-invalid='true'] {
+    border-width: 2px;
+    border-color: var(--brand-error);
+  }
+}
+
+/* La cuadricula de tercios del visor de captura (HU-003, criterio 2).
+
+   Va como utilidad y no como clases sueltas porque son dos degradados de ocho
+   paradas cada uno: es justo el caso que las utilidades no cubren y para el que
+   existe @utility. La sombra le da el contorno oscuro que la hace visible sobre
+   un fondo claro, por lo mismo que la silueta lleva dos tonos. */
+@utility camera-grid {
+  filter: drop-shadow(0 0 1px var(--brand-camera-guide-outline));
+  background-image:
+    linear-gradient(
+      to right,
+      transparent calc(100% / 3 - 1px),
+      var(--brand-camera-guide) calc(100% / 3 - 1px),
+      var(--brand-camera-guide) calc(100% / 3),
+      transparent calc(100% / 3),
+      transparent calc(200% / 3 - 1px),
+      var(--brand-camera-guide) calc(200% / 3 - 1px),
+      var(--brand-camera-guide) calc(200% / 3),
+      transparent calc(200% / 3)
+    ),
+    linear-gradient(
+      to bottom,
+      transparent calc(100% / 3 - 1px),
+      var(--brand-camera-guide) calc(100% / 3 - 1px),
+      var(--brand-camera-guide) calc(100% / 3),
+      transparent calc(100% / 3),
+      transparent calc(200% / 3 - 1px),
+      var(--brand-camera-guide) calc(200% / 3 - 1px),
+      var(--brand-camera-guide) calc(200% / 3),
+      transparent calc(200% / 3)
+    );
+}
+
+/* La rejilla de tarjetas del catalogo. El numero de columnas lo decide el ancho
+   disponible y no un punto de quiebre: con auto-fill y un minimo, en movil salen
+   dos columnas y en escritorio cuatro o cinco sin escribir una sola consulta de
+   medios.
+
+   Va aqui porque estaba escrita identica en tres hojas —catalogo, favoritos y
+   perfil de vendedor— y las tres lo decian por escrito: «dos rejillas distintas
+   para lo mismo acaban divergiendo». */
+@utility catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--container-card-min), 1fr));
+  gap: calc(var(--spacing) * 6) calc(var(--spacing) * 4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Los pasos numerados de los dos recorridos de /como-funciona.
+
+   Va como utilidad porque usa contadores CSS y un ::before, que es lo que las
+   utilidades no cubren. La lista es ordenada de verdad —el orden es informacion,
+   no adorno— asi que un lector de pantalla anuncia «3 de 5» sin que nadie lo
+   escriba, y el numero visible es decorativo. */
+@utility numbered-steps {
+  margin-top: calc(var(--spacing) * 6);
+  padding: 0;
+  list-style: none;
+  counter-reset: paso;
+
+  & > li {
+    counter-increment: paso;
+    position: relative;
+    padding-left: calc(var(--spacing) * 12);
+    margin-top: calc(var(--spacing) * 6);
+  }
+
+  & > li::before {
+    content: counter(paso);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* En em y no en px: con el texto ampliado al 200% el circulo crece con la
+       cifra, en vez de dejarla salirse por los cuatro lados. */
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    border: 1px solid var(--brand-border);
+    background: var(--brand-surface);
+    color: var(--brand-text);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* El recorte visual de un documento legal largo.
+
+   El nombre esta en espanol, al contrario que el resto de utilidades, porque no
+   es una utilidad nueva: es la clase de estado que el componente ya conmutaba y
+   que `e2e/legal.spec.ts` consulta como `.texto-del-documento.recortado`.
+   Renombrarla obligaria a cambiar la prueba para que encajara con el codigo.
+
+   El recorte es solo visual y **el texto sigue entero en el documento**: no se
+   quita del DOM ni se oculta a un lector de pantalla. Es deliberado. Esto es un
+   contrato, y esconderle la mitad a quien lee con asistencia tecnica seria
+   incumplir el deber de informacion para ganar unos pixeles.
+
+   Sin transicion a proposito: max-height pasa de un valor fijo a `none` al
+   abrir, y eso no se puede animar. Una transicion daria un salto a medias, que
+   se ve peor que el salto limpio. */
+@utility recortado {
+  max-height: var(--container-legal-clamp);
+  overflow: hidden;
+
+  /* La mascara desvanece el final del texto para que se vea que sigue. Con
+     mask-image y no con un degradado encima: un pseudoelemento pintado sobre el
+     texto tendria que llevar el color del fondo, y el fondo cambia con el modo
+     oscuro y dentro de cualquier franja. La mascara no necesita saber el color:
+     aqui `black` y `transparent` no son colores de marca, son opaco y
+     transparente. */
+  mask-image: linear-gradient(to bottom, black calc(100% - calc(var(--spacing) * 16)), transparent);
+}
+
+/* ---------- Piezas de marca ----------
+   No son maquetacion: son componentes de la marca, con reglas de contraste ya
+   medidas y comportamiento propio. Vivian en marca.css y se traen aqui enteras,
+   no reescritas, para poder retirar esa hoja. */
+
+/* El brillo de carga. Marca el hueco de lo que va a llegar y NO se anuncia: lo
+   que se dice va por la region viva de cada pantalla. */
+@utility esqueleto {
+  background: linear-gradient(
+    90deg,
+    var(--brand-primary-soft) 25%,
+    var(--brand-border) 37%,
+    var(--brand-primary-soft) 63%
+  );
+  background-size: 400% 100%;
+  animation: brillo 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes brillo {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Quien pide menos movimiento lo pide para TODO, no para lo que se acuerde cada
+   componente.
+
+   Esta regla vivia en tokens.css y se quedo fuera al retirarla: durante un rato
+   solo se detuvo el brillo del esqueleto, y las transiciones de los botones y lo
+   que trae tw-animate-css siguieron corriendo. Es una regresion, no una
+   simplificacion, y por eso vuelve entera.
+
+   No se pone a 0 sino a 0.01ms: una duracion nula cancela el evento
+   `transitionend`, y hay codigo que espera por el. Asi el movimiento desaparece
+   sin romper a quien lo escucha. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* El brillo del esqueleto se detiene del todo: acortarlo a 0.01ms lo dejaria
+     parpadeando mil veces por segundo, que es peor que el movimiento original. */
+  .esqueleto {
+    animation: none !important;
+  }
+}
+
+/* El estado vacio: centrado, borde punteado y texto suave. Dice que no hay nada,
+   que es distinto de que algo no haya cargado. */
+@utility vacio {
+  text-align: center;
+  padding: calc(var(--spacing) * 12) calc(var(--spacing) * 6);
+  border: 1px dashed var(--brand-control-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-text-muted);
+}
+
+/* La firma grafica: guion 40, hueco 12. Es la traduccion literal del corte que
+   separa los dos ganchos de la S, y por eso va en bronce: es el momento del
+   traspaso, lo mismo que la insignia. UNA sola vez por pieza; si ya hay una
+   insignia de verificado a la vista, esta regla no va. */
+@utility regla-corte {
+  height: 3px;
+  border: 0;
+  margin: calc(var(--spacing) * 12) 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--brand-accent) 0 40px,
+    transparent 40px 52px
+  );
+}
+
+/* La insignia de vendedor verificado: el UNICO sitio donde aparece el bronce, y
+   la unica pieza que no sale de un patron generico de comercio electronico. Es
+   la traduccion directa de «confianza» —la promesa central del negocio— a un
+   componente visual.
+
+   Linea superior de 2px y un icono, nunca relleno. El tamano del icono se fija
+   aqui y no con la clase .icono porque en la insignia es de 16 y no de 20. */
+@utility insignia-verificado {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--spacing) * 1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--brand-text-muted);
+  border-top: 2px solid var(--brand-accent);
+  padding-top: 6px;
+
+  & .icon-base {
+    width: 16px;
+    height: 16px;
+    color: var(--brand-accent);
+  }
+}
+
+/* La barra de paginacion. Envuelve porque los dos botones y la cuenta no caben
+   en una linea de movil con el texto ampliado. */
+@utility paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--spacing) * 3);
+  margin-top: calc(var(--spacing) * 6);
+}
+
+/* La franja de tinta: el hero de la portada y el pie. Es oscura en los DOS modos,
+   asi que dentro de ella el tema deja de valer y hay que redefinirlo.
+
+   Redefine las variables de marca dentro del bloque, y ahi esta la gracia: como
+   @theme inline mapea cada utilidad a su --brand-*, todo lo que entre en la
+   franja se invierte SOLO. El boton primario pasa a relleno claro con tinta
+   encima sin que nadie escriba una regla para el, el anillo de foco deja de ser
+   tinta sobre tinta, y el bronce coge su tono de fondo oscuro.
+
+   Sin esto, el foco de la accion principal es invisible, el bronce se queda con
+   el tono equivocado —cruzarlos da 2.97:1— y el boton desaparece contra el fondo. */
+@utility franja-tinta {
+  background: var(--brand-ink);
+  color: var(--brand-on-ink);
+
+  --brand-focus: #ffffff;
+  --brand-primary: #ffffff;
+  --brand-on-primary: var(--brand-ink);
+
+  /* El bronce de fondo oscuro. Los dos tonos no se cruzan nunca. */
+  --brand-accent: #b4884a;
+
+  /* Los enlaces de la franja, MENOS los botones. La exclusion no es un adorno:
+     sin ella esta regla (0,2,1) le gana a la utilidad text-on-primary (0,1,0) y
+     el boton queda con texto claro sobre relleno claro, ilegible. Antes hacia
+     falta una regla aparte para ese caso; con data-variant basta con excluirlo,
+     y ademas se lee lo que quiere decir. */
+  & a:not([data-variant]) {
+    color: var(--brand-on-ink);
+  }
+
+  & .insignia-verificado {
+    color: var(--brand-on-ink);
+  }
+}
+
+/* Impresion de la franja. Los navegadores no imprimen el fondo, asi que sobre
+   papel la franja se queda sin su tinta y el texto casi blanco desaparece. Con
+   el se van el correo de soporte y los tres documentos legales que el pie
+   repite, que es justo lo que alguien conserva cuando imprime /contacto. */
+@media print {
+  .franja-tinta,
+  .franja-tinta a {
+    background: var(--brand-paper);
+    color: var(--brand-paper-ink);
+  }
+}

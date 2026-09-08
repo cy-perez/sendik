@@ -73,11 +73,32 @@ const RUTAS_PUBLICAS: readonly { readonly ruta: string; readonly nombre: string 
   { ruta: '/esta-ruta-no-existe', nombre: 'no encontrada' },
 ];
 
+/** Contraste WCAG entre dos colores computados, que llegan en rgb(). */
+function contraste(frente: string, fondo: string): number {
+  const lineal = (canal: number): number => {
+    const c = canal / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+
+  const luminancia = (color: string): number => {
+    const canales = (color.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+    return (
+      0.2126 * lineal(canales[0] ?? 0) +
+      0.7152 * lineal(canales[1] ?? 0) +
+      0.0722 * lineal(canales[2] ?? 0)
+    );
+  };
+
+  const a = luminancia(frente);
+  const b = luminancia(fondo);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 /**
  * Deja la pagina lista para auditar: fija el tema antes de navegar, para que el
  * servidor ya pinte el modo correcto, y espera al titular.
  *
- * <p>La comprobacion del atributo no es decorativa. Sin ella, una cookie que
+ * <p>La comprobacion de la clase no es decorativa. Sin ella, una cookie que
  * dejara de aplicarse convertiria la mitad oscura de esta suite en una copia de
  * la clara, y seguiria en verde: el modo oscuro dejaria de auditarse sin que
  * fallara nada.
@@ -89,12 +110,65 @@ async function abrirEn(page: Page, ruta: string, modo: (typeof MODOS)[number]): 
 
   await page.goto(ruta);
 
-  await expect(page.locator('html')).toHaveAttribute('data-tema', modo.atributo);
+  // La clase, que es lo que de verdad conmuta el tema desde la ADR-0032. Se
+  // espera a ella y no a un atributo decorativo: si esta comprobacion mirara algo
+  // que ya no gobierna nada, la auditoria del modo oscuro podria correr en claro
+  // sin que fallara nada.
+  await expect(page.locator('html')).toHaveClass(modo.esOscuro ? /dark/ : /^(?!.*dark).*$/);
   await expect(page.locator('h1')).toBeVisible();
 }
 
 for (const modo of MODOS) {
   test.describe(`accesibilidad en modo ${modo.modo}`, () => {
+    /**
+     * El anillo de foco, medido sobre lo que se pinta.
+     *
+     * <p>Axe NO evalua el contraste del indicador de foco, asi que esta suite
+     * entera en verde no dice nada sobre el. Y la unica prueba que lo medía
+     * —portada.spec.ts— lo hace DENTRO de la franja de tinta, donde el anillo es
+     * blanco por definicion. Entre las dos quedaba un hueco por el que cabia un
+     * fallo entero: el kit generado no definia el color de foco para el modo
+     * oscuro, asi que el anillo era tinta sobre fondo oscuro —1.08:1— y llevaba
+     * asi desde la Fase 1.
+     *
+     * <p>Se mide sobre un control normal de una pagina normal, que es donde
+     * nadie estaba mirando.
+     */
+    test('el anillo de foco se ve sobre un control normal', async ({ page }) => {
+      await abrirEn(page, '/', modo);
+
+      // Con el TECLADO y no con focus(): el anillo lo pinta :focus-visible, y el
+      // navegador no lo aplica a un foco programatico. Enfocarlo desde el codigo
+      // daria un contraste de 1:1 y la prueba estaria midiendo nada.
+      const control = page.getByRole('button', { name: /modo (oscuro|claro)/i });
+      for (
+        let vuelta = 0;
+        vuelta < 30 && !(await control.evaluate((e) => e === document.activeElement));
+        vuelta++
+      ) {
+        await page.keyboard.press('Tab');
+      }
+
+      await expect(control).toBeFocused();
+
+      const anillo = await control.evaluate((elemento) => {
+        const estilo = getComputedStyle(elemento);
+        return {
+          color: estilo.outlineColor,
+          grosor: estilo.outlineWidth,
+          separacion: estilo.outlineOffset,
+          fondo: getComputedStyle(document.body).backgroundColor,
+        };
+      });
+
+      // El anillo lleva outline-offset, o sea que esta separado del control por
+      // un hueco que deja ver el fondo: se contrasta contra el fondo y no contra
+      // el relleno del control.
+      expect(contraste(anillo.color, anillo.fondo)).toBeGreaterThanOrEqual(3);
+      expect(anillo.grosor).toBe('3px');
+      expect(anillo.separacion).not.toBe('0px');
+    });
+
     for (const { ruta, nombre } of RUTAS_PUBLICAS) {
       test(`${nombre} (${ruta}) no incumple ningun criterio WCAG 2.2 AA`, async ({ page }) => {
         await abrirEn(page, ruta, modo);
