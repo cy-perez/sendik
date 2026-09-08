@@ -56,3 +56,4 @@ la referencia.
 | 0031 | La entrega del correo transaccional se saca del contenedor: Cloud Tasks | Aceptada, pendiente de implementar |
 | 0032 | Tailwind como motor de estilos y fin del kit generado | **Revertida** el mismo día; ver ADR-0033 |
 | 0033 | La reversión de la migración a Tailwind, y qué se recupera de ella | Aceptada. Deja Tailwind aplazado, no descartado |
+| 0034 | Skydropx Colombia como agregador de envíos, y el envío a cargo del comprador | Aceptada |

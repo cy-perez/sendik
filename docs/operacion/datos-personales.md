@@ -178,10 +178,40 @@ la autorizacion. Operativamente:
 | Registros tecnicos con IP | Seis meses |
 | Cuenta eliminada | Anonimizada en el acto en Fase 1; treinta dias cuando existan pedidos |
 
+## La direccion del comprador y el envio
+
+Anotado el 8 de septiembre de 2026, al decidirse la integracion con el agregador
+de envios (ADR-0034).
+
+Para cotizar y para entregar, **el nombre, la direccion y el telefono del
+comprador salen de Sendik** y llegan a dos sitios: al agregador y a la
+transportadora que este habilite para ese envio. Los dos son encargados.
+
+Tres consecuencias que hay que respetar al construirlo:
+
+- **Cotizar no necesita la direccion completa.** Basta la ciudad o el codigo
+  postal de destino. La direccion exacta se manda solo al emitir la guia, que es
+  cuando el pago ya esta aprobado. Es el principio de finalidad aplicado a un
+  caso concreto, y coincide con RN-048: la direccion completa se revela cuando
+  hay pago aprobado, no antes.
+- **La cadena tiene un eslabon que Sendik no elige.** Sendik contrata al
+  agregador; quien entrega es una transportadora que el agregador habilita. Que
+  el contrato de encargo alcance a ese segundo eslabon es una de las cosas que
+  hay que confirmar con el proveedor, y hoy **no esta confirmada**.
+- **La lista de encargados de la politica publica tiene que poder mantenerse.**
+  Si las transportadoras cambian sin que Sendik se entere, una lista con nombres
+  propios envejece sola. Por eso la politica nombra al agregador y describe a las
+  transportadoras por su papel, en vez de enumerarlas.
+
 ## Pendiente antes del lanzamiento
 
 - Registro de bases de datos ante la SIC, si se superan los umbrales aplicables.
 - Politica de tratamiento de datos y terminos de uso redactados y publicados.
 - Aviso de privacidad en el formulario de registro y en el de verificacion.
 - Contrato de encargo con cada proveedor que procese datos por cuenta de Sendik:
-  pasarela, correo, almacenamiento, buscador.
+  pasarela, correo, almacenamiento, buscador **y envios**.
+- Del proveedor de envios, cuatro datos que solo el puede dar y que ninguno esta
+  confirmado: bajo que entidad y desde que pais contrata, si su contrato de
+  encargo cubre a las transportadoras que habilita, y si su adenda de tratamiento
+  cumple lo que exige el articulo 25 del Decreto 1377 de 2013. Estan en
+  `entrega-textos-legales-2026-09-08b.md`.

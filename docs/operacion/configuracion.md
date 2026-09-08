@@ -82,11 +82,24 @@ correo, ningún NIT, ningún porcentaje de comisión.
 | `TYPESENSE_HOST` | | Fase 3 |
 | `TYPESENSE_PORT` | `8108` | Fase 3 |
 | `TYPESENSE_API_KEY` | | Fase 3 |
-| `CARRIER_*_API_KEY` | uno por transportadora | Fase 3 |
+| `SHIPPING_PROVIDER_API_KEY` | clave de Skydropx Colombia, ver ADR-0034 | Fase 3 |
+| `SHIPPING_PROVIDER_BASE_URL` | permite apuntar al entorno de pruebas | Fase 3 |
+| `SHIPPING_PROVIDER_WEBHOOK_SECRET` | firma de los eventos de seguimiento | Fase 3 |
+| `SHIPPING_ORIGIN_POSTAL_CODE` | origen por omisión si el vendedor no lo tiene | Fase 3 |
 | `COMPANY_NAME` | `Sendik` | sí |
 | `COMPANY_TAX_ID` | `1054994043-9` | sí |
 | `COMPANY_ADDRESS` | | sí |
 | `SUPPORT_EMAIL` | | sí |
+
+Las cuatro de envío sustituyen a `CARRIER_*_API_KEY`, que suponía una clave por
+transportadora. Con el agregador es **una sola integración** (ADR-0034), y las
+transportadoras dejan de ser configuración de Sendik: las habilita el proveedor.
+
+`SHIPPING_PROVIDER_WEBHOOK_SECRET` no es opcional aunque lo parezca. De los eventos
+de seguimiento sale la fecha de entrega, y de ella cuelgan la ventana de reclamo y
+la liberación del pago (RN-079). Un evento de entrega que cualquiera pueda enviar
+sin firma es una forma de que le paguen a un vendedor antes de tiempo. Es el mismo
+razonamiento de `WOMPI_EVENTS_SECRET` y RN-037.
 
 `COMMISSION_RATE` y `CLAIM_WINDOW_DAYS` son valores de negocio que el sitio
 informativo **anuncia** (RN-026, RN-051). En Colombia lo anunciado es exigible,

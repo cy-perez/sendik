@@ -17,7 +17,7 @@ Spring Boot 4.1  (Cloud Run)
    +--> Cloud Storage        imágenes de producto y verificación
    +--> Wompi                recaudo y división de pago
    +--> Typesense            búsqueda (Fase 3)
-   +--> Transportadoras      cotización de envíos (Fase 3)
+   +--> Skydropx Colombia    cotización, guías y seguimiento (Fase 3)
    +--> Proveedor de correo  transaccionales
 ```
 
@@ -88,7 +88,7 @@ de cada contexto se repiten las cuatro capas.
 | `search` | Indexación y consulta del catálogo | 3 |
 | `order` | Pedidos y su ciclo de vida | 3 |
 | `payment` | Intentos de pago, división, desembolsos | 3 |
-| `shipping` | Cotización, guías y seguimiento | 3 |
+| `shipping` | Cotización, guías y seguimiento, contra un agregador (ADR-0034) | 3 |
 | `shared` | Objetos de valor comunes: dinero, identificadores, fechas | 1 |
 
 Un contexto no llama al repositorio de otro. Si necesita algo, es por un caso de

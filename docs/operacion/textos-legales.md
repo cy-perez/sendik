@@ -36,6 +36,21 @@ enlazan (RN-057).
 
 ## Estado actual
 
+**Escrita la versión `2026-09-08b` el 8 de septiembre de 2026 y todavía sin publicar**, en
+términos y en política de tratamiento de datos, en los dos idiomas. Recoge el cambio de
+modelo de envío: precio base y costo de envío como cifras separadas, con el flete a cargo
+del comprador, y la cotización con un agregador en vez de con tres transportadoras
+(ADR-0034). **Las variables `LEGAL_TERMS_VERSION` y `LEGAL_PRIVACY_VERSION` de `dev`
+siguen en `2026-09-08`**, así que lo que el sitio sirve es la anterior. El detalle de lo
+verificado, lo que quedó abierto y el comando que publica están en
+`entrega-textos-legales-2026-09-08b.md`.
+
+**La letra en el nombre de versión es deliberada.** La convención es la fecha y el 8 de
+septiembre ya tenía versión publicada, así que una segunda del mismo día no puede
+llamarse igual sin sobrescribir archivos a los que apunta la evidencia de un
+consentimiento. El formato `<documento>.<version>.<idioma>.html` admite el sufijo sin
+cambiar nada.
+
 **Publicada la versión `2026-09-08` el 8 de septiembre de 2026**, en términos y en
 política de tratamiento de datos. **La política de cookies se queda en `2026-09-06`**:
 no tenía ningún vacío y su variable es independiente.

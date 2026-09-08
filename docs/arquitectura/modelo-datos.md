@@ -289,11 +289,33 @@ El identificador único del proveedor es lo que garantiza idempotencia.
 **payouts**: `id`, `order_id`, `seller_id`, `gross_amount`, `commission_amount`,
 `net_amount`, `status`, `released_at`.
 
-**shipping_quotes**: `id`, `order_id`, `carrier`, `service`, `amount`,
-`estimated_days`, `quoted_at`, `raw_response` (`jsonb`).
+**shipping_quotes**: `id`, `order_id`, `provider_quote_id`, `carrier`, `service`,
+`amount`, `estimated_days`, `chosen` (`boolean`), `quoted_at`, `raw_response`
+(`jsonb`).
 
-**shipments**: `id`, `order_id`, `carrier`, `tracking_code`, `status`,
-`shipped_at`, `delivered_at`.
+Se guarda **una fila por opción devuelta por el agregador**, no solo la elegida, y
+`chosen` marca cuál se cobró. Guardar solo la elegida deja sin explicar por qué se
+le ofreció ese precio a esa persona, que es justo lo que hay que poder reconstruir
+si alguien reclama. `provider_quote_id` es el identificador que devolvió Skydropx y
+es lo que ata la cotización a la guía que se emita después (RN-041).
+
+**shipments**: `id`, `order_id`, `provider_shipment_id`, `carrier`,
+`tracking_code`, `declared_value`, `status`, `shipped_at`, `delivered_at`.
+
+`declared_value` es el precio base congelado del pedido y lo escribe el sistema
+(RN-078): es el techo de la indemnización si la transportadora pierde el paquete.
+
+`delivered_at` **no se edita a mano**: lo fija el evento de entrega del
+seguimiento (RN-079), y de él cuelgan la ventana de reclamo y la liberación del
+pago. Un campo que alguien pueda mover a mano es un campo que mueve dinero.
+
+**shipment_events**: `id`, `shipment_id`, `occurred_at`, `received_at`, `status`,
+`description`, `raw_payload` (`jsonb`).
+
+Es el rastro del envío, y guarda **dos fechas distintas a propósito**:
+`occurred_at` es cuando la transportadora dice que pasó y `received_at` cuando
+Sendik se enteró. Con una sola no se puede explicar por qué un plazo se contó
+desde un día y no desde otro cuando el agregador reporta con retraso.
 
 **order_status_history**: `id`, `order_id`, `from_status`, `to_status`,
 `actor_id`, `reason`, `created_at`. Ningún estado cambia sin dejar rastro.
@@ -324,8 +346,14 @@ El identificador único del proveedor es lo que garantiza idempotencia.
 ## Reglas de integridad
 
 - La suma `product_amount + shipping_amount` debe igualar `total_amount`.
+  `product_amount` es el **precio base** congelado (RN-030) y `shipping_amount` es
+  el de la cotización elegida, que es la que se cobra y no se recalcula (RN-077).
 - `commission_amount` debe ser el 5% de `product_amount` redondeado al peso.
-  Se guarda calculado, no se recalcula al leer.
+  Se guarda calculado, no se recalcula al leer. **Nunca sobre `total_amount`**: el
+  envío no entra en la base (RN-026).
+- La fila de `shipping_quotes` con `chosen` en cierto es única por pedido, y su
+  `amount` tiene que coincidir con `orders.shipping_amount`. Si no coinciden, se
+  le cobró al comprador algo distinto de lo que eligió.
 - Una publicación en `PUBLISHED` exige exactamente ocho imágenes del vendedor y
   cuatro canónicas. **Excepción única:** la tecnología con `is_sealed` en cierto
   exige cuatro y solo cuatro, todas canónicas (RN-065). Las imágenes de

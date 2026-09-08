@@ -169,9 +169,15 @@ nunca se escriben en la plantilla (HU-004, criterios 11 y 12).
 
 **Fase 3.** Cuando existan los pagos y los envíos, el pie suma dos filas de
 logos: medios de pago (PSE · Nequi · Bancolombia a la mano · Tarjetas · Addi) y
-transportadoras (Envía · Coordinadora · Interrapidísimo). En Colombia esos logos
-hacen más por la confianza que cualquier sello de "sitio seguro". Hoy no van:
-anunciarían una funcionalidad que no existe.
+transportadoras. En Colombia esos logos hacen más por la confianza que cualquier
+sello de "sitio seguro". Hoy no van: anunciarían una funcionalidad que no existe.
+
+La fila de transportadoras **no se puede escribir todavía**, y no es olvido. Desde
+RN-038 Sendik no contrata transportadoras: cotiza con Skydropx Colombia, que decide
+cuáles habilita. Los logos que van ahí son los de las que el agregador tenga
+habilitadas el día que se encienda, y esa lista **no la sabe nadie aún**. Poner las
+tres de antes —Envía, Coordinadora, Interrapidísimo— sería anunciar transportadoras
+que quizá no entreguen ni un paquete.
 
 ---
 
@@ -199,16 +205,19 @@ detrás de una pestaña ni de un acordeón que un buscador no pueda seguir
 | # | Clave | Título | Texto |
 |---|---|---|---|
 | 1 | `.browse` | Eliges una prenda | Cada publicación pasó por revisión antes de aparecer y muestra la prenda desde ocho ángulos, con su talla, sus medidas reales en centímetros y su condición declarada. Una prenda, una publicación: lo que ves es la pieza exacta que recibes. |
-| 2 | `.pay` | Pagas producto más envío | El envío se cotiza con las transportadoras y el valor es aproximado; lo ves antes de confirmar. La comisión de Sendik no se te suma: la asume el vendedor. |
+| 2 | `.pay` | Pagas el producto más el envío | Ves el precio del producto, el costo del envío y el total antes de confirmar. **Lo que ves del envío es lo que pagas.** La comisión de Sendik no se te suma: la asume el vendedor. |
 | 3 | `.hold` | El pago queda retenido | Tu pago lo recauda y lo retiene la pasarela. No llega al vendedor mientras la prenda viaja. |
 | 4 | `.confirm` | Confirmas y se libera | Cuando recibes la prenda y confirmas que corresponde a lo publicado, el pago se libera. Si no confirmas ni reportas nada dentro de la ventana de reclamo, se da por confirmada. |
 
-Reglas: RN-016 a RN-021 (paso 1), RN-027 y RN-038 (paso 2), RN-031 y RN-033
-(paso 3), RN-034 y RN-052 (paso 4).
+Reglas: RN-016 a RN-021 (paso 1), RN-027, RN-076 y RN-077 (paso 2), RN-031 y
+RN-033 (paso 3), RN-034 y RN-052 (paso 4).
 
-El paso 2 dice **aproximado** porque RN-038 obliga a rotularlo así, y no anuncia
-plazo de entrega: no hay regla que lo respalde. El paso 3 dice "la pasarela", no
-"Sendik".
+El paso 2 **ya no dice «aproximado»**, y el cambio es del 8 de septiembre de 2026.
+Lo decía porque RN-038 obligaba a rotularlo así cuando la cotización era
+orientativa; desde RN-077 la cifra que se muestra es la que se cobra, y llamarla
+aproximada sería lo contrario de lo que se promete. Sigue sin anunciar plazo de
+entrega: RN-080 fija uno estimado por envío, y un plazo estimado no se puede
+escribir en un texto fijo. El paso 3 dice "la pasarela", no "Sendik".
 
 ### Si lo que recibes no es lo publicado — `howItWorks.buyer.claim.*`
 
@@ -391,9 +400,11 @@ y condiciones, en los [Términos y condiciones](/terminos-y-condiciones).
 (RN-050, RN-057)
 
 **¿Cuánto cuesta el envío?** (`.shippingCost`)
-Depende del destino, del peso y del tamaño. Se cotiza con las transportadoras y
-lo ves antes de pagar. Es un valor aproximado. El envío lo paga el comprador y la
-comisión de Sendik no se te suma. (RN-027, RN-038, RN-039)
+Depende del destino, del peso y del tamaño. Antes de pagar ves las opciones de
+envío con su costo y su plazo estimado, eliges una, y **el valor que elegiste es
+el que se te cobra**: no se recalcula después. El envío lo paga el comprador,
+aparte del precio del producto, y la comisión de Sendik no se te suma.
+(RN-027, RN-039, RN-076, RN-077)
 
 **¿Cómo puedo pagar?** (`.payment`)
 Con PSE, Nequi, Bancolombia a la mano y tarjeta débito o crédito a través de
@@ -1413,11 +1424,13 @@ fichas es una descripción que ningún buscador usa.
 
 ## Checkout — Fase 3
 
-- **Paso de envío:** Cotizamos con Envía, Coordinadora e Interrapidísimo. Los
-  valores son aproximados. Elige la que prefieras.
+- **Paso de envío:** Elige cómo quieres recibirlo. Cada opción muestra su
+  transportadora, su costo y su plazo estimado. **Lo que elijas es lo que pagas.**
+- **Si no hay opciones:** No pudimos cotizar el envío a esa dirección. Prueba con
+  otra o vuelve a intentarlo en un momento. (RN-040)
 - **Paso de pago:** El pago lo recauda y lo retiene la pasarela. Se libera al
   vendedor cuando confirmes que recibiste la prenda.
-- **Antes de confirmar:** Prenda + envío = total. Sin costos adicionales.
+- **Antes de confirmar:** Precio + envío = total. Sin costos adicionales.
 - **Botón final:** Comprar y pagar
 
 ## Textos alternativos de imagen
@@ -1511,8 +1524,13 @@ Lo que falta escribir:
 - [ ] Si la comisión incluye IVA y si la comisión de la pasarela se descuenta
       aparte. Si el vendedor recibe menos de lo que dice el texto, es publicidad
       engañosa.
-- [ ] Si se anuncia algún plazo de entrega. Hoy no, y RN-038 obliga a rotular la
-      cotización como aproximada.
+- [ ] Si se anuncia algún plazo de entrega general. Hoy no. RN-080 da un plazo
+      estimado **por envío**, que sale del agregador y no cabe en un texto fijo, y
+      encima de él rige el máximo legal de 30 días calendario. Lo que falta decidir
+      es si alguno de los dos se enuncia en las páginas informativas.
+- [ ] Qué cobertura de envío se anuncia. Los términos dicen «todo el territorio
+      nacional» desde el 5 de septiembre y **nadie lo ha comprobado** contra las
+      transportadoras que el agregador habilite (RN-080).
 - [ ] Quién está detrás de Sendik: nombre, ciudad y por qué se montó.
 - [ ] Dirección y correo de soporte reales (`COMPANY_ADDRESS`, `SUPPORT_EMAIL`).
 - [ ] Variables de configuración para canales adicionales, si se quieren mostrar.

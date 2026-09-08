@@ -93,9 +93,14 @@ aplica la frase.
 | Liberación del pago | `PaymentRelease` | Fin de la retención. Ocurre cuando el comprador confirma la entrega, o cuando vence la ventana de reclamo sin que confirme ni reporte, y habilita el desembolso (RN-034). |
 | Comisión | `Commission` | 5% sobre el valor del producto, a cargo del vendedor. |
 | Desembolso | `Payout` | Traslado del dinero al vendedor una vez liberado. |
+| Precio base | `BasePrice` | Lo que cuesta el producto, sin el envío. Es la cifra que publica el vendedor, la base de la comisión (RN-026) y la que se congela al crear el pedido (RN-030). |
+| Costo de envío | `ShippingCost` | Lo que cuesta llevar el producto hasta el comprador. Lo paga el comprador, se muestra aparte del precio base y se suma al total (RN-076). |
 | Envío | `Shipment` | Movimiento físico del producto. |
-| Cotización de envío | `ShippingQuote` | Valor aproximado consultado a las transportadoras. |
+| Agregador de envíos | `ShippingAggregator` | Quien cotiza y emite guías con varias transportadoras por una sola integración. El de Sendik es Skydropx Colombia (RN-038, ADR-0034). No es una transportadora: no transporta nada. |
+| Cotización de envío | `ShippingQuote` | Una opción devuelta por el agregador: transportadora, costo y plazo estimado. **No es aproximada**: la que el comprador elige es la que se le cobra (RN-077). |
+| Remitente | `Shipper` | Quien entrega la mercancía al transportador y es parte del contrato de transporte. En Sendik es siempre **el vendedor**, aunque la guía la emita Sendik por su cuenta (RN-078). |
 | Guía | `TrackingCode` | Número de rastreo de la transportadora. |
+| Evento de seguimiento | `TrackingEvent` | Cada estado que reporta la transportadora sobre un envío. El de entrega es el que fija la fecha de entrega (RN-079). |
 | Entrega confirmada | `DeliveryConfirmed` | Hecho que habilita la liberación del pago. La confirma **el comprador**; la guía de la transportadora prueba que el paquete llegó, no que dentro venga lo publicado. |
 | Ventana de reclamo | `ClaimWindow` | Los 3 días hábiles siguientes a la entrega en los que el comprador puede reportar (RN-051). Confirmar la entrega la cierra. |
 | Producto no conforme | `NonConformingProduct` | El que no corresponde a lo publicado o llega con daño no declarado (RN-050). Que la talla no siente no lo es. |

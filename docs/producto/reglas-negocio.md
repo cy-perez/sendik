@@ -367,10 +367,13 @@ o se venda, y si hay tope.
 
 ## Precio y comisión
 
-- **RN-026** La comisión es del **5% sobre el valor del producto**, a cargo del
-  vendedor. El envío no entra en la base de cálculo.
-- **RN-027** El comprador paga: valor del producto + valor del envío. La comisión
-  no se le suma; se descuenta del desembolso al vendedor.
+- **RN-026** La comisión es del **5% sobre el precio base del producto**, a cargo
+  del vendedor. El envío no entra en la base de cálculo, y desde RN-076 esa frase
+  tiene consecuencia visible: el costo de envío es una cifra aparte que el
+  comprador ve y paga, y sobre la que Sendik no cobra nada.
+- **RN-027** El comprador paga: **precio base + costo de envío**. La comisión no
+  se le suma; se descuenta del desembolso al vendedor. Cómo se le muestran esas
+  cifras y qué obliga a mostrarlas lo fija RN-076.
 - **RN-028** El redondeo de la comisión es al peso más cercano, con la mitad
   hacia arriba. Se guarda el valor calculado, nunca se recalcula al mostrarlo.
 - **RN-029** Todo cálculo de dinero se hace con decimales exactos, jamás con
@@ -401,14 +404,166 @@ o se venda, y si hay tope.
 
 ## Envío
 
-- **RN-038** El cotizador consulta a Envía, Coordinadora e Interrapidísimo y
-  muestra valores **aproximados**, siempre rotulados como tales.
-- **RN-039** La cotización se calcula con el peso y las dimensiones declaradas
-  por el vendedor, y el destino del comprador.
-- **RN-040** Si una transportadora no responde, se muestran las demás. La
-  cotización nunca bloquea la compra.
-- **RN-041** La cotización se guarda con el pedido para poder auditar diferencias
-  con el valor real.
+Las cuatro primeras se reescribieron el 8 de septiembre de 2026, al decidirse la
+integración con **Skydropx Colombia** (ADR-0034). Lo que cambió no es el proveedor
+sino la posición del envío en el precio: **el comprador paga el flete y lo ve como
+una cifra aparte antes de pagar**, y una cifra que alguien va a pagar no puede
+seguir siendo «aproximada».
+
+- **RN-038** La cotización de envío se obtiene de **Skydropx Colombia**, que es un
+  agregador: Sendik le pide las opciones y él consulta a las transportadoras que
+  tenga habilitadas. **Sendik no se integra con ninguna transportadora una por
+  una.**
+
+  Al comprador se le muestran las opciones que devuelva el agregador, cada una con
+  su transportadora, su costo y su plazo estimado, y elige. Si vuelve una sola, se
+  muestra una sola.
+
+  La regla decía antes que el cotizador consultaba a Envía, Coordinadora e
+  Interrapidísimo y mostraba valores **aproximados** rotulados como tales. Ninguna
+  de las dos cosas sobrevive. La primera porque tres integraciones son tres
+  contratos, tres claves y tres formatos que hay que mantener. La segunda porque
+  **un valor aproximado deja de ser legítimo en el momento en que el comprador lo
+  paga**: el artículo 26 de la Ley 1480 dice que el consumidor solo está obligado a
+  pagar el precio anunciado. Lo desarrolla RN-077.
+
+- **RN-039** La cotización se calcula con **el peso y las dimensiones declaradas
+  por el vendedor** (RN-021, RN-062), **la ciudad de origen del vendedor** y **la
+  dirección de destino del comprador**.
+
+  El origen es nuevo en la regla y no es un detalle: sin él no hay tarifa. Estaba
+  implícito mientras la cotización era orientativa y deja de poder estarlo cuando
+  es la cifra que se cobra.
+
+- **RN-040** **Sin cotización no hay compra, y se dice.** Si el agregador no
+  responde, o no devuelve ninguna opción para ese destino, el comprador ve que el
+  envío no se pudo cotizar y el pedido no avanza al pago.
+
+  Es lo contrario de lo que decía esta regla, que prometía que la cotización nunca
+  bloqueaba la compra. Aquello era cierto mientras el envío no se cobraba aparte:
+  se podía seguir sin él. Ahora el flete es parte del total, y **las únicas salidas
+  a un cotizador caído son dejar comprar sin saber el precio o inventarse una
+  cifra**. La primera incumple el deber de informar el precio total antes de la
+  transacción; la segunda es peor. Se prefiere no vender ese minuto.
+
+  Lo que no se hace nunca es cobrar un envío estimado y ajustarlo después: eso lo
+  cierra RN-077.
+
+- **RN-041** La cotización elegida se guarda con el pedido: el identificador que
+  devolvió el agregador, la transportadora, el servicio, el costo, el plazo
+  estimado, el momento de la consulta y la respuesta cruda.
+
+  Se guarda por dos razones y la segunda es nueva. La primera, poder auditar la
+  diferencia con el costo real. La segunda, que **esa diferencia ahora la paga
+  Sendik** (RN-077), así que dejó de ser un dato de curiosidad para ser la medida
+  de cuánto cuesta la promesa. Si el descuadre agregado crece, lo que se revisa es
+  RN-077, y para revisarlo hay que tenerlo medido.
+
+- **RN-076** El comprador ve **tres cifras separadas y sumadas**: el **precio
+  base** del producto, el **costo de envío** y el **total**. El precio base es el
+  que publica el vendedor y sobre el que se calcula la comisión (RN-026); el costo
+  de envío es el de la opción elegida; el total es lo que se le cobra.
+
+  El rango de RN-020 —mínimo 10.000 y máximo 20.000.000— se aplica **al precio
+  base**, no al total. Y la comisión se sigue calculando solo sobre el precio base:
+  RN-026 y RN-027 ya lo decían y no cambian.
+
+  Esto no es una preferencia de diseño. El artículo 50, literal c), de la Ley 1480
+  obliga a informar «el precio total del producto incluyendo todos los impuestos,
+  costos y gastos que deba pagar el consumidor para adquirirlo» y añade que «en
+  caso de ser procedente, se debe informar adecuadamente y por separado los gastos
+  de envío». Separado **y** total: las dos cosas, no una.
+
+  El literal d) del mismo artículo extiende el deber a dos momentos más, y los dos
+  son trabajo de Fase 3: el **resumen previo** a cerrar la transacción, con el
+  precio de cada producto, el total y los gastos de envío; y el **acuse del
+  pedido**, que sale a más tardar el día calendario siguiente y vuelve a llevar el
+  plazo de entrega, el precio exacto, los gastos de envío y la forma de pago.
+
+  Sobre impuestos: el transporte nacional de carga **está excluido de IVA** por el
+  artículo 476, numeral 9, del Estatuto Tributario, de modo que el costo de envío
+  que se le muestra al comprador no lleva impuesto añadido.
+
+- **RN-077** **El valor de envío que se le muestra al comprador antes de pagar es
+  el que se le cobra, y no se recotiza nunca.** Si el costo real que factura el
+  agregador resulta mayor, **la diferencia la asume Sendik**.
+
+  El artículo 26 de la Ley 1480 no deja alternativa: «el consumidor solo estará
+  obligado a pagar el precio anunciado». Cobrar después la diferencia no es una
+  opción que se descartara por generosidad; es una que no existe.
+
+  Que la asuma Sendik y no el vendedor **sí** es una decisión, tomada el 8 de
+  septiembre de 2026, y tiene un coste que conviene ver escrito: el dato que
+  descuadra una cotización es casi siempre el peso o las medidas, y los declara el
+  vendedor (RN-021). El Código de Comercio se los imputaría a él —el artículo 1010
+  hace responsable al remitente de la inexactitud de esas indicaciones—. Se eligió
+  lo otro porque descontarlo del desembolso significa que **el vendedor no sabe
+  cuánto va a cobrar hasta que alguien pese la caja**, y quien no puede predecir su
+  ingreso no publica.
+
+  Lo que sí se hace con un descuadre repetido es mirarlo por vendedor: si uno
+  declara siempre de menos, eso es un problema de publicación y se trata como tal,
+  no cobrándoselo al comprador.
+
+- **RN-078** **El remitente es el vendedor.** Sendik genera la guía a través del
+  agregador **por cuenta del vendedor**, no en nombre propio: no vende el servicio
+  de transporte ni se interpone como transportador.
+
+  Es la posición que sostiene el resto del documento. Sendik es un portal de
+  contacto en el sentido del numeral 18 del artículo 5 de la Ley 1480 —añadido por
+  el artículo 6 de la Ley 2439 de 2024—, y contratar el transporte en nombre propio
+  lo convertiría en proveedor de ese servicio frente al consumidor, con la
+  responsabilidad que eso arrastra. Emitir la guía por cuenta de otro no tiene ese
+  efecto.
+
+  Del contrato de transporte salen dos consecuencias que hay que respetar:
+
+  1. **Partes del contrato son el transportador y el remitente** (Código de
+     Comercio, art. 1008); el destinatario lo es cuando acepta el contrato. Quien
+     le reclama a la transportadora por pérdida, avería o retardo es, por tanto,
+     **el vendedor**. Que el comprador no tenga que hacerlo es justamente lo que
+     cubre el Respaldo: su dinero sigue retenido (RN-054).
+  2. **El valor declarado en la guía es el precio base congelado del pedido**
+     (RN-030). El artículo 1031 fija la indemnización por pérdida total en «el
+     valor declarado por el remitente para la carga afectada», así que declarar de
+     menos para abaratar el flete deja a alguien pagando la diferencia, y por
+     RN-054 ese alguien es Sendik, que ya le devolvió al comprador. El valor lo
+     pone el sistema; no es un campo que el vendedor escriba.
+
+- **RN-079** La guía y sus eventos de seguimiento se le muestran **al comprador y
+  al vendedor**, desde el pedido, mientras el envío está en curso.
+
+  **La fecha de entrega la fija el evento de entrega del seguimiento**, se guarda
+  con su origen y **no se edita a mano**. Es el hecho que arranca los dos relojes
+  que gobiernan el dinero: la ventana de reclamo de RN-051 y los cinco días
+  hábiles de retracto de RN-075.
+
+  Esto no contradice a RN-034, lo completa: **quien confirma la entrega sigue
+  siendo el comprador**, porque la guía prueba que el paquete llegó y no que dentro
+  venga lo publicado. Lo que aporta el seguimiento es la **fecha**, que es otra
+  cosa y que hasta ahora no tenía de dónde salir. Sin ella, RN-052 —dar la entrega
+  por confirmada al vencer la ventana— no tiene desde cuándo contar.
+
+- **RN-080** Antes de pagar se le informa al comprador **el plazo estimado de la
+  opción de envío que eligió**. Ese plazo es el que devuelve el agregador y se
+  rotula como estimado, que es lo que es.
+
+  Además, y con independencia de él, rige el **plazo máximo de treinta (30) días
+  calendario** del artículo 50, literal h), de la Ley 1480, contados a partir del
+  día siguiente a aquel en que el comprador comunicó su pedido. Si se supera, el
+  comprador puede terminar el contrato y recuperar **todas las sumas pagadas, envío
+  incluido, sin retención ni descuento**, y esa devolución tiene plazo propio:
+  **máximo quince (15) días calendario**.
+
+  El mismo literal le impone un deber **al portal de contacto**, no solo al
+  vendedor: si el producto no está disponible, **hay que informarlo de inmediato**.
+  Ese deber es de Sendik y es directo.
+
+  **La cobertura es la que cubra el agregador**, y no se anuncia ninguna otra. En
+  particular no se anuncia cobertura nacional mientras nadie la haya comprobado
+  contra las transportadoras que Skydropx tenga habilitadas: lo anunciado es
+  exigible, y una ciudad prometida a la que no llega nadie es un incumplimiento por
+  escrito.
 
 ## Pedido
 

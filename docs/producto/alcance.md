@@ -364,7 +364,13 @@ donde debía haber un verbo. Queda anotado y sin arreglar aquí.
 - Carrito y proceso de compra.
 - Pago con Wompi: PSE, Nequi, tarjetas, Bancolombia a la mano y Addi.
 - División del pago y retención de la comisión del 5%.
-- Cotizador de envíos con Envía, Coordinadora e Interrapidísimo.
+- Cotización de envíos con **Skydropx Colombia**, el agregador (ADR-0034, RN-038).
+  Una integración, no una por transportadora.
+- **Precio base y costo de envío como cifras separadas**, con el envío a cargo del
+  comprador y el total a la vista antes de pagar (RN-076, RN-077).
+- **Seguimiento del envío**: guía y eventos visibles para comprador y vendedor, y
+  la fecha de entrega tomada del evento de entrega, que es la que arranca los
+  plazos del dinero (RN-079).
 - Estados del pedido, confirmación de entrega por el comprador, ventana de
   reclamo de 3 días hábiles y liberación del pago (RN-034, RN-051, RN-052).
 - Correos transaccionales de cada cambio de estado.
@@ -387,6 +393,10 @@ Se documentan aquí para no reabrirlas por accidente:
 | Tema | Estado |
 |---|---|
 | Días hábiles que tarda el desembolso en llegar a la cuenta del vendedor | Se define en Fase 3 con asesoría. La retención sí está definida: hasta que el comprador confirma o vence la ventana (RN-034) |
+| Proveedor de envíos | **Decidido el 8 de septiembre de 2026**: Skydropx Colombia como agregador (ADR-0034). Sustituye la integración directa con Envía, Coordinadora e Interrapidísimo, que nunca se llegó a construir. La política de tratamiento de datos ya lo nombraba desde el 6 de septiembre sin que ninguna otra parte del proyecto lo respaldara |
+| Quién contrata el transporte | **Decidido el 8 de septiembre de 2026**: el vendedor es el remitente y Sendik emite la guía por su cuenta (RN-078). Se descartó vender el envío en nombre propio, que habría hecho de Sendik proveedor del servicio de transporte ante el consumidor |
+| Quién asume la diferencia entre la cotización y el costo real | **Decidido el 8 de septiembre de 2026**: Sendik (RN-077). Recotizar después de pagar no era una opción disponible —artículo 26 de la Ley 1480—, y descontárselo al vendedor deja su ingreso sin predecir |
+| Cobertura de envío | **Sin comprobar.** El texto legal anuncia todo el territorio nacional desde el 5 de septiembre y nadie lo ha contrastado con las transportadoras que el agregador habilite (RN-080) |
 | Separar la política de devoluciones de los términos y condiciones | Sin decidir. Requiere variable de versión propia |
 | Árbol de categorías del catálogo | **Decidido el 24 de agosto de 2026**, en `docs/producto/categorias.md`: seis familias y treinta y una categorías, por tipo de producto y sin eje de género, incluida la familia de tecnología. "Dama" y "Caballero" siguen sin ser categorías del proyecto |
 | Facturación electrónica de la comisión ante la DIAN | Se define en Fase 3 |
