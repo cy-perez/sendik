@@ -176,8 +176,9 @@ de Fase 2 está completo— pero sí la lista de lo que bloquea el lanzamiento.
   las sesiones abiertas ni la lista de favoritos. Los dos arreglados, cada uno con
   la prueba que sí puede verlos.
 
-  Queda fuera todavía la frase de la garantía del fabricante en la ficha (RN-067),
-  aplazada a la tanda legal por decisión del 26 de agosto.
+  ~~Queda fuera todavía la frase de la garantía del fabricante en la ficha
+  (RN-067)~~ **Escrita el 8 de septiembre de 2026**, en la tanda legal a la que la
+  decisión del 26 de agosto la aplazó. Con ella este punto ya no arrastra nada.
 - Panel del vendedor con sus publicaciones y su estado. **Sigue a medias, pero por
   una sola cosa.** `/mis-publicaciones` llegó con HU-007 y da la lista con el
   estado de cada una, que es lo que hacía falta para retomar un borrador. Lo que
@@ -343,8 +344,14 @@ donde debía haber un verbo. Queda anotado y sin arreglar aquí.
 
 - **Las tres banderas en `prod`.** Siguen apagadas y encenderlas es una decisión
   aparte, después de los textos legales.
-- **La frase de la garantía del fabricante en la ficha (RN-067)**, aplazada a la
-  tanda legal el 26 de agosto y que arrastran HU-009 y esta línea.
+- ~~**La frase de la garantía del fabricante en la ficha (RN-067)**, aplazada a la
+  tanda legal el 26 de agosto y que arrastran HU-009 y esta línea.~~ **Escrita el 8
+  de septiembre de 2026.** No hizo falta redactar copia legal nueva: el numeral 15.2
+  de los términos `2026-09-08b` ya reparte la responsabilidad, así que la ficha lo
+  enuncia en llano y enlaza al documento (RN-057). Lo que sigue abierto es de
+  criterio profesional y no de redacción —si el reparto es sostenible para una
+  plataforma que cobra comisión—, y vive en
+  `docs/operacion/entrega-textos-legales-2026-09-08b.md`.
 - ~~**Límite de tasa sobre `/api/v1/listings/**`.**~~ **Hecho el 5 de septiembre de
   2026.** El prefijo entra en el interceptor como un cuarto grupo, contado por sujeto
   del token y con **una sola cuenta para todas sus rutas**, no una por ruta: el bucle

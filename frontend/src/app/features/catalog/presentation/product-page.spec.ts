@@ -221,16 +221,80 @@ describe('ProductPage', () => {
   });
 
   /**
-   * La garantía del fabricante **no** se pinta.
+   * La garantía del fabricante, RN-067. Escrita el 8 de septiembre de 2026.
    *
-   * <p>Está aplazada a la tanda legal y `textos-web.md` dice que bloquea esta pantalla.
-   * La prueba existe para que nadie la agregue sin darse cuenta de que falta el texto.
+   * <p>Lo que estas cuatro protegen no es la maquetación: es el reparto de responsabilidad.
+   * La ficha dice los meses **y quién responde por ellos**, y las dos cosas van juntas o no
+   * va ninguna. Una ficha que anuncie doce meses sin decir de quién son deja al lector
+   * suponiendo que responde Sendik, que es exactamente lo que RN-067 prohíbe.
    */
-  it('no pinta la garantía del fabricante mientras su texto no exista, RN-067', async () => {
-    const { fixture, backend } = await montar();
-    await responder(fixture, backend, publicacion({ isSealed: true, warrantyMonths: 12 }));
+  describe('la garantía del fabricante, RN-067', () => {
+    const conGarantia = (meses: number) => publicacion({ isSealed: true, warrantyMonths: meses });
 
-    expect(fixture.nativeElement.textContent).not.toContain('12');
+    it('no dice nada cuando el vendedor no declaró ninguna', async () => {
+      const { fixture, backend } = await montar();
+      await responder(fixture, backend, publicacion());
+
+      expect(fixture.nativeElement.textContent).not.toContain('Garantía del fabricante');
+    });
+
+    /**
+     * El cero es la otra forma de decir que no hay, y se trata igual que el nulo.
+     *
+     * <p>Nunca «sin garantía»: la garantía legal de la Ley 1480 rige igual sobre un producto
+     * nuevo, así que anunciar su ausencia sería decir algo falso sobre los derechos de quien
+     * compra.
+     */
+    it('tampoco con cero meses, y en ningún caso dice «sin garantía»', async () => {
+      const { fixture, backend } = await montar();
+      await responder(fixture, backend, conGarantia(0));
+
+      const texto = fixture.nativeElement.textContent;
+      expect(texto).not.toContain('Garantía del fabricante');
+      expect(texto).not.toContain('Sin garantía');
+    });
+
+    it('dice los meses y quién responde por ellos', async () => {
+      const { fixture, backend } = await montar();
+      await responder(fixture, backend, conGarantia(12));
+
+      const texto = fixture.nativeElement.textContent;
+      expect(texto).toContain('Garantía del fabricante');
+      expect(texto).toContain('12 meses, declarados por el vendedor');
+      expect(texto).toContain('Quien responde por esta garantía es el vendedor, no Sendik.');
+    });
+
+    /** «1 meses» se nota, y esta es la pantalla que más gente lee sin tener cuenta. */
+    it('usa el singular con un solo mes', async () => {
+      const { fixture, backend } = await montar();
+      await responder(fixture, backend, conGarantia(1));
+
+      const texto = fixture.nativeElement.textContent;
+      expect(texto).toContain('1 mes, declarado por el vendedor');
+      expect(texto).not.toContain('1 meses');
+    });
+
+    /**
+     * RN-057: la ficha no enuncia plazos ni condiciones por su cuenta, enlaza al documento
+     * que los tiene. El enlace sale de `RUTAS_LEGALES`, así que esto también comprueba que
+     * no se escribió a mano.
+     */
+    it('enlaza a los términos, que es donde vive la cláusula', async () => {
+      const { fixture, backend } = await montar();
+      await responder(fixture, backend, conGarantia(12));
+
+      const enlace = fixture.nativeElement.querySelector('.ficha__garantia a') as HTMLAnchorElement;
+      expect(enlace.getAttribute('href')).toBe('/terminos');
+      expect(enlace.textContent?.trim()).toBe('Leer los términos y condiciones');
+    });
+
+    /** La palabra que no puede aparecer aquí ni parecida (glosario, RN-067). */
+    it('no roza la palabra Respaldo', async () => {
+      const { fixture, backend } = await montar();
+      await responder(fixture, backend, conGarantia(12));
+
+      expect(fixture.nativeElement.textContent).not.toMatch(/respaldo/i);
+    });
   });
 
   /**

@@ -206,9 +206,18 @@ Cada regla tiene identificador. Úsalo en el código y en las pruebas:
   de RN-050 a RN-058. La garantía legal que la Ley 1480 de 2011 fija para un
   producto nuevo existe además de eso y no la sustituye ninguna regla de aquí.
 
-  **Esta regla necesita revisión de abogado antes de abrir la venta de
-  tecnología**, y hasta entonces ningún texto del sitio la enuncia. Es la misma
-  condición que ya bloquea los tres documentos legales.
+  **La ficha ya lo enuncia desde el 8 de septiembre de 2026.** La regla decía que
+  hasta la revisión de abogado ningún texto del sitio la enunciaría, por ser «la misma
+  condición que bloquea los tres documentos legales»; esa condición se levantó por
+  decisión expresa el 5 de septiembre, cuando los tres se publicaron sin abogado
+  colegiado. El texto de la ficha no decide nada por su cuenta: repite en llano el
+  numeral 15.2 de los términos vigentes y enlaza al documento (RN-057). Está en
+  `docs/producto/textos-web.md`, bajo `catalog.detail.warranty.*`.
+
+  **Lo que sigue necesitando criterio profesional** es si repartir así la
+  responsabilidad es sostenible para una plataforma que además cobra comisión. No lo
+  cierra ninguna redacción y vive con los demás puntos abiertos en
+  `docs/operacion/entrega-textos-legales-2026-09-08b.md`.
 - **RN-061** Transiciones válidas de la publicación, sobre los siete estados del
   glosario:
 

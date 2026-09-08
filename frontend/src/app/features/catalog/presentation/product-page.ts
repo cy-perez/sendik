@@ -11,6 +11,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
+import { RUTAS_LEGALES } from '../../../core/routes/legal-routes';
 import { precioFormateado } from '../../../shared/domain/listing';
 import { SpinViewer, type FotogramaDelVisor } from '../../../shared/ui/viewer/spin-viewer';
 import { MOTIVOS_DE_RECHAZO_DE_PUBLICACION } from '../../../shared/domain/listing';
@@ -31,11 +32,11 @@ import {
  *
  * <p>Pública y sin sesión: si está aquí es porque está publicada (RN-068).
  *
- * <p><strong>Lo que no está y no es un olvido: la garantía del fabricante.</strong>
- * RN-067 la declara y el campo llega en la respuesta, pero cómo se enuncia sin usar la
- * palabra Respaldo ni parecerse a ella está aplazado a la tanda de los documentos legales
- * por decisión del 26 de agosto de 2026, y `textos-web.md` dice con esas palabras que
- * bloquea esta pantalla. Escribir aquí una frase provisional sería inventar copia legal.
+ * <p><strong>La garantía del fabricante ya se enuncia (RN-067).</strong> Estuvo aplazada
+ * a la tanda de los documentos legales por decisión del 26 de agosto de 2026, y se escribió
+ * en esa tanda el 8 de septiembre: el numeral 15.2 de los términos `2026-09-08b` reparte la
+ * responsabilidad por escrito, así que esta pantalla lo dice en llano y **enlaza al
+ * documento** (RN-057) en vez de decidir nada por su cuenta.
  *
  * <p>El visor 360 tampoco: es HU-003 y va detrás de `FEATURE_SPIN_VIEWER`. Cuando llegue
  * sustituye al carrusel sin tocar esta historia.
@@ -128,6 +129,40 @@ export class ProductPage {
       .map(([clase, valor]) => ({ clase, valor }))
       .sort((una, otra) => una.clase.localeCompare(otra.clase));
   });
+
+  /**
+   * Los meses de garantía del fabricante, o nulo si el vendedor no declaró ninguno.
+   *
+   * <p>**Sin dato la ficha calla, y nunca dice «sin garantía».** La garantía legal de la
+   * Ley 1480 de 2011 rige sobre todo producto nuevo lo declare quien lo vende o no, así que
+   * anunciar su ausencia sería afirmar algo falso sobre los derechos de quien compra. El
+   * cero se trata igual que el nulo: son la misma cosa dicha de dos formas y ninguna de las
+   * dos es una garantía de un mes.
+   */
+  protected readonly mesesDeGarantia = computed(() => {
+    const meses = this.publicacion()?.product.warrantyMonths ?? null;
+    return meses !== null && meses > 0 ? meses : null;
+  });
+
+  /**
+   * Qué clave enuncia los meses. El singular es una clave aparte, no un plural improvisado.
+   *
+   * <p>Se decide aquí y no en la plantilla porque es la misma razón por la que existe la
+   * clave: «1 meses» en la pantalla que más gente lee sin tener cuenta se nota.
+   */
+  protected readonly claveDeGarantia = computed(() =>
+    this.mesesDeGarantia() === 1
+      ? 'catalog.detail.warranty.month'
+      : 'catalog.detail.warranty.months',
+  );
+
+  /**
+   * A dónde lleva el enlace de la garantía.
+   *
+   * <p>Sale de `RUTAS_LEGALES` y no escrita a mano: el día que la ruta del documento cambie,
+   * un enlace copiado a mano se queda apuntando a una página que ya no existe.
+   */
+  protected readonly rutaDeTerminos = RUTAS_LEGALES.terms;
 
   protected readonly vendedor = computed(() => this.store.vendedor.data() ?? null);
 

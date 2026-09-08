@@ -324,8 +324,9 @@ probados. Las cuatro reglas que la historia obligaba a escribir —RN-070 a RN-0
   prohíben enlazar a algo que no funciona. El enlace entra cuando la bandera se encienda.
 - **Avisar de que un favorito bajó de precio o se vendió**, compartir la lista, carpetas y
   el contador público. Los cuatro estaban fuera del alcance y siguen fuera.
-- **La frase de la garantía del fabricante en la ficha** (RN-067) sigue aplazada a la tanda
-  legal, como la dejó HU-009.
+- ~~**La frase de la garantía del fabricante en la ficha** (RN-067) sigue aplazada a la tanda
+  legal, como la dejó HU-009.~~ **Escrita el 8 de septiembre de 2026** en esa tanda, sobre la
+  ficha y sin tocar nada de esta historia.
 
 ### Lo que cambió la revisión
 

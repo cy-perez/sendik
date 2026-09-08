@@ -128,7 +128,31 @@
           <dt class="tipo-secundario">{{ 'listing.form.color' | transloco }}</dt>
           <dd class="tipo-cuerpo">{{ 'listing.color.' + color | transloco }}</dd>
         }
+
+        <!--
+          RN-067. Los meses van aquí porque son un dato declarado más, como la marca o la
+          talla. Quién responde por ellos no lo es, y por eso sale de la lista: es una
+          aclaración sobre la responsabilidad, no una fila de la ficha técnica.
+        -->
+        @if (mesesDeGarantia() !== null) {
+          <dt class="tipo-secundario">{{ 'catalog.detail.warranty.label' | transloco }}</dt>
+          <dd class="tipo-cuerpo">
+            {{ claveDeGarantia() | transloco: { meses: mesesDeGarantia() } }}
+          </dd>
+        }
       </dl>
+
+      <!--
+        Quien responde, y el enlace al documento que lo dice. El texto no enuncia plazos ni
+        condiciones por su cuenta: viven en los términos, versionados y en un solo sitio
+        (RN-057), y esta línea apunta allí.
+      -->
+      @if (mesesDeGarantia() !== null) {
+        <p class="tipo-secundario">{{ 'catalog.detail.warranty.who' | transloco }}</p>
+        <p class="tipo-secundario ficha__garantia">
+          <a [routerLink]="rutaDeTerminos">{{ 'catalog.detail.warranty.link' | transloco }}</a>
+        </p>
+      }
 
       @if (medidas().length > 0) {
         <h2 class="tipo-titulo-tarjeta">{{ 'catalog.detail.measurements' | transloco }}</h2>

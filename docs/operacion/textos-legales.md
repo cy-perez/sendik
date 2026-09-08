@@ -36,13 +36,16 @@ enlazan (RN-057).
 
 ## Estado actual
 
-**Escrita la versión `2026-09-08b` el 8 de septiembre de 2026 y todavía sin publicar**, en
-términos y en política de tratamiento de datos, en los dos idiomas. Recoge el cambio de
-modelo de envío: precio base y costo de envío como cifras separadas, con el flete a cargo
-del comprador, y la cotización con un agregador en vez de con tres transportadoras
-(ADR-0034). **Las variables `LEGAL_TERMS_VERSION` y `LEGAL_PRIVACY_VERSION` de `dev`
-siguen en `2026-09-08`**, así que lo que el sitio sirve es la anterior. El detalle de lo
-verificado, lo que quedó abierto y el comando que publica están en
+**Publicada la versión `2026-09-08b` el 8 de septiembre de 2026**, en términos y en
+política de tratamiento de datos, en los dos idiomas. Recoge el cambio de modelo de envío:
+precio base y costo de envío como cifras separadas, con el flete a cargo del comprador, y
+la cotización con un agregador en vez de con tres transportadoras (ADR-0034).
+
+Se escribió y se publicó el mismo día, pero **no en el mismo acto**: los archivos entraron
+con el commit de la introducción de Skydropx y `LEGAL_TERMS_VERSION` y
+`LEGAL_PRIVACY_VERSION` de `dev` se movieron a `2026-09-08b` después, que es el paso 2 de
+más arriba y el que de verdad publica. Comprobado contra el entorno, no contra este
+documento. El detalle de lo verificado y de lo que quedó abierto está en
 `entrega-textos-legales-2026-09-08b.md`.
 
 **La letra en el nombre de versión es deliberada.** La convención es la fecha y el 8 de
