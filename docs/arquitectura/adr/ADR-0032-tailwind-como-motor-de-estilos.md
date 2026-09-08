@@ -191,17 +191,17 @@ verificación o se declara a axe como única garantía, esta vez por escrito.
 sobre medidas, no sobre impresión: la validación se ejecutó entera y estos son
 los números.
 
-| Comprobación                                               | Resultado                          |
-| ---------------------------------------------------------- | ---------------------------------- |
-| Vitest                                                     | 867 pruebas, 74 archivos, en verde |
-| Playwright (`npm run e2e`)                                 | 205 en Windows; **204/205 en CI**  |
-| ESLint + Prettier                                          | limpio                             |
-| Cobertura de líneas                                        | 93.1%                              |
-| Bundle inicial                                             | 640.13 kB, bajo el aviso de 650    |
-| Hojas `.css` de componente                                 | ninguna                            |
-| HEX sueltos y valores arbitrarios de color                 | ninguno                            |
-| Puntos de quiebre fuera de `sm:` y `lg:`                   | ninguno                            |
-| Dependencias de `shared/ui` con Transloco o TanStack Query | ninguna                            |
+| Comprobación                                               | Resultado                               |
+| ---------------------------------------------------------- | --------------------------------------- |
+| Vitest                                                     | 867 pruebas, 74 archivos, en verde      |
+| Playwright (`npm run e2e`)                                 | 205 pruebas, en verde (Windows y Linux) |
+| ESLint + Prettier                                          | limpio                                  |
+| Cobertura de líneas                                        | 93.1%                                   |
+| Bundle inicial                                             | 640.13 kB, bajo el aviso de 650         |
+| Hojas `.css` de componente                                 | ninguna                                 |
+| HEX sueltos y valores arbitrarios de color                 | ninguno                                 |
+| Puntos de quiebre fuera de `sm:` y `lg:`                   | ninguno                                 |
+| Dependencias de `shared/ui` con Transloco o TanStack Query | ninguna                                 |
 
 La revisión posterior al cierre encontró tres residuos, y los tres están
 corregidos aquí:
@@ -227,27 +227,40 @@ corregidos aquí:
   pone **solo** el grosor, así que las dos cámaras comparten el trazo sin
   compartir el color.
 
-### Un fallo abierto, y no es de este cierre
+### El sexto fallo de accesibilidad: el anillo de foco se desvanecía
 
-`e2e/portada.spec.ts:166` —«el foco del boton principal es visible y mide 3px»—
-**falla en integración continua y pasa en Windows**. Mide el anillo de foco del
-botón principal contra el fondo de la franja de tinta y obtiene **1.086:1**,
-donde exige 3:1.
+`e2e/portada.spec.ts:166` falló en integración continua desde el commit de la
+migración, y **pasaba en Windows**. Reproducido en el contenedor
+`mcr.microsoft.com/playwright:v1.62.1-noble` y resuelto.
 
-No lo introdujo este cierre, y conviene que quede escrito por qué se sabe: el
-mismo caso falla con el mismo número en el commit anterior, `main` está en verde,
-y **el archivo de la prueba no lo tocó la migración**. La prueba es la de
-siempre; lo que cambió debajo fue el estilo. Es una regresión de la migración
-que solo se ve en Linux, y se escapó porque la verificación se corrió en
-Windows, donde pasa incluso forzando `CI=1`.
+**El anillo de foco del botón principal tardaba 100ms en ser visible.** Aparecía
+desvaneciéndose desde el color del texto, y durante ese rato no cumplía
+contraste. Medido sobre la franja de tinta, muestreando el color calculado:
 
-Descartado ya: no es que la prueba enfoque el elemento equivocado —el volcado de
-accesibilidad de CI muestra un único enlace «Crear cuenta», y está activo— ni es
-intermitente, porque los tres intentos dan el mismo valor. Siguen en pie dos
-explicaciones: que `:focus-visible` no case en ese Chromium y `outlineColor` esté
-devolviendo `currentcolor`, o que la redefinición de `--brand-focus` dentro de
-`@utility franja-tinta` no llegue al botón por el orden de capas que introduce
-Tailwind. **Separarlas exige reproducir en Linux.**
+| t     | `outline-color`    | Contraste contra la franja |
+| ----- | ------------------ | -------------------------- |
+| 0ms   | `rgb(28,30,50)`    | **1.09:1**                 |
+| 50ms  | `rgb(183,184,190)` | 6.6:1                      |
+| 100ms | `rgb(253,253,254)` | 16.8:1                     |
+
+La causa es que **`transition-colors` de Tailwind incluye `outline-color`** en su
+lista de propiedades, y el botón la llevaba. Con los 150ms por omisión el anillo
+interpola del color del texto al suyo. Un indicador de foco que aparece
+desvaneciéndose no está cuando el usuario acaba de pulsar el tabulador, que es
+justo cuando tiene que estar.
+
+Se nombra `transition-colors-no-outline` en `tema.css` —la misma lista menos
+`outline-color`— y el botón pasa a usarla. Es el único sitio: la tarjeta usa
+`transition-shadow`, que no arrastra el anillo.
+
+**Lo que enseña sobre la verificación, que importa más que el fallo.** No se
+escapó por falta de pruebas: la prueba existía, era correcta y estaba midiendo lo
+que debía. Se escapó porque **en Windows el viaje entre la pulsación y la
+medición supera los 150ms**, así que el anillo ya había llegado a blanco cuando
+se le preguntaba. La misma prueba, el mismo navegador —Chromium 151.0.7922.34 en
+los dos— y el mismo CSS daban verde en una plataforma y rojo en la otra. Dar por
+buena una verificación local de Playwright en Windows es dar por buena una
+carrera que se gana por accidente: **lo que decide es integración continua**.
 
 Queda además **una cosa abierta a propósito**, y se anota para que no se pierda:
 tres dependencias declaradas y sin usar —`@spartan-ng/brain`, `clsx` y
