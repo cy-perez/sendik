@@ -36,16 +36,28 @@ enlazan (RN-057).
 
 ## Estado actual
 
-**Publicada la versión `2026-09-06` el 6 de septiembre de 2026.** Corrige la anterior
-en lo único que se podía corregir sin abogado: los datos del negocio que estaban en
-`[[ ]]` y quedaron a la vista del público durante unas horas —teléfono, horario, plazo
-de respuesta, preaviso, cobertura, pasarela, transportadoras, proveedor de base de
-datos y los plazos de conservación—. Lo verificado y lo que se decidió está en
+**Publicada la versión `2026-09-08` el 8 de septiembre de 2026**, en términos y en
+política de tratamiento de datos. **La política de cookies se queda en `2026-09-06`**:
+no tenía ningún vacío y su variable es independiente.
+
+La versión `2026-09-08` **no deja un solo marcador `[[ ]]` en ninguno de los dos
+idiomas**, que es la diferencia con todas las anteriores. De los seis vacíos que
+arrastraba la `2026-09-06`, tres se cerraron yendo al texto de la norma, uno se cerró
+reescribiendo la cláusula, y los dos que siguen abiertos **salieron del documento
+publicado**: eran notas dirigidas a un abogado y las leía cualquier usuario. Viven
+ahora en `entrega-textos-legales-2026-09-08.md`, que es donde se registra qué se
+verificó, contra qué fuente y qué falta.
+
+**La versión `2026-09-06` corrigió antes** los datos del negocio que estaban en `[[ ]]`
+y quedaron a la vista del público durante unas horas —teléfono, horario, plazo de
+respuesta, preaviso, cobertura, pasarela, transportadoras, proveedor de base de datos y
+los plazos de conservación—. Lo verificado entonces está en
 `entrega-textos-legales-2026-09-05.md`.
 
-**Siguen sin resolver seis marcadores por idioma**, y son los que no se rellenan con un
-dato: los cinco de criterio profesional y los días hábiles de desembolso, que RN-034
-deja explícitamente para la Fase 3.
+**Aviso de coherencia.** Entre el 6 y el 8 de septiembre las variables
+`LEGAL_*_VERSION` de `dev` siguieron apuntando a `2026-09-05`, de modo que la versión
+`2026-09-06` estuvo en el repositorio sin que la viera nadie. Publicar un archivo no es
+publicarlo: **el paso 2 de este documento —mover la variable— es el que publica**.
 
 La versión `2026-09-05` y los `borrador-local` **siguen en el repositorio y no se
 tocan**: hay consentimientos cuya evidencia apunta a ellos.
