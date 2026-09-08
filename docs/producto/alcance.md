@@ -298,12 +298,46 @@ congelado —con lo que se cierra de paso el buzón de reintentos que faltaba—
 El código está completo: `AsyncMailSender` se retiró, la composición del texto se
 separó del transporte, el encolado entra detrás del puerto `MailTransport` y el
 endpoint `/internal/mail/deliveries` entrega verificando el token OIDC de la cuenta de
-servicio. **Lo que falta no es código sino infraestructura**: crear la cola y la
-cuenta de servicio en Google Cloud y declarar las cinco variables. Hasta que eso se
-haga, `MAIL_QUEUE_ENABLED` sigue en falso y el correo se entrega en el hilo de la
-petición, que es como está hoy.
+servicio. La infraestructura se creó el 6 de septiembre de 2026 —la cola, la cuenta
+`sendik-cola` y las cuatro variables del entorno `dev`, en `docs/operacion/entornos.md`—.
 
-**Esto bloquea el lanzamiento**, porque `prod` tiene la misma configuración.
+**Comprobado de punta a punta el 8 de septiembre de 2026, y hasta ese día no lo estaba.**
+Que el servicio arrancara solo probaba que la configuración estaba completa, porque
+`MailQueueProperties` valida al construirse; no probaba que saliera un correo. Entre el 6
+y el 8 la cola registró **cero tareas** y el endpoint no recibió una sola petición de
+Cloud Tasks: las únicas cuatro que le llegaron fueron `GET` de rastreadores de internet,
+rechazadas con 401. Nadie se había registrado contra `dev` desde que se encendió.
+
+El disparo fue un `POST /api/v1/auth/forgot-password` contra una cuenta existente, que es
+el caso que ADR-0031 llama normal —una petición aislada, con el correo pendiente después
+de responder—:
+
+| Hora (UTC) | Eslabón | Resultado |
+|---|---|---|
+| 13:39:10 | `forgot-password` | 202 en 1,95 s |
+| 13:39:12 | Cloud Tasks entrega la tarea | `POST /internal/mail/deliveries`, agente `Google-Cloud-Tasks`, 204 |
+| 13:39:13 | Resend entrega | correo recibido, de `no-responder@sendik.co` |
+
+Tres segundos, sin reintentos y sin una sola advertencia en el registro. El 204 por sí
+solo no bastaba —el controlador lo devuelve tanto si el correo salió como si el proveedor
+lo rechazó en firme—, y es el correo recibido lo que lo desambigua. Que el token OIDC
+valida se ve en que respondió 204 y no el 401 que reciben los rastreadores.
+
+**Para `dev` esto deja de bloquear el lanzamiento. Para `prod` no, y es configuración:**
+el entorno `prod` de GitHub **no tiene ninguna de las cuatro variables** `MAIL_QUEUE_*`, y
+el flujo respalda la bandera con `|| 'false'`. Un despliegue a `prod` hoy no falla al
+arrancar: se va con la cola apagada y el correo se entrega en el hilo de la petición. Eso
+ya no reproduce el fallo original —lo causaba el `AsyncMailSender` que se retiró— pero
+tampoco es lo que ADR-0031 decidió, y hace la petición de registro tan lenta como tarde el
+proveedor. Falta crear las cuatro variables de `prod`, con su propia
+`MAIL_QUEUE_HANDLER_URL` sobre `api.sendik.co`.
+
+**Y el envío real destapó lo que ninguna suite podía ver: los correos en español salen sin
+tildes ni eñes.** No es codificación: están así en el código, en tres archivos —los diez
+asuntos de `ResendMailSender`, los cuatro de `ListingMailTexts` y los motivos de rechazo
+de `ListingRejectionTexts`, que viajan dentro del correo—. En dos de ellos cambia el
+significado: «Tu contrasena cambio» y «Alguien intento registrarse» dejan un sustantivo
+donde debía haber un verbo. Queda anotado y sin arreglar aquí.
 
 ### Lo que no entra en el cierre
 

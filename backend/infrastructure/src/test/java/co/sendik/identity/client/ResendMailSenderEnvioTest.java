@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * El envio real de los correos transaccionales (ADR-0012).
@@ -186,6 +188,32 @@ class ResendMailSenderEnvioTest {
 
         transporte().enviarVerificacionDeCorreo(cuenta(UserLocale.EN), "token");
         assertThat(unicoCuerpo()).contains("Confirm your email on Sendik");
+    }
+
+    /**
+     * Las tildes y las enes llegan intactas al otro lado.
+     *
+     * <p>Hasta el 8 de septiembre de 2026 los correos en espanol salieron sin ellas, y no
+     * se descubrio con una suite sino recibiendo uno de verdad desde {@code dev}: ninguna
+     * prueba miraba el texto, solo el destinatario y el enlace. Esta lo mira, y en el sitio
+     * donde una tilde se pierde de verdad —los bytes del cuerpo de la peticion, que el
+     * servidor de esta prueba decodifica como UTF-8—, con lo que cubre de una vez el
+     * literal de Java, la codificacion con que se compila y la serializacion de Jackson.
+     *
+     * <p>Se lee el JSON en vez de buscar la cadena dentro: si algun dia Jackson escapa lo
+     * que no es ASCII, el correo seguiria llegando bien y esta prueba no tiene por que
+     * fallar. Lo que se afirma es que el valor llega igual, no como se escribio en el cable.
+     */
+    @Test
+    void deberia_conservar_las_tildes_y_las_enes_hasta_el_cuerpo_de_la_peticion() {
+        transporte().enviarRestablecimientoDeContrasena(cuenta(UserLocale.ES), "token");
+
+        JsonNode enviado = new ObjectMapper().readTree(unicoCuerpo());
+
+        assertThat(enviado.get("subject").asString()).isEqualTo("Restablece tu contraseña en Sendik");
+        assertThat(enviado.get("html").asString())
+                .contains("Si no fuiste tú, ignora este mensaje: tu contraseña no cambia.")
+                .contains("Poner una contraseña nueva");
     }
 
     /** Cada enlace a su pantalla: un token de restablecimiento no se canjea en la de verificacion. */

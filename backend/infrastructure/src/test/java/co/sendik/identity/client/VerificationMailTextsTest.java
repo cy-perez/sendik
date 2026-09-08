@@ -20,8 +20,23 @@ class VerificationMailTextsTest {
 
     @Test
     void deberia_decir_el_plazo_prometido_en_el_aviso_de_recibida() {
-        assertThat(VerificationMailTexts.cuerpoDeRecibida(UserLocale.ES, 2)).contains("2 dias habiles");
+        assertThat(VerificationMailTexts.cuerpoDeRecibida(UserLocale.ES, 2)).contains("2 días hábiles");
         assertThat(VerificationMailTexts.cuerpoDeRecibida(UserLocale.EN, 5)).contains("5 business days");
+    }
+
+    /**
+     * Un dia de plazo tambien concuerda. {@code sendik.verification.review-days} admite
+     * cualquier entero positivo, asi que prometer la revision "en maximo 1 dias habiles" no
+     * necesita un error para aparecer: basta con cambiar una variable de entorno.
+     */
+    @Test
+    void deberia_concordar_el_numero_cuando_el_plazo_es_de_un_solo_dia() {
+        assertThat(VerificationMailTexts.cuerpoDeRecibida(UserLocale.ES, 1))
+                .contains("1 día hábil")
+                .doesNotContain("1 días hábiles");
+        assertThat(VerificationMailTexts.cuerpoDeRecibida(UserLocale.EN, 1))
+                .contains("1 business day")
+                .doesNotContain("1 business days");
     }
 
     @Test
@@ -69,7 +84,7 @@ class VerificationMailTextsTest {
         String cuerpo =
                 VerificationMailTexts.cuerpoDeRechazada(UserLocale.ES, RejectionReason.EXPIRED_DOCUMENT, null, 2);
 
-        assertThat(cuerpo).contains("el documento esta vencido");
+        assertThat(cuerpo).contains("el documento está vencido");
     }
 
     // --- RN-014 ---------------------------------------------------------------
@@ -83,6 +98,25 @@ class VerificationMailTextsTest {
     }
 
     /**
+     * Con uno solo concuerdan el verbo y el sustantivo.
+     *
+     * <p>No es un caso raro: RN-014 da tres intentos, asi que quedar uno es el paso previo
+     * a quedarse sin ninguno, y lo lee alguien a quien acaban de rechazar por segunda vez.
+     * Hasta el 8 de septiembre de 2026 decia "Te quedan 1 intentos" en espanol y "You have
+     * 1 attempts left" en ingles.
+     */
+    @Test
+    void deberia_concordar_el_numero_cuando_queda_un_solo_intento() {
+        String espanol =
+                VerificationMailTexts.cuerpoDeRechazada(UserLocale.ES, RejectionReason.ILLEGIBLE_PHOTOS, null, 1);
+        String ingles =
+                VerificationMailTexts.cuerpoDeRechazada(UserLocale.EN, RejectionReason.ILLEGIBLE_PHOTOS, null, 1);
+
+        assertThat(espanol).contains("Te queda 1 intento.").doesNotContain("1 intentos");
+        assertThat(ingles).contains("You have 1 attempt left").doesNotContain("1 attempts");
+    }
+
+    /**
      * En cero no se invita a reintentar. RN-014 no lo permite, y decir «vuelve a
      * intentarlo» cuando el sistema va a negarlo es peor que no decir nada.
      */
@@ -93,7 +127,7 @@ class VerificationMailTextsTest {
         String ingles =
                 VerificationMailTexts.cuerpoDeRechazada(UserLocale.EN, RejectionReason.ILLEGIBLE_PHOTOS, null, 0);
 
-        assertThat(espanol).doesNotContain("volver a enviarlo").contains("Escribenos");
+        assertThat(espanol).doesNotContain("volver a enviarlo").contains("Escríbenos");
         assertThat(ingles).doesNotContain("send it again").contains("Write to us");
     }
 
@@ -121,15 +155,15 @@ class VerificationMailTextsTest {
         String cuerpo = VerificationMailTexts.cuerpoDeRechazada(
                 UserLocale.ES, RejectionReason.ILLEGIBLE_PHOTOS, "El reverso sale oscuro", 2);
 
-        assertThat(cuerpo).contains("Nota de quien reviso").contains("El reverso sale oscuro");
+        assertThat(cuerpo).contains("Nota de quien revisó").contains("El reverso sale oscuro");
     }
 
     @Test
     void deberia_omitir_el_parrafo_de_la_nota_cuando_no_hay() {
         assertThat(VerificationMailTexts.cuerpoDeRechazada(UserLocale.ES, RejectionReason.ILLEGIBLE_PHOTOS, null, 2))
-                .doesNotContain("Nota de quien reviso");
+                .doesNotContain("Nota de quien revisó");
         assertThat(VerificationMailTexts.cuerpoDeRechazada(UserLocale.ES, RejectionReason.ILLEGIBLE_PHOTOS, "   ", 2))
-                .doesNotContain("Nota de quien reviso");
+                .doesNotContain("Nota de quien revisó");
     }
 
     /**
