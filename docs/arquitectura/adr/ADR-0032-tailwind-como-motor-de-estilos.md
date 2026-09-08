@@ -1,0 +1,273 @@
+# ADR-0032 — Tailwind como motor de estilos y fin del kit generado
+
+**Fecha:** 2026-09-07
+**Estado: revertida el 2026-09-07. La reversión y lo que queda decidido están en
+la ADR-0033.**
+
+> **El código no cumple esta ADR y no la cumple hoy.** La migración se revirtió
+> entera la misma noche en que se fusionó, porque el sitio quedó descuadernado
+> (commit `6a5845f`). El sistema de diseño vigente es el que esta ADR venía a
+> sustituir: `tokens.css` generado y de solo lectura, más `marca.css`.
+>
+> El texto se conserva íntegro y sin retocar, porque el índice de este directorio
+> lo pide —«no se borra nunca; una decisión que se revierte se marca»— y porque el
+> razonamiento sigue siendo el punto de partida de un segundo intento. **Lo que se
+> revirtió fue la ejecución, no el argumento.** La condición para reabrirla está en
+> la ADR-0033: que exista una forma de ver una regresión visual antes de fusionar.
+>
+> Nada de lo que sigue describe el estado actual del repositorio. Léase como lo que
+> es: una decisión que se tomó, se implementó y se deshizo en veinticuatro horas.
+
+**La ADR-0011 vuelve a estar vigente entera.** Esta ADR la sustituía en lo relativo
+a la propiedad del color y de las medidas; al revertirse, esa sustitución no llegó a
+consolidarse y el sistema tipográfico por roles sigue mandando sobre el tipo.
+
+## Contexto
+
+Desde la Fase 1 el frontend se pinta con un sistema propio: `tokens.css`
+generado por `docs/ui/generador/kit_ui.py`, más `tipografia.css` y `marca.css`
+escritas a mano. El sistema está auditado, tiene informe de contraste en
+`docs/ui/contraste.md` y lo verifica `verificar.py` sobre una lista de pares de
+color. Funciona.
+
+Lo que obliga a decidir no es un defecto del sistema, sino una decisión de
+producto: se quiere construir el sistema de diseño sobre un stack de utilidades
+y componentes headless —Tailwind, Angular CDK, Spartan— para acelerar la
+construcción de pantallas y no tener que escribir a mano cada primitiva de
+interfaz. Con 46 hojas de estilo propias y 54 componentes, seguir escribiendo
+CSS a medida por componente tiene un costo creciente.
+
+La restricción dura es que `frontend/src/styles/tokens.css` es **generado y de
+solo escritura denegada** en `.claude/settings.json`: no se puede editar, solo
+dejar de usar.
+
+## Opciones
+
+**Seguir con el kit propio y añadir solo Angular CDK.** Costo cero en migración,
+conserva el informe de contraste y las garantías de accesibilidad de la Fase 1.
+No da el vocabulario de utilidades ni los componentes headless que se buscan, y
+deja el costo por pantalla donde está.
+
+**Tailwind como puente, mapeado 1:1 a las variables existentes.** Permite usar
+utilidades sin mover la propiedad del color. A cambio deja dos nombres para cada
+cosa —`--color-fondo` y `bg-background`— sin que ninguno de los dos sea el
+verdadero, que es la clase de ambigüedad que se paga durante años.
+
+**Tailwind como motor, con paleta propia.** Una sola fuente de verdad del color
+y de la medida, en `styles/tema.css`. Cuesta la migración de las 46 hojas y
+obliga a rehacer la verificación de contraste, que hoy lee del generador.
+
+## Decisión
+
+Tailwind 4 pasa a ser el motor de estilos y `frontend/src/styles/tema.css` la
+fuente de verdad del color, el espaciado y el radio. `tokens.css` deja de
+generarse para el frontend y se retira cuando termine la migración incremental.
+
+## Motivo
+
+Entre las dos primeras, la segunda es peor que cualquiera de sus extremos: dos
+vocabularios simultáneos para el mismo color es la ambigüedad que el proyecto
+evita en todas partes —el glosario existe justamente para eso—. Y la primera no
+entrega lo que se pidió.
+
+Sobre la tercera hay que ser explícito, porque es donde se pierde algo: se
+adopta sabiendo que **invalida `docs/ui/contraste.md` como informe vigente** y
+que la garantía de contraste queda, hasta que se rehaga, solo en manos de la
+auditoría axe de `frontend/e2e/accesibilidad.spec.ts` (ADR-0016). Esa auditoría
+comprueba el contraste real de lo que se pinta, en los dos modos, que es una
+comprobación más fuerte que la lista de pares; lo que pierde es la capacidad de
+avisar antes de pintar. Es un costo aceptado, no un descuido.
+
+Tres detalles técnicos que la decisión fija y conviene no redescubrir:
+
+- **No hay `tailwind.config.ts`.** Tailwind 4 se configura desde CSS. El archivo
+  en JavaScript es de la versión 3 y su motor ya casi no lo lee. `darkMode:
+"class"` se escribe aquí como `@custom-variant dark`, y `theme.colors` como
+  `@theme`.
+- **Las hojas heredadas van en `@layer legacy`.** En CSS el estilo sin capa gana
+  al estilo con capa, así que con `marca.css` suelta ninguna utilidad de
+  Tailwind podría sobrescribirla y la migración incremental sería imposible: se
+  vería funcionar en una plantilla nueva y fallar en toda pantalla existente.
+- **El modo oscuro escribe clase y atributo a la vez** durante la transición. El
+  atributo `data-tema` lo lee `tokens.css`, que no se puede editar; la clase
+  `.dark` la lee Tailwind. Los dos se escriben en el servidor antes de pintar,
+  que es lo que conserva el mecanismo antiparpadeo.
+
+## Consecuencias
+
+Se gana un vocabulario de utilidades, componentes headless accesibles del CDK y
+de Spartan, y una sola fuente de verdad del color.
+
+Se acepta perder:
+
+- El informe `docs/ui/contraste.md` deja de reflejar lo que se pinta. Hasta que
+  se rehaga la verificación sobre la paleta nueva, **la única garantía de
+  contraste es axe en las pruebas de extremo a extremo**.
+- El generador `kit_ui.py` deja de tener consumidor en el frontend.
+- **Al migrar aparecio un hueco que el kit generado arrastraba**: `--color-primario-suave`
+  nunca se redefinio para el modo oscuro, asi que se quedaba en el gris claro
+  `#E8E8EA` y se usaba como fondo de hover del boton secundario, con el texto en
+  `--color-primario` encima. Eso da **3:1** y solo lo ve axe con el raton sobre el
+  boton, que es por lo que llevaba ahi sin que nadie lo notara. La paleta nueva lo
+  nombra (`--brand-primary-soft` en `.dark`), y las variantes `secondary` y `text`
+  del boton dejan de usar `--brand-primary` como color de texto en oscuro. Es un
+  argumento a favor de la decision: el token faltaba y el generador no lo decia.
+- **El presupuesto de bundle sube de 600 kB a 650 kB de aviso**, con el de error
+  intacto en 700. No es un ajuste cosmético para callar la advertencia, así que
+  van los números medidos: el inicial pasó a 634.16 kB. De ese crecimiento,
+  **12.68 kB son las tres hojas heredadas** —medido quitando sus `@import` y
+  volviendo a compilar— y vuelven cuando se retiren; el resto es Tailwind, el
+  runtime de Lucide y el CDK. Solo la trampa de foco del CDK en la cabecera
+  cuesta **8.6 kB** (625.54 → 634.16), y se paga a sabiendas porque corrige un
+  fallo real de teclado.
+
+  El margen de 650 no es para gastarlo: es el techo de la transición. Cuando la
+  migración termine, el inicial debería bajar a unos 621 kB y **el presupuesto
+  tiene que volver a bajar con él**. Si no baja, alguien se gastó el margen.
+
+- Durante la migración conviven dos sistemas. Era deuda con fecha y **quedó
+  saldada dentro de esta misma decisión**: no queda ningún `@import` en
+  `layer(legacy)` —la capa ni siquiera se llama así ya— y la única hoja heredada
+  que sobrevive es `tipografia.css`, que no es deuda sino la fuente de verdad
+  del tipo. Ver «Cierre», al final.
+
+Dos dependencias del encargo original **no** se adoptaron, y por el mismo motivo
+en los dos casos: npm las marca como obsoletas.
+
+- `@angular/animations` está deprecado; Angular 21.2 ya trae `animate.enter` y
+  `animate.leave` nativos en la plantilla. Son el mecanismo a usar el día que
+  haga falta una entrada o una salida animada. Hoy **no hay ninguna**: todo el
+  movimiento del sistema son tres declaraciones —`transition-colors` en el
+  botón, `transition-shadow` en la tarjeta y `motion-safe:animate-spin` en el
+  botón de envío—, y ninguna necesita el paquete.
+- `lucide-angular` está deprecado en favor de `@lucide/angular`, que es el que
+  se instaló.
+
+La regla de la ADR-0011 sobre los iconos —retícula 24, área viva 20, trazo 2 y
+terminaciones rectas— **sigue vigente y Lucide no la cumple por omisión**: sus
+iconos vienen con terminaciones redondeadas. El componente envoltorio de la
+Fase 2 tiene que forzar `butt` y `miter`, o el set se verá mezclado.
+
+## Estado
+
+**La deuda de contraste está saldada.** `e2e/contraste.spec.ts` comprueba los
+treinta pares del sistema en los dos modos, más los cinco de la franja de tinta,
+leyendo los valores **que el navegador resuelve** en vez de un archivo: así se
+verifica la cascada de verdad, incluidas las variables que la franja redefine
+dentro de su bloque. Corre en cada integración, que es más de lo que hacía
+`verificar.py`, y avisa antes de pintar, que es justo lo que axe no puede hacer.
+
+Lo primero que encontró al escribirse fue un fallo que llevaba desde la Fase 1:
+**el kit generado nunca definió el color de foco para el modo oscuro**, así que
+el anillo era tinta sobre fondo oscuro —1.08:1 contra el fondo y 1.32:1 contra
+la tarjeta— y por tanto invisible. No lo veía nadie porque axe no evalúa el
+contraste del indicador de foco y la única prueba que lo medía lo hacía dentro
+de la franja de tinta, donde el anillo es blanco por definición. Es el tercer
+hueco de la paleta generada que destapa esta migración.
+
+**La migración terminó.** No queda ningún `.css` de componente, y `marca.css` y
+`tokens.css` están retiradas: las seis piezas de marca que quedaban vivas son
+ahora `@utility` en `tema.css` y la escala de tipo se movió a `tipografia.css`,
+que es su fuente de verdad y se queda. La capa `legacy` se llama ahora `roles`,
+porque lo único que contiene es esa hoja y no tiene nada de heredado.
+
+Al retirar `tokens.css` aparecio el segundo hueco de la paleta generada, del
+mismo tipo que el de `--color-primario-suave`: la regla global del anillo de foco
+seguia leyendo `--color-foco`, que la franja de tinta ya no redefine, y el foco
+del boton principal sobre la franja cayo a **1.6:1**. Lo vio
+`e2e/portada.spec.ts`, que mide el contraste del anillo de verdad. Es el
+argumento mas fuerte a favor de esta decision: dos huecos que el generador no
+sabia que tenia.
+
+## Cuándo revisar
+
+**Sobre el presupuesto de bundle, una prediccion que salio mal y conviene no
+repetir.** Al medir que las tres hojas heredadas costaban 12.68 kB se anoto que
+al retirarlas el inicial bajaria a unos 621 kB. No bajo: quedo en **640.24 kB**.
+Esos 12.68 kB eran el coste de la DUPLICACION —las hojas heredadas conviviendo
+con Tailwind—, no el del contenido. Al retirarlas su contenido no desaparecio:
+se mudo a tema.css como @utility. Lo que se recupero fue la duplicacion, y eso
+ya se habia recuperado antes por otras vias.
+
+El presupuesto queda en **650 kB de aviso**, veinte por encima del inicial real y
+cincuenta por encima del que tenia el proyecto. Esa diferencia es el precio del
+stack —Tailwind, el runtime de Lucide y el CDK— y ya no va a bajar sola. Si
+alguien quiere volver a los 600, el sitio donde mirar es el runtime de Lucide en
+el bundle inicial, que entra por los cuatro iconos de la cabecera.
+
+Si al terminar la migración la verificación de contraste sobre la paleta nueva
+no se ha rehecho, la decisión de retirar `docs/ui/contraste.md` fue un préstamo
+que nadie devolvió: hay que reabrirla y decidir si se reconstruye la
+verificación o se declara a axe como única garantía, esta vez por escrito.
+
+## Cierre
+
+**El plan de migración queda cerrado el 7 de septiembre de 2026.** Se cierra
+sobre medidas, no sobre impresión: la validación se ejecutó entera y estos son
+los números.
+
+| Comprobación                                               | Resultado                          |
+| ---------------------------------------------------------- | ---------------------------------- |
+| Vitest                                                     | 867 pruebas, 74 archivos, en verde |
+| Playwright (`npm run e2e`)                                 | 205 en Windows; **204/205 en CI**  |
+| ESLint + Prettier                                          | limpio                             |
+| Cobertura de líneas                                        | 93.1%                              |
+| Bundle inicial                                             | 640.13 kB, bajo el aviso de 650    |
+| Hojas `.css` de componente                                 | ninguna                            |
+| HEX sueltos y valores arbitrarios de color                 | ninguno                            |
+| Puntos de quiebre fuera de `sm:` y `lg:`                   | ninguno                            |
+| Dependencias de `shared/ui` con Transloco o TanStack Query | ninguna                            |
+
+La revisión posterior al cierre encontró tres residuos, y los tres están
+corregidos aquí:
+
+- **`data-tema` sobrevivía muerto.** `index.html` seguía sirviendo
+  `data-tema="claro"` con un comentario que afirmaba que lo reescribía
+  `src/server.ts`. No lo reescribía nadie —el tema lo resuelve el inicializador
+  de `app.config.server.ts`— y ninguna hoja lo leía, porque la única que lo hacía
+  era `tokens.css`, ya fuera de la compilación. Atributo y comentario retirados.
+- **La documentación normativa contradecía al código en tres puntos.** `CLAUDE.md`
+  y `frontend/CLAUDE.md` seguían mandando escribir `data-tema` «porque es lo que
+  lee `tokens.css`», y seguían diciendo que dentro de `.franja-tinta` el bronce lo
+  alternaba `marca.css`, que ya no existe. El hook `revisar-convenciones.mjs`
+  arrastraba lo mismo: sus mensajes mandaban al infractor a `tokens.css` y a
+  `marca.css` y le ofrecían `var(--esp-N)` y `var(--radio-*)`, que son tokens del
+  sistema retirado. Es el peor sitio donde puede quedar una regla vieja, porque es
+  justo lo que lee quien acaba de equivocarse.
+- **Quedaban dos medidas sueltas.** `border-[3px]` estaba escrito a mano en la
+  captura de producto y en la de identidad. Se nombra como
+  `--brand-guide-stroke` con la utilidad `guide-stroke`, que existe porque
+  Tailwind 4 no tiene espacio de nombres de tema para el grosor de borde: su
+  escala es estática y 3px solo se alcanzaba con un valor arbitrario. La utilidad
+  pone **solo** el grosor, así que las dos cámaras comparten el trazo sin
+  compartir el color.
+
+### Un fallo abierto, y no es de este cierre
+
+`e2e/portada.spec.ts:166` —«el foco del boton principal es visible y mide 3px»—
+**falla en integración continua y pasa en Windows**. Mide el anillo de foco del
+botón principal contra el fondo de la franja de tinta y obtiene **1.086:1**,
+donde exige 3:1.
+
+No lo introdujo este cierre, y conviene que quede escrito por qué se sabe: el
+mismo caso falla con el mismo número en el commit anterior, `main` está en verde,
+y **el archivo de la prueba no lo tocó la migración**. La prueba es la de
+siempre; lo que cambió debajo fue el estilo. Es una regresión de la migración
+que solo se ve en Linux, y se escapó porque la verificación se corrió en
+Windows, donde pasa incluso forzando `CI=1`.
+
+Descartado ya: no es que la prueba enfoque el elemento equivocado —el volcado de
+accesibilidad de CI muestra un único enlace «Crear cuenta», y está activo— ni es
+intermitente, porque los tres intentos dan el mismo valor. Siguen en pie dos
+explicaciones: que `:focus-visible` no case en ese Chromium y `outlineColor` esté
+devolviendo `currentcolor`, o que la redefinición de `--brand-focus` dentro de
+`@utility franja-tinta` no llegue al botón por el orden de capas que introduce
+Tailwind. **Separarlas exige reproducir en Linux.**
+
+Queda además **una cosa abierta a propósito**, y se anota para que no se pierda:
+tres dependencias declaradas y sin usar —`@spartan-ng/brain`, `clsx` y
+`tw-animate-css`—. Spartan venía en el encargo original y no se usó: las cuatro
+primitivas se escribieron a mano sobre el CDK, que es lo que la propia decisión
+justifica. `styles.css` importa `tw-animate-css`, pero ninguna plantilla usa una
+utilidad suya. No se retiran en esta entrega para no mezclar limpieza de
+dependencias con cierre de migración; es tarea propia y de un solo commit.
