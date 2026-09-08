@@ -108,6 +108,17 @@
   margin: 0;
 }
 
+/* El enlace va solo en su párrafo y no incrustado en la frase: es lo que permite darle
+   los 44px que `frontend/CLAUDE.md` exige sin excepción, y es la misma forma que usa el
+   enlace a la política en la página de contacto. La separación la da el `gap` de
+   `.ficha__datos`; una `margin-top` aquí sería letra muerta, porque `.ficha__datos p`
+   gana por especificidad con su `margin: 0`. */
+.ficha__garantia a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+}
+
 .ficha__esqueleto {
   aspect-ratio: var(--relacion-foto);
   max-width: 420px;

@@ -1287,7 +1287,14 @@
       "backToCatalog": "Volver al catálogo",
       "loading": "Cargando la publicación",
       "gallery": "Fotos del producto",
-      "shot": "Toma {{grados}} grados"
+      "shot": "Toma {{grados}} grados",
+      "warranty": {
+        "label": "Garantía del fabricante",
+        "months": "{{meses}} meses, declarados por el vendedor",
+        "month": "1 mes, declarado por el vendedor",
+        "who": "Quien responde por esta garantía es el vendedor, no Sendik.",
+        "link": "Leer los términos y condiciones"
+      }
     },
     "referenceImage": {
       "label": "Imagen de referencia",

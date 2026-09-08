@@ -59,13 +59,17 @@ No entra:
 - **Visor 360.** Es HU-003 y va detrás de `FEATURE_SPIN_VIEWER`. La ficha nace con
   un carrusel de las ocho tomas; cuando HU-003 llegue, el visor sustituye al
   carrusel sin tocar esta historia.
-- **La frase de la garantía del fabricante en la ficha (RN-067).** No es un olvido:
-  `textos-web.md` la tiene aplazada por decisión del 26 de agosto de 2026 a la
+- **La frase de la garantía del fabricante en la ficha (RN-067).** No fue un olvido:
+  `textos-web.md` la tenía aplazada por decisión del 26 de agosto de 2026 a la
   tanda de los documentos legales, porque reparte responsabilidad entre vendedor,
-  comprador y una plataforma que no la asume. Ese documento dice, con esas
-  palabras, que **bloquea la ficha de producto**. La ficha de tecnología se
-  entrega sin esa línea y con el campo ya disponible en la API; se agrega cuando
-  el texto exista, y hasta entonces no se inventa.
+  comprador y una plataforma que no la asume. Ese documento decía, con esas
+  palabras, que **bloquea la ficha de producto**. La ficha de tecnología se entregó
+  sin esa línea y con el campo ya disponible en la API.
+
+  **Se agregó el 8 de septiembre de 2026**, en esa misma tanda y sobre esta pantalla,
+  sin reabrir la historia: el numeral 15.2 de los términos `2026-09-08b` ya reparte la
+  responsabilidad por escrito, así que la ficha lo enuncia en llano y enlaza al
+  documento (RN-057). Las claves son `catalog.detail.warranty.*`.
 
 ## Criterios de aceptación
 

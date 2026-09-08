@@ -825,16 +825,15 @@ ocho, y puedes agregar imágenes del fabricante.
 `.referenceHelp`: Del fabricante, para mostrar el producto por dentro. Nunca cuenta
 como una de tus tomas: sin fotos reales no publicamos.
 
-⚠️ **Cómo se enuncia la garantía en la ficha se redacta al final del proyecto,
-junto con los textos legales** (decisión del 26 de agosto de 2026). RN-067 dice que
-responde el vendedor y no Sendik: eso reparte una responsabilidad entre dos partes
-y una tercera que no la asume, así que se escribe con la misma revisión que los
-términos, la política de datos y la de cookies, y en la misma tanda. Está anotado
-en «Revisión legal antes de abrir».
+~~⚠️ **Cómo se enuncia la garantía en la ficha se redacta al final del proyecto,
+junto con los textos legales** (decisión del 26 de agosto de 2026).~~ **Escrito el 8
+de septiembre de 2026**, en esa tanda, que es lo que la decisión pedía. Vive en «La garantía del fabricante — `catalog.detail.warranty.*`», dentro
+de «Catálogo público — Fase 2», y se apoya en el numeral 15.2 de los términos
+publicados en vez de inventar una frase nueva.
 
 Lo de aquí arriba es el rótulo del campo del formulario, que es otra cosa: nombra
-el dato, no promete nada. **El formulario no se bloquea por esto**; la ficha de
-producto, que es otra historia, sí.
+el dato, no promete nada. **El formulario nunca se bloqueó por esto**; la ficha de
+producto, que es otra historia, sí lo estuvo, y ya no.
 
 ⚠️ **El rótulo de la imagen de referencia en la ficha y en el carrusel tampoco.**
 `.reference` es del formulario. RN-066 exige rotularlas también donde se ven, y eso
@@ -1376,6 +1375,45 @@ Va en los dos idiomas desde el primer día. En inglés se conserva la misma
 distinción: `Reference image` / `The seller did not take this photo. It is the
 manufacturer's and shows the model, not the item you will receive.`
 
+### La garantía del fabricante — `catalog.detail.warranty.*`
+
+Lo exige RN-067 y era el último pendiente de redacción de la ficha. **Escrito el 8
+de septiembre de 2026**, en la misma tanda que los documentos legales, que es lo que
+la decisión del 26 de agosto pedía.
+
+`.label`: Garantía del fabricante
+`.months`: {{meses}} meses, declarados por el vendedor
+`.month`: 1 mes, declarado por el vendedor
+`.who`: Quien responde por esta garantía es el vendedor, no Sendik.
+`.link`: Leer los términos y condiciones
+
+**No es copia legal nueva y por eso se pudo escribir.** El numeral 15.2 de los
+términos publicados —versión `2026-09-08b`— ya dice esto mismo con estas palabras:
+el vendedor declara la garantía y por cuántos meses, y quien responde por ella es él
+y no Sendik. Lo de aquí lo enuncia en llano y **enlaza al documento**, que es lo que
+RN-057 manda: los plazos y las condiciones viven en un solo sitio versionado y las
+páginas apuntan allí en vez de repetirlos.
+
+**Sin dato no se pinta nada, y nunca «sin garantía».** La garantía legal de la Ley
+1480 de 2011 rige sobre todo producto nuevo, la traiga o no de fábrica, así que una
+ficha que dijera «sin garantía» estaría afirmando algo falso sobre los derechos de
+quien compra. Cuando el vendedor no declaró meses, la ficha calla y el numeral 15.1
+sigue siendo verdad.
+
+**El singular va en su propia clave.** «1 meses» en la pantalla que más gente lee sin
+tener cuenta es de las cosas que se notan. `listingReview.detail.warrantyMonths`
+arrastra ese defecto, pero eso lo ve un moderador y se corrige aparte.
+
+**Nunca la palabra Respaldo ni nada que se le parezca**, que es la condición literal
+que RN-067 imponía. El glosario admite «garantía» exactamente en esta forma —referida
+al dispositivo y a lo que responde su vendedor— y la prohíbe para nombrar lo que
+ofrece Sendik. `.who` es la frase que mantiene las dos cosas separadas, y por eso
+nombra a Sendik: decir solo «responde el vendedor» deja al lector suponiendo quién más.
+
+En inglés: `Manufacturer warranty` / `{{meses}} months, as declared by the seller` /
+`1 month, as declared by the seller` / `The seller answers for this warranty, not
+Sendik.` / `Read the terms and conditions`.
+
 ### El perfil del vendedor — `catalog.seller.*`
 
 `.title`: {{nombre}}
@@ -1488,12 +1526,13 @@ Lo que falta escribir:
       RN-066 exige en los dos idiomas.~~ **Escrito el 27 de agosto de 2026** en
       «Catálogo público — Fase 2», junto con la historia que lo necesitaba:
       `catalog.referenceImage.label` y `.hint`, en español y en inglés.
-- [ ] Cómo se enuncia la garantía del fabricante en la ficha sin usar la palabra
-      Respaldo ni parecerse a ella (RN-067). **Se redacta al final del proyecto,
-      en la misma tanda que los tres documentos legales** (decisión del 26 de
-      agosto de 2026): reparte responsabilidad entre el vendedor, el comprador y
-      una plataforma que no la asume, y eso no se escribe sin abogado. Bloquea la
-      ficha de producto, no el formulario de publicación.
+- [x] ~~Cómo se enuncia la garantía del fabricante en la ficha sin usar la palabra
+      Respaldo ni parecerse a ella (RN-067).~~ **Escrito el 8 de septiembre de 2026**,
+      en la tanda de los documentos legales tal como pedía la decisión del 26 de
+      agosto, en «Catálogo público — Fase 2». Lo que lo desbloqueó no fue una frase
+      nueva: el numeral 15.2 de los términos `2026-09-08b` ya reparte la
+      responsabilidad por escrito, así que la ficha lo enuncia en llano y enlaza al
+      documento (RN-057) en vez de decidir nada por su cuenta.
 
 ## Decisiones de producto
 
@@ -1549,15 +1588,21 @@ Lo que falta escribir:
       electrónico. Es el punto que un abogado debe revisar primero.
 - [ ] **La garantía legal de un producto de tecnología nuevo.** La Ley 1480 de
       2011 la impone sobre todo producto nuevo, y RN-067 dice que responde el
-      vendedor y no Sendik. Que la regla lo diga no basta: hay que comprobar que
-      es sostenible para una plataforma que además cobra comisión, y redactar
-      cómo se enuncia sin rozar la palabra Respaldo. **Bloquea abrir la venta de
-      tecnología**, no el resto del sitio.
+      vendedor y no Sendik. **Bloquea abrir la venta de tecnología**, no el resto
+      del sitio.
 
-      **Confirmado el 26 de agosto de 2026: se redacta al final del proyecto, en
-      esta misma tanda.** No antes y no por separado. El formulario de publicación
-      no espera por esto —su campo se llama «Meses de garantía del fabricante» y
-      no promete nada—; la ficha de producto sí.
+      **La redacción quedó hecha el 8 de septiembre de 2026** y con ella se
+      desbloquea la ficha de producto: los términos `2026-09-08b` lo dicen en el
+      numeral 15.2 —15.1 recoge además la garantía legal y sus términos— y la ficha
+      lo enuncia y enlaza sin rozar la palabra Respaldo.
+
+      **Lo que sigue abierto es lo otro que esta línea pedía, y es de criterio
+      profesional:** si repartir así la responsabilidad es sostenible para una
+      plataforma que además cobra comisión. Eso no lo cierra una redacción y va
+      donde van sus hermanos, en
+      `docs/operacion/entrega-textos-legales-2026-09-08b.md`, junto al alcance de la
+      responsabilidad como portal de contacto. Publicar sin abogado colegiado sigue
+      siendo la decisión expresa del 5 de septiembre.
 
 ## Traducción
 
