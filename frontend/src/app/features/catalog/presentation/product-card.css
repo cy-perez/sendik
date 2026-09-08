@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+  color: inherit;
+  text-decoration: none;
+  height: 100%;
+}
+
+/* La foto de producto es 3:4 (ADR-0010, RN-018). El hueco se reserva con la proporción
+   y no con una altura fija: así la rejilla no salta al cargar y la medida sigue siendo
+   la del sistema y no un número de esta pantalla. */
+.tarjeta__foto {
+  aspect-ratio: var(--relacion-foto);
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+}
+
+.tarjeta__foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tarjeta__datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+/* Dos líneas y corta. Un título de 120 caracteres —el máximo que admite el formulario—
+   descuadraría la fila entera de la rejilla. */
+.tarjeta__titulo {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tarjeta__datos p {
+  margin: 0;
+}
+
+/* El foco se ve sobre la tarjeta entera, que es lo que se enfoca. No se quita el
+   contorno: se le da sitio para que no lo recorte el desbordamiento de la foto. */
+.tarjeta:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 4px;
+  border-radius: var(--radio-md);
+}
+
+@media (hover: hover) {
+  .tarjeta:hover .tarjeta__foto {
+    border-color: var(--color-texto-suave);
+  }
+}

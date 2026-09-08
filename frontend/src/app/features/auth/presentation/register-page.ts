@@ -17,11 +17,10 @@ import { RUTAS_LEGALES } from '../../../core/routes/legal-routes';
 import { esCorreoValido } from '../domain/credentials';
 import { cumpleElLargoMinimo, fuerzaDe } from '../domain/password-policy';
 import { esMayorDeEdad } from '../domain/registration';
-import { CheckboxField } from '../../../shared/ui/field/checkbox-field';
-import { PrivacyNotice } from '../../../shared/legal/privacy-notice';
-import { SubmitButton } from '../../../shared/ui/field/submit-button';
-import { TextField } from '../../../shared/ui/field/text-field';
-import { FormError } from '../../../shared/ui/field/form-error';
+import { CheckboxField } from '../../../shared/ui/form/checkbox-field';
+import { PrivacyNotice } from '../../../shared/ui/form/privacy-notice';
+import { SubmitButton } from '../../../shared/ui/form/submit-button';
+import { TextField } from '../../../shared/ui/form/text-field';
 
 /**
  * Formulario de registro. Criterios 1 a 6 de HU-001.
@@ -43,9 +42,9 @@ import { FormError } from '../../../shared/ui/field/form-error';
     CheckboxField,
     SubmitButton,
     PrivacyNotice,
-    FormError,
   ],
   templateUrl: './register-page.html',
+  styleUrl: './register-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterPage {

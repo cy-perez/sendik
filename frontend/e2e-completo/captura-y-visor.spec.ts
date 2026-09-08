@@ -92,21 +92,6 @@ test.describe('captura asistida y visor giratorio', () => {
      * imagen midiera cualquier otra cosa. Este es el viaje entero —camara, worker, subida,
      * validacion del servidor, disco y vuelta— medido en el unico sitio donde se puede.
      */
-    /*
-     * Criterio 17, y se comprueba aqui porque solo aqui se puede: la regla vive en
-     * la hoja global desde la ADR-0032 y jsdom no la carga, asi que una prueba de
-     * componente leeria un estilo computado vacio.
-     *
-     * `pinch-zoom` va explicito porque `pan-y` a secas TAMBIEN descarta el
-     * pellizco para ampliar, y esta es la foto principal del producto: justo lo
-     * que alguien con baja vision necesita agrandar. Se afirma lo que se quiere y
-     * no lo que no se quiere: `not.toBe('none')` pasaria con `pan-x`, que atrapa
-     * la pagina igual.
-     */
-    const gesto = await visor.evaluate((caja) => getComputedStyle(caja).touchAction);
-    expect(gesto).toContain('pan-y');
-    expect(gesto).toContain('pinch-zoom');
-
     const foto = visor.locator('img.visor__foto');
     const medida = await foto.evaluate(async (imagen: HTMLImageElement) => {
       await imagen.decode();

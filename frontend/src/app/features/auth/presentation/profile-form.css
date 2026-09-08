@@ -1,0 +1,28 @@
+/* La misma caja que el resto de los formularios del sitio: una linea de campo
+   ancha es incomoda de recorrer con la vista. */
+.formulario {
+  max-width: 480px;
+  margin-top: var(--esp-24);
+}
+
+.error {
+  margin-top: var(--esp-16);
+  color: var(--color-error);
+}
+
+/* El aviso de guardado no lleva color de exito propio: se distingue por el texto
+   y por el borde, que es lo que tambien percibe quien no distingue el color. */
+.guardado {
+  padding: var(--esp-8) var(--esp-12);
+  margin-bottom: var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* La barra de esqueleto necesita su caja: el brillo va sobre un bloque. */
+.barra {
+  height: 20px;
+  max-width: 320px;
+  margin-top: var(--esp-16);
+}

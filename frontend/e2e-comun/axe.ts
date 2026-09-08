@@ -24,8 +24,8 @@ export const ETIQUETAS_WCAG = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag
 
 /** Los dos modos, con el valor que espera la cookie que lee el servidor. */
 export const MODOS = [
-  { modo: 'claro', cookie: 'light', esOscuro: false },
-  { modo: 'oscuro', cookie: 'dark', esOscuro: true },
+  { modo: 'claro', cookie: 'light', atributo: 'claro' },
+  { modo: 'oscuro', cookie: 'dark', atributo: 'oscuro' },
 ] as const;
 
 /**

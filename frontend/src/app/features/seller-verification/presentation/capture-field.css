@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+.captura {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+  align-items: flex-start;
+  margin-top: var(--esp-16);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+}
+
+.visor {
+  position: relative;
+  width: 100%;
+  max-width: var(--medida-formulario);
+}
+
+.video {
+  display: block;
+  width: 100%;
+  border-radius: var(--radio-sm);
+  background-color: var(--color-fondo);
+}
+
+/* La guia de encuadre. Proporcion de una cedula: mas ancha que alta. */
+.guia {
+  position: absolute;
+  inset: 10% 6%;
+  border: 3px solid var(--color-foco);
+  border-radius: var(--radio-sm);
+  pointer-events: none;
+}
+
+/* Para el rostro, un ovalo centrado y mas alto que ancho. */
+.guia-rostro {
+  inset: 8% 22%;
+  border-radius: 50%;
+}
+
+.vista-previa {
+  display: block;
+  width: 100%;
+  max-width: var(--medida-formulario);
+  border-radius: var(--radio-sm);
+}
+
+.accion {
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8) var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.error {
+  color: var(--color-error);
+}

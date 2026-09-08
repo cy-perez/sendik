@@ -11,23 +11,13 @@ documento no las repite: dice qué existe hoy y dónde se verifica.
 
 Cinco cosas que la persona usa o que el sitio respeta por ella.
 
-| Control                                 | Dónde                                                                                     | Se comprueba en                                               |
-| --------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Enlace de salto al contenido            | Primer elemento enfocable de cada página (`site-header.html`)                             | `e2e/shell.spec.ts`                                           |
-| Foco visible de 3px                     | `styles/tema.css`, con anillo propio dentro de `.franja-tinta`                            | `e2e/portada.spec.ts`, `e2e/accesibilidad.spec.ts`            |
-| Conmutador de tema claro y oscuro       | Cabecera, con `aria-pressed`                                                              | `e2e/shell.spec.ts`, `core/theme/theme.spec.ts`               |
-| Selector de idioma ES/EN                | Cabecera, con etiqueta para lector de pantalla                                            | `e2e/shell.spec.ts`                                           |
-| Respeto de las preferencias del sistema | `prefers-reduced-motion` en `styles/tema.css`; tema preferido si no hay elección guardada | `e2e/movimiento-reducido.spec.ts`, `core/theme/theme.spec.ts` |
-
-**Dos de estas filas no tenían prueba propia hasta la Fase 4**, y las dos
-escondían un fallo real. El anillo de foco solo se medía dentro de la franja de
-tinta, donde es blanco por definición: fuera de ella, el kit generado nunca
-definió el color de foco para el modo oscuro, así que el anillo llevaba desde la
-Fase 1 dando **1.08:1** contra el fondo, o sea invisible. Y el respeto al
-movimiento reducido se daba por hecho porque la regla vivía en `tokens.css`; al
-retirar esa hoja desapareció sin que nada fallara. Axe no evalúa ninguna de las
-dos cosas. La lección es la de siempre: un control declarado y no comprobado no
-está entregado, está supuesto.
+| Control | Dónde | Se comprueba en |
+|---|---|---|
+| Enlace de salto al contenido | Primer elemento enfocable de cada página (`site-header.html`) | `e2e/shell.spec.ts` |
+| Foco visible de 3px | `tokens.css`, con anillo propio dentro de `.franja-tinta` | `e2e/portada.spec.ts` |
+| Conmutador de tema claro y oscuro | Cabecera, con `aria-pressed` | `e2e/shell.spec.ts`, `core/theme/theme.spec.ts` |
+| Selector de idioma ES/EN | Cabecera, con etiqueta para lector de pantalla | `e2e/shell.spec.ts` |
+| Respeto de las preferencias del sistema | `prefers-reduced-motion` en `tokens.css` y `marca.css`; tema preferido si no hay elección guardada | `core/theme/theme.spec.ts` |
 
 **Lo que no hay: control de tamaño de texto.** No está y no se añade por iniciativa
 propia: sería funcionalidad de producto que nadie ha decidido. El navegador ya

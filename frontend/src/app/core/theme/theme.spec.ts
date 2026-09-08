@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildThemeCookie, resolveTheme } from './theme';
+import { buildThemeCookie, resolveTheme, themeAttribute, themeFromAttribute } from './theme';
 
 describe('resolveTheme', () => {
   it('sirve el modo claro cuando no hay ninguna pista', () => {
@@ -29,6 +29,21 @@ describe('resolveTheme', () => {
     expect(resolveTheme({ cookieHeader: 'sendik_theme=neon', colorSchemeHint: 'dark' })).toBe(
       'dark',
     );
+  });
+});
+
+describe('themeAttribute', () => {
+  // Los valores del atributo los fija tokens.css y estan en espanol. Esta es la
+  // unica frontera donde se traducen.
+  it('traduce al valor que lee el sistema de diseno', () => {
+    expect(themeAttribute('dark')).toBe('oscuro');
+    expect(themeAttribute('light')).toBe('claro');
+  });
+
+  it('vuelve del atributo al tema', () => {
+    expect(themeFromAttribute('oscuro')).toBe('dark');
+    expect(themeFromAttribute('claro')).toBe('light');
+    expect(themeFromAttribute(null)).toBe('light');
   });
 });
 

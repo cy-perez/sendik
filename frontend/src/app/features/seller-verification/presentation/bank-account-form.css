@@ -1,0 +1,36 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-16);
+  max-width: var(--medida-formulario);
+  margin-top: var(--esp-24);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+/* Mismo alto minimo que el resto de los controles: 44px de destino tactil, sin
+   excepcion (frontend/CLAUDE.md). */
+.control {
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+.error-campo {
+  color: var(--color-error);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.guardado {
+  color: var(--color-exito);
+}

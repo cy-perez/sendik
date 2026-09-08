@@ -1,7 +1,4 @@
-<a
-  class="tipo-secundario inline-flex min-h-touch items-center"
-  routerLink="/moderacion/publicaciones"
->
+<a class="enlace-de-volver tipo-secundario" routerLink="/moderacion/publicaciones">
   {{ 'listingReview.detail.back' | transloco }}
 </a>
 
@@ -14,16 +11,16 @@
 </h1>
 
 @if (consulta.isPending()) {
-  <span class="esqueleto mt-6 block h-[320px]" aria-hidden="true"></span>
+  <span class="esqueleto esqueleto-detalle" aria-hidden="true"></span>
   <p class="solo-lectores" role="status">{{ 'listingReview.inbox.loading' | transloco }}</p>
 } @else if (consulta.isError()) {
-  <div class="tipo-cuerpo mt-6 rounded-md border border-l-4 bg-surface p-4 border-error">
+  <div class="aviso-de-error tipo-cuerpo">
     <p>
       <strong>{{ 'listingReview.inbox.error.title' | transloco }}</strong>
     </p>
     <!-- Con su reintentar, como la bandeja. Aqui hace mas falta todavia: quien llego por
          la direccion directa ya no tiene la fila desde la que volver a entrar. -->
-    <button type="button" sendikButton variant="ghost" (click)="reintentar()">
+    <button type="button" class="btn" (click)="reintentar()">
       {{ 'listingReview.inbox.error.retry' | transloco }}
     </button>
   </div>
@@ -38,10 +35,7 @@
        se le dice el motivo, para no invitarlo a cambiar el precio y esquivar la revisión;
        quien revisa es justo quien lo necesita (RN-020). -->
   @if (marcasDeAtencion().length > 0) {
-    <section
-      class="mt-6 rounded-md border border-l-4 bg-surface p-4 border-warning [&_ul]:mt-2 [&_ul]:mb-0 [&_ul]:pl-6"
-      aria-labelledby="titulo-atencion"
-    >
+    <section class="atencion" aria-labelledby="titulo-atencion">
       <h2 id="titulo-atencion" class="tipo-titulo-tarjeta">
         {{ 'listingReview.attention.title' | transloco }}
       </h2>
@@ -53,14 +47,12 @@
     </section>
   }
 
-  <section class="mt-8" aria-labelledby="titulo-producto">
+  <section class="seccion" aria-labelledby="titulo-producto">
     <h2 id="titulo-producto" class="tipo-titulo-tarjeta">
       {{ 'listingReview.detail.productSection' | transloco }}
     </h2>
 
-    <dl
-      class="datos-de-la-publicacion tipo-cuerpo mt-3 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[max-content_1fr] [&_dd]:m-0 [&_dt]:text-text-muted"
-    >
+    <dl class="datos-de-la-publicacion tipo-cuerpo">
       <dt>{{ 'listingReview.detail.price' | transloco }}</dt>
       <dd class="precio">{{ precio() }}</dd>
 
@@ -105,18 +97,16 @@
       <h3 class="tipo-titulo-tarjeta">
         {{ 'listingReview.detail.description' | transloco }}
       </h3>
-      <p class="tipo-cuerpo mt-2 whitespace-pre-wrap [overflow-wrap:anywhere]">{{ descripcion }}</p>
+      <p class="tipo-cuerpo descripcion">{{ descripcion }}</p>
     }
   </section>
 
   @if (medidas().length > 0) {
-    <section class="mt-8" aria-labelledby="titulo-medidas">
+    <section class="seccion" aria-labelledby="titulo-medidas">
       <h2 id="titulo-medidas" class="tipo-titulo-tarjeta">
         {{ 'listingReview.detail.measurementsSection' | transloco }}
       </h2>
-      <dl
-        class="datos-de-la-publicacion tipo-cuerpo mt-3 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[max-content_1fr] [&_dd]:m-0 [&_dt]:text-text-muted"
-      >
+      <dl class="datos-de-la-publicacion tipo-cuerpo">
         @for (medida of medidas(); track medida.clave) {
           <dt>{{ medida.clave | transloco }}</dt>
           <dd>{{ medida.valor }}</dd>
@@ -125,18 +115,14 @@
     </section>
   }
 
-  <section class="mt-8" aria-labelledby="titulo-tomas">
+  <section class="seccion" aria-labelledby="titulo-tomas">
     <h2 id="titulo-tomas" class="tipo-titulo-tarjeta">
       {{ 'listingReview.detail.shotsSection' | transloco }}
     </h2>
 
-    <ul
-      class="mt-4 grid list-none grid-cols-[repeat(auto-fill,minmax(var(--container-shot-min),1fr))] gap-4 p-0"
-    >
+    <ul class="tomas">
       @for (posicion of posiciones(); track posicion) {
-        <li
-          class="toma m-0 overflow-hidden rounded-md border border-border bg-surface [&_img]:block [&_img]:h-auto [&_img]:w-full"
-        >
+        <li class="toma">
           @if (tomaDe(posicion); as direccion) {
             <!--
               Medidas explícitas: las exige NgOptimizedImage y reservan el hueco, para que
@@ -157,9 +143,7 @@
             <!-- Caso borde: el archivo puede faltar por un fallo de despliegue. Se dice,
                  y la publicación sigue siendo decidible: rechazar por fotos inservibles
                  es una respuesta válida. -->
-            <p
-              class="tipo-secundario m-0 flex min-h-shot-gap items-center justify-center p-3 text-center text-text-muted"
-            >
+            <p class="toma--ausente tipo-secundario">
               {{ 'listingReview.detail.shotMissing' | transloco }}
             </p>
           }
@@ -172,24 +156,24 @@
        igual; esconder los botones no es la regla, pero enterarse después de pulsar, con
        un correo ya prometido, no hace falta. -->
   @if (esPropia()) {
-    <p class="tipo-cuerpo mt-8 rounded-md border border-primary bg-surface p-4" role="status">
+    <p class="aviso-propia tipo-cuerpo" role="status">
       {{ 'listingReview.decision.ownListing' | transloco }}
     </p>
   } @else {
-    <section class="mt-8" aria-labelledby="titulo-decision">
+    <section class="seccion" aria-labelledby="titulo-decision">
       <h2 id="titulo-decision" class="tipo-titulo-tarjeta">
         {{ 'listingReview.decision.title' | transloco }}
       </h2>
 
       <form (submit)="alEnviar($event)" novalidate>
-        <div class="mt-4 mb-1 block">
+        <div class="campo">
           <label class="tipo-secundario" for="motivo">
             {{ 'listingReview.decision.reasonLabel' | transloco }}
           </label>
           <select
             #motivo
             id="motivo"
-            class="control-field max-w-form resize-y"
+            class="control"
             [attr.aria-invalid]="faltaMotivo() ? 'true' : null"
             [attr.aria-describedby]="faltaMotivo() ? 'motivo-error' : null"
             (change)="elegirMotivo($any($event.target).value)"
@@ -202,13 +186,13 @@
             }
           </select>
           @if (faltaMotivo()) {
-            <p id="motivo-error" class="tipo-secundario mt-2 text-error" role="alert">
+            <p id="motivo-error" class="mensaje-de-error tipo-secundario" role="alert">
               {{ 'listingReview.decision.reasonRequired' | transloco }}
             </p>
           }
         </div>
 
-        <div class="mt-4 mb-1 block">
+        <div class="campo">
           <label class="tipo-secundario" for="nota">
             {{ 'listingReview.decision.noteLabel' | transloco }}
           </label>
@@ -219,7 +203,7 @@
           </p>
           <textarea
             id="nota"
-            class="control-field max-w-form resize-y"
+            class="control"
             rows="3"
             aria-describedby="nota-ayuda"
             [attr.maxlength]="maximoDeNota"
@@ -229,11 +213,11 @@
         </div>
 
         @if (porConfirmar() === null) {
-          <div class="mt-8 flex flex-wrap items-center gap-3">
+          <div class="acciones">
             <button
               #aprobar
               type="button"
-              sendikButton
+              class="btn btn-primario"
               [disabled]="enCurso()"
               (click)="pedirConfirmacion('aprobar')"
             >
@@ -242,8 +226,7 @@
             <button
               #rechazar
               type="button"
-              sendikButton
-              variant="ghost"
+              class="btn"
               [disabled]="enCurso()"
               (click)="pedirRechazo()"
             >
@@ -256,7 +239,7 @@
                un lector anuncie de qué va lo que acaba de aparecer. -->
           <div
             #confirmacion
-            class="mt-8 flex flex-col flex-wrap items-start gap-3 rounded-md border border-control-border bg-surface p-4 [&>p]:m-0"
+            class="confirmacion"
             tabindex="-1"
             role="group"
             aria-labelledby="texto-de-confirmacion"
@@ -271,17 +254,16 @@
                 ) | transloco
               }}
             </p>
-            <div class="mt-8 flex flex-wrap items-center gap-3">
-              <button type="button" sendikButton [disabled]="enCurso()" (click)="confirmar()">
-                {{ 'listingReview.decision.confirm' | transloco }}
-              </button>
+            <div class="acciones">
               <button
                 type="button"
-                sendikButton
-                variant="ghost"
+                class="btn btn-primario"
                 [disabled]="enCurso()"
-                (click)="cancelar()"
+                (click)="confirmar()"
               >
+                {{ 'listingReview.decision.confirm' | transloco }}
+              </button>
+              <button type="button" class="btn" [disabled]="enCurso()" (click)="cancelar()">
                 {{ 'listingReview.decision.cancel' | transloco }}
               </button>
             </div>
@@ -293,11 +275,11 @@
            formas de dejar de estar pendiente con el mismo texto, porque al moderador le
            pasa lo mismo en las dos: ya no le toca. -->
       @if (yaNoEstaPendiente()) {
-        <p class="tipo-cuerpo mt-2 text-error" role="alert">
+        <p class="mensaje-de-error tipo-cuerpo" role="alert">
           {{ 'listingReview.decision.alreadyResolved' | transloco }}
         </p>
       } @else if (claveDeError(); as clave) {
-        <p class="tipo-cuerpo mt-2 text-error" role="alert">{{ clave | transloco }}</p>
+        <p class="mensaje-de-error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
       }
     </section>
   }

@@ -1,0 +1,81 @@
+.bloque {
+  max-width: var(--medida);
+  margin-top: var(--esp-48);
+}
+
+.bloque > p {
+  margin-top: var(--esp-8);
+}
+
+/* El bloque de cierre se distingue por el borde y por su titulo, no solo por el
+   color: un color no puede ser el unico portador de informacion. */
+.peligro {
+  padding: var(--esp-16);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radio-md);
+}
+
+.sesiones {
+  list-style: none;
+  padding: 0;
+  margin: var(--esp-16) 0 0;
+}
+
+.sesion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-12);
+  padding: var(--esp-12) 0;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+/* Etiqueta, no adorno: dice cual es la sesion desde la que se esta mirando. */
+.actual {
+  display: inline-block;
+  margin-left: var(--esp-8);
+  padding: 0 var(--esp-8);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-completo);
+  color: var(--color-texto-suave);
+}
+
+.accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin-top: var(--esp-16);
+  padding: 0 var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.sesion .accion {
+  margin-top: 0;
+}
+
+.accion:hover {
+  background: var(--color-fondo);
+}
+
+.error {
+  margin-top: var(--esp-16);
+  color: var(--color-error);
+}
+
+.formulario {
+  margin-top: var(--esp-24);
+}
+
+/* La barra de esqueleto necesita su caja: el brillo va sobre un bloque. */
+.barra {
+  height: 20px;
+  max-width: 320px;
+  margin-top: var(--esp-16);
+}

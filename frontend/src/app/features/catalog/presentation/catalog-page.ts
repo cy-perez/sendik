@@ -15,7 +15,6 @@ import type { Category } from '../../../shared/domain/listing';
 import { CatalogStore } from '../application/catalog.store';
 import { categoriaPorSlugs, nombreDeCategoria } from '../domain/public-listing';
 import { ProductCard } from './product-card';
-import { Button } from '../../../shared/ui/button/button';
 
 /**
  * El catálogo público. HU-009, criterios 1 a 10.
@@ -36,12 +35,9 @@ import { Button } from '../../../shared/ui/button/button';
 @Component({
   selector: 'sendik-catalog-page',
   standalone: true,
-  imports: [ProductCard, RouterLink, TranslocoPipe, Button],
+  imports: [ProductCard, RouterLink, TranslocoPipe],
   templateUrl: './catalog-page.html',
-  // grid-column es obligatorio: <main> es una rejilla y sin asignar carril la
-  // pagina cae en el de sangria y se pinta en una columna de 40px. Sin ancho
-  // maximo tampoco, porque el carril de contenido ya centra.
-  host: { class: 'block [grid-column:content] max-w-content px-4 py-6' },
+  styleUrl: './catalog-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CatalogPage {

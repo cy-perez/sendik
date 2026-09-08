@@ -1,0 +1,206 @@
+/* Enlace de salto: fuera de la vista hasta que recibe el foco. No se oculta con
+   display:none porque entonces el teclado tampoco lo alcanzaria. */
+.salto-al-contenido {
+  position: absolute;
+  z-index: 10;
+  left: var(--esp-8);
+  top: var(--esp-8);
+  transform: translateY(-250%);
+  padding: var(--esp-8) var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.salto-al-contenido:focus {
+  transform: translateY(0);
+}
+
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+/* Medidas del kit de Sendik: 56 en movil, 72 en escritorio. Es min-height y no
+   height para que con el texto al 200% la barra crezca en vez de recortar. */
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-16);
+  min-height: 56px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .barra {
+    min-height: 72px;
+  }
+}
+
+/* Aqui SOLO el tamano de cada variante. Cual de las cuatro se ve —dos temas por
+   dos anchos— lo decide marca.css, y tiene que ser alli por una razon concreta:
+   la encapsulacion emulada de Angular le anade `[_ngcontent-x]` a TODOS los
+   compuestos del selector, incluido `[data-tema="oscuro"]`, que vive en el
+   <html> y no lleva ese atributo. Una regla de tema escrita en esta hoja se
+   compila a algo que no casa nunca, y falla en silencio: el logo se quedaba en
+   su version clara sobre el fondo oscuro y casi no se veia.
+
+   Tampoco se declara `display` sobre `.logo-sitio img` en general: una regla de
+   aqui le gana a la de marca.css aunque parezca menos especifica, justamente
+   porque la encapsulacion le suma atributos, y volverian a pintarse dos logos a
+   la vez. */
+.logo-sitio .lockup {
+  height: 34px;
+  width: auto;
+}
+
+.logo-sitio .isotipo {
+  height: 32px;
+  width: 32px;
+}
+
+/* Envuelve igual que .barra. Con el hueco proyectado son ya tres controles, y
+   con el texto al 200% la fila no cabe en un movil: sin wrap eso saca una barra
+   de desplazamiento horizontal en una cabecera que ademas es pegajosa. */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-8);
+}
+
+/* Todo destino tactil llega a 44px. Sin excepcion. */
+.selector-idioma {
+  min-height: var(--destino-tactil);
+  padding: 0 var(--esp-8);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+}
+
+.boton-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--destino-tactil);
+  min-height: var(--destino-tactil);
+  padding: 0;
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.boton-icono:hover {
+  background: var(--color-primario-suave);
+}
+
+.boton-icono svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- Navegacion principal y menu compacto (HU-005) ---- */
+
+/* El boton solo existe por debajo del punto de quiebre. Se oculta con display
+   para que en escritorio tampoco lo alcance el tabulador: un boton invisible que
+   recibe el foco deja a quien navega con teclado sin saber donde esta. */
+.boton-menu {
+  display: inline-flex;
+}
+
+/* En movil el panel ocupa la fila siguiente y se despliega bajo la barra. Cerrado
+   es display:none, asi que no es enfocable; el HTML servido lo lleva igual
+   dentro, que es de lo que vive el buscador.
+
+   El `order` lo baja por debajo de las acciones: el panel es width:100%, asi que
+   rompe fila, y sin esto al abrir el menu los controles de idioma, tema y sesion
+   se iban de un salto a una tercera fila. En escritorio se vuelve al orden del
+   documento: primero la navegacion, luego las acciones. */
+.panel {
+  order: 1;
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--esp-16);
+  padding-bottom: var(--esp-16);
+}
+
+.panel.desplegado {
+  display: flex;
+}
+
+/* list-style: none faltaba y las vinetas se pintaban a la izquierda de cada
+   enlace de la barra. Venia de antes del cambio de marca; se corrige aqui porque
+   la maqueta del kit no las tiene y esta hoja es la que la implementa.
+   role="list" en la plantilla devuelve el rol que WebKit le quita a un ul sin
+   vinetas, asi que quitarlas no cuesta la semantica. */
+.lista-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 44px de destino tactil, sin excepcion, tambien en la lista desplegada. */
+.enlace-nav {
+  display: flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+  padding: 0 var(--esp-8);
+  border-radius: var(--radio-md);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+/* El texto se queda en --color-texto: es el par ya auditado ("Etiqueta sobre
+   fondo de etiqueta") y el mismo que usa .boton-icono:hover. Con
+   --color-sobre-primario encima daba 1.22:1 en claro, asi que el enlace
+   desaparecia justo al apuntarlo. */
+.enlace-nav:hover {
+  background: var(--color-primario-suave);
+}
+
+/* La pagina en la que se esta, marcada con algo mas que color: un subrayado se
+   ve tambien sin percibir el matiz. aria-current lo dice ademas al lector. */
+.enlace-nav.activo {
+  text-decoration: underline;
+  text-underline-offset: var(--esp-4);
+  text-decoration-thickness: 2px;
+}
+
+@media (min-width: 640px) {
+  .boton-menu {
+    display: none;
+  }
+
+  /* En escritorio no hay panel que desplegar: es la fila de siempre. */
+  .panel {
+    order: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: auto;
+    padding-bottom: 0;
+    gap: var(--esp-24);
+  }
+
+  .lista-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--esp-8);
+  }
+}

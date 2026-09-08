@@ -1,0 +1,22 @@
+/* El formulario no ocupa el ancho completo de la pagina: una linea de campo de
+   1200px es incomoda de recorrer con la vista. */
+.formulario,
+.aviso {
+  max-width: 480px;
+  margin-top: var(--esp-32);
+}
+
+.error-general {
+  padding: var(--esp-12) var(--esp-16);
+  margin-bottom: var(--esp-24);
+  border: 1px solid var(--color-error);
+  border-left-width: 4px;
+  border-radius: var(--radio-md);
+  color: var(--color-error);
+  background: var(--color-superficie);
+}
+
+.fuerza {
+  color: var(--color-texto-suave);
+  margin: calc(-1 * var(--esp-16)) 0 var(--esp-24);
+}

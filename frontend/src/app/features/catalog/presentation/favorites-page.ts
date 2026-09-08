@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import { FavoritesStore } from '../application/favorites.store';
 import { ProductCard } from './product-card';
@@ -29,10 +28,9 @@ import { ProductCard } from './product-card';
 @Component({
   selector: 'sendik-favorites-page',
   standalone: true,
-  imports: [ProductCard, RouterLink, TranslocoPipe, Button],
+  imports: [ProductCard, RouterLink, TranslocoPipe],
   templateUrl: './favorites-page.html',
-  // <main> es una rejilla: sin asignar carril la pagina cae en el de sangria.
-  host: { class: 'block [grid-column:content] max-w-content px-4 py-6' },
+  styleUrl: './favorites-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FavoritesPage {

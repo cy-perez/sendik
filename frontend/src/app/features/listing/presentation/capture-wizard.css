@@ -1,0 +1,224 @@
+:host {
+  display: block;
+}
+
+.asistente {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-12);
+  align-items: flex-start;
+  max-width: var(--medida-formulario);
+  margin-inline: auto;
+  padding: var(--esp-16);
+}
+
+/* `wrap` porque en la misma fila van un titular a tamaño fluido y un botón: a 360px, o
+   con el texto al 200%, los dos juntos se salen del ancho. */
+.asistente__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-16);
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* El título recibe el foco al entrar y no debe pintar el anillo por eso. */
+.asistente__cabecera h1:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.asistente__esqueleto {
+  width: 100%;
+  height: var(--alto-esqueleto-detalle);
+}
+
+/* Sin `accent-color` el relleno y la pista los pone el navegador y no cambian con el modo
+   oscuro: la pista clara del agente de usuario quedaba como una banda blanca. */
+.asistente__progreso {
+  width: 100%;
+  height: var(--esp-8);
+  accent-color: var(--color-primario);
+}
+
+/* El obturador es la acción principal de la pantalla, así que va en tinta. La caja, el
+   tipo y el destino táctil los pone `.btn`; aquí solo el ancho.
+
+   El estado no disponible se pinta a mano porque el botón lleva `aria-disabled` y no
+   `disabled` —para no perder el foco de quien navega con teclado—, así que `:disabled` no
+   llega. Sin esto, el obturador inclinado se veía idéntico al habilitado y el criterio 3
+   quedaba roto en lo visual. */
+.asistente__obturador {
+  width: 100%;
+}
+
+.btn[aria-disabled='true'] {
+  background: var(--color-deshabilitado);
+  color: var(--color-superficie);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+
+/*
+  El visor mantiene la proporción del catálogo mientras se encuadra: si la vista previa
+  fuera 16:9 y el recorte 3:4, la persona compondría la foto sobre un área que luego se
+  corta, y descubriría el corte al ver el resultado.
+*/
+.visor {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--relacion-foto);
+  /* Sin tope, en un teléfono de 360px la vista previa mide 437px de alto y el obturador
+     queda fuera de pantalla justo mientras se encuadra. */
+  max-height: 55svh;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: var(--radio-md);
+  background-color: var(--color-fondo);
+}
+
+.visor__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Criterio 2: la silueta translúcida sobre la que se alinea el producto.
+
+   Va en el par de guía de cámara y no en `--color-foco`. Dos razones: `--color-foco`
+   significa «anillo de foco» y atarla a él haría que cambiar el color del foco cambiara el
+   encuadre de la cámara; y el fondo de esta línea **no es el tema, es el vídeo**, así que
+   una sola tinta no puede cumplir 3:1 contra lo que haya delante del objetivo. El contorno
+   en el tono opuesto es lo que la hace visible sobre una pared blanca y sobre un producto
+   negro. */
+.visor__silueta {
+  position: absolute;
+  inset: 8% 18%;
+  border: 3px dashed var(--color-guia-camara);
+  border-radius: var(--radio-lg);
+  outline: 1px solid var(--color-guia-camara-contorno);
+  outline-offset: -1px;
+  pointer-events: none;
+}
+
+/* La cuadrícula de tercios, en el mismo par de guía que la silueta y por lo mismo. La
+   sombra le da el contorno oscuro que la hace visible sobre un fondo claro. */
+.visor__rejilla {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px var(--color-guia-camara-contorno));
+  background-image:
+    linear-gradient(
+      to right,
+      transparent calc(100% / 3 - 1px),
+      var(--color-guia-camara) calc(100% / 3 - 1px),
+      var(--color-guia-camara) calc(100% / 3),
+      transparent calc(100% / 3),
+      transparent calc(200% / 3 - 1px),
+      var(--color-guia-camara) calc(200% / 3 - 1px),
+      var(--color-guia-camara) calc(200% / 3),
+      transparent calc(200% / 3)
+    ),
+    linear-gradient(
+      to bottom,
+      transparent calc(100% / 3 - 1px),
+      var(--color-guia-camara) calc(100% / 3 - 1px),
+      var(--color-guia-camara) calc(100% / 3),
+      transparent calc(100% / 3),
+      transparent calc(200% / 3 - 1px),
+      var(--color-guia-camara) calc(200% / 3 - 1px),
+      var(--color-guia-camara) calc(200% / 3),
+      transparent calc(200% / 3)
+    );
+}
+
+/*
+  El nivel dice lo mismo por texto y por color. El color solo acompaña: quien no distingue
+  el verde del rojo lee «Endereza el teléfono» igual, que es lo que el criterio 3 pide
+  explicar.
+*/
+.nivel {
+  color: var(--color-exito);
+}
+
+.nivel--torcido {
+  color: var(--color-aviso);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+/*
+  El campo de archivo se oculta y lo dispara su etiqueta, que es lo que da un destino
+  táctil de verdad. No se usa `display: none`: eso lo saca del orden de tabulación y el
+  teclado dejaría de alcanzarlo.
+*/
+.galeria {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  align-items: flex-start;
+  width: 100%;
+}
+
+.galeria__campo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/*
+  El foco del campo oculto se pinta sobre su etiqueta, que es lo que se ve. Va con `:has`
+  porque la etiqueta esta ANTES del campo en el documento y no hay combinador hacia atras.
+*/
+.galeria:has(.galeria__campo:focus-visible) .btn {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.pasos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pasos__paso {
+  min-height: var(--destino-tactil);
+  padding: var(--esp-4) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-completo);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.pasos__paso--hecha {
+  background-color: var(--color-primario-suave);
+}
+
+/*
+  El paso en curso se marca con el borde y con `aria-current`, no solo con color: quien no
+  distingue tonos ve el borde, y quien usa lector de pantalla oye "paso actual". El peso no
+  se toca aqui: el tipo lo decide tipografia.css y no una hoja de componente.
+*/
+.pasos__paso[aria-current='step'] {
+  border-color: var(--color-primario);
+  border-width: 2px;
+}
+
+/* `--color-deshabilitado` es un token de RELLENO en este sistema; como texto da 1.96:1.
+   Se usa el texto suave con opacidad, que es legible y no estrena un uso del token. */
+.pasos__paso[aria-disabled='true'] {
+  color: var(--color-texto-suave);
+  opacity: 0.7;
+  cursor: not-allowed;
+}

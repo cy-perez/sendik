@@ -1,0 +1,28 @@
+/* .btn-primario trae de marca.css el relleno en tinta; aqui va solo la caja. */
+.enlace-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: var(--esp-24);
+  padding: 0 var(--esp-24);
+  border: 0;
+  border-radius: var(--radio-md);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.error {
+  max-width: 480px;
+  padding: var(--esp-12) var(--esp-16);
+  margin-top: var(--esp-24);
+  border: 1px solid var(--color-error);
+  border-left-width: 4px;
+  border-radius: var(--radio-md);
+  color: var(--color-error);
+  background: var(--color-superficie);
+}
+
+.alternativa {
+  margin-top: var(--esp-24);
+}

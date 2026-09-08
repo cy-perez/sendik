@@ -1,0 +1,84 @@
+/* `grid-column` es obligatorio: <main> es una rejilla y sin asignar carril la página cae
+   en el de sangría y se pinta en una columna de 40px. Y sin `margin: 0 auto`, que en un
+   elemento de rejilla anula el estirado y lo deja del ancho de su contenido. Centrar ya
+   lo hace el carril. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--ancho-max);
+  padding: var(--esp-24) var(--esp-16);
+}
+
+.catalogo__intro {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-8);
+}
+
+.catalogo__categorias {
+  margin: var(--esp-24) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+}
+
+.catalogo__ramas,
+.catalogo__hojas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8) var(--esp-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Los destinos táctiles de la navegación llegan a 44px por el relleno vertical, no por
+   una altura fija: así crecen con el texto cuando alguien agranda la letra. */
+.catalogo__ramas a,
+.catalogo__hojas a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8) 0;
+  color: inherit;
+}
+
+/* La rama abierta se marca con peso y una línea, no solo con color: el color solo no
+   distingue para quien no lo percibe. */
+.catalogo__ramas a[aria-current='page'],
+.catalogo__hojas a[aria-current='page'] {
+  font-weight: var(--peso-fuerte);
+  text-decoration-thickness: 0.12em;
+}
+
+/* Las hojas cuelgan de su familia, y la sangría lo dice sin necesitar un título. */
+.catalogo__hojas {
+  padding-left: var(--esp-16);
+  border-left: 1px solid var(--color-borde);
+}
+
+/* Rejilla fluida: el número de columnas lo decide el ancho disponible y no un punto de
+   quiebre. Con `auto-fill` y un mínimo, en móvil salen dos columnas y en escritorio
+   cuatro o cinco sin escribir ninguna media query.
+
+   El mínimo es una medida del sistema y no un número suelto: es el ancho de tarjeta con
+   el que la foto 3:4 sigue siendo legible. */
+.catalogo__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  gap: var(--esp-24) var(--esp-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.catalogo__esqueleto {
+  aspect-ratio: var(--relacion-foto);
+  width: 100%;
+  height: auto;
+}
+
+.catalogo__mas {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--esp-32);
+}

@@ -12,7 +12,6 @@ import {
   type ElementRef,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import { CameraService } from '../../../shared/infrastructure/camera.service';
 import { SharpnessService } from '../infrastructure/sharpness.service';
@@ -39,9 +38,9 @@ export type Encuadre = 'documento' | 'rostro';
  */
 @Component({
   selector: 'sendik-capture-field',
-  imports: [TranslocoPipe, Button],
+  imports: [TranslocoPipe],
   templateUrl: './capture-field.html',
-  host: { class: 'block' },
+  styleUrl: './capture-field.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaptureField {

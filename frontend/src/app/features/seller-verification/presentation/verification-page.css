@@ -1,0 +1,62 @@
+.bloque {
+  max-width: var(--medida);
+  margin-top: var(--esp-48);
+}
+
+.bloque > p {
+  margin-top: var(--esp-8);
+}
+
+.pasos {
+  list-style: none;
+  padding: 0;
+  margin: var(--esp-24) 0 0;
+}
+
+.paso {
+  display: flex;
+  gap: var(--esp-16);
+  align-items: flex-start;
+  padding: var(--esp-16) 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+/* El estado del paso no se distingue solo por el color: lleva su propia palabra,
+   «Listo» o «Falta». Un color no puede ser el unico portador de informacion. */
+.estado {
+  flex-shrink: 0;
+  padding: var(--esp-4) var(--esp-8);
+  border-radius: var(--radio-sm);
+  border: 1px solid var(--color-borde);
+}
+
+.estado-listo {
+  border-color: var(--color-exito);
+  color: var(--color-exito);
+}
+
+.detalle {
+  margin-top: var(--esp-4);
+}
+
+/* El aviso de rechazo se distingue por el borde y por su titulo, como el bloque de
+   cierre de cuenta. */
+.rechazo {
+  margin-top: var(--esp-24);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radio-md);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-16);
+  align-items: center;
+  margin-top: var(--esp-24);
+}
+
+.error {
+  margin-top: var(--esp-16);
+  color: var(--color-error);
+}

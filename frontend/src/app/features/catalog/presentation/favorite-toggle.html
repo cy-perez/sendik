@@ -14,12 +14,11 @@
   bloquea el almacen contando peticiones, asi que el atributo no aportaba nada y si hacia
   dano. aria-busy dice lo mismo sin sacar el elemento del orden de foco.
 -->
-<div>
+<div class="favorito">
   @if (seOfrece()) {
     <button
       type="button"
-      sendikButton
-      variant="secondary"
+      class="btn btn-secundario favorito__boton"
       [attr.aria-busy]="enCurso() ? 'true' : null"
       (click)="pulsar()"
     >
@@ -27,7 +26,9 @@
         Contorno o relleno. Es la senal visual del estado que no depende del color, junto
         con el propio texto del boton, que tambien cambia.
       -->
-      <sendik-icon [icon]="iconoFavorito" [filled]="marcado()" />
+      <svg class="icono" [class.icono-relleno]="marcado()" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 4h16v16l-8-5-8 5z" />
+      </svg>
 
       {{ etiqueta() | transloco }}
     </button>
@@ -55,6 +56,6 @@
     El criterio pide que no se guarde nada Y que se explique.
   -->
   @if (error(); as clave) {
-    <p class="tipo-secundario mt-2 text-error" role="alert">{{ clave | transloco }}</p>
+    <p class="favorito__error tipo-secundario" role="alert">{{ clave | transloco }}</p>
   }
 </div>

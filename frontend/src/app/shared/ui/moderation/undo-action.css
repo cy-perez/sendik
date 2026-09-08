@@ -1,0 +1,46 @@
+/* El panel se distingue de lo que hay alrededor: es un momento distinto y conviene que se
+   note que la pantalla está preguntando algo. Mismo tratamiento que la confirmación de la
+   bandeja de moderación, que es la misma interacción en otra pantalla. */
+.deshacer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-12);
+  align-items: stretch;
+  margin-top: var(--esp-16);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.deshacer > p {
+  margin: 0;
+}
+
+/* El aviso de RN-013. Con línea a la izquierda y no con color de fondo: lo que dice
+   cambia la decisión, así que tiene que separarse del texto de la pregunta, pero no es un
+   error ni un peligro y no lleva el tratamiento de uno. */
+.deshacer__aviso {
+  padding-left: var(--esp-12);
+  border-left: 2px solid var(--color-borde-control);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-12);
+  margin-top: var(--esp-8);
+}
+
+/* Junto al campo y no al final del panel: es donde lo busca quien acaba de intentar
+   confirmar sin elegir. */
+.mensaje-de-error {
+  margin: 0;
+  color: var(--color-error);
+}

@@ -1,0 +1,25 @@
+<div class="campo">
+  <!-- Etiqueta siempre visible. Un marcador de posicion como etiqueta desaparece
+       al escribir y deja a quien vuelve al formulario sin saber que iba ahi. -->
+  <label class="etiqueta tipo-secundario" [for]="fieldId()">{{ labelKey() | transloco }}</label>
+
+  @if (hintKey(); as pista) {
+    <p class="pista tipo-leyenda" [id]="hintId()">{{ pista | transloco }}</p>
+  }
+
+  <input
+    class="entrada"
+    [id]="fieldId()"
+    [type]="type()"
+    [formControl]="control()"
+    [attr.autocomplete]="autocomplete()"
+    [attr.aria-invalid]="errorKey() ? 'true' : null"
+    [attr.aria-describedby]="describedBy()"
+  />
+
+  @if (errorKey(); as error) {
+    <!-- role="alert" para que el lector de pantalla lo anuncie al aparecer, sin
+         esperar a que el foco llegue al campo. -->
+    <p class="error tipo-leyenda" [id]="errorId()" role="alert">{{ error | transloco }}</p>
+  }
+</div>

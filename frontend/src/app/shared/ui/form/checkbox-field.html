@@ -1,0 +1,34 @@
+<!-- La etiqueta envuelve el control, asi que tocar el texto tambien marca la
+     casilla: el destino tactil deja de ser el cuadrito del navegador. -->
+<label class="casilla" [for]="fieldId()">
+  <input
+    type="checkbox"
+    [id]="fieldId()"
+    [formControl]="control()"
+    [attr.aria-invalid]="errorKey() ? 'true' : null"
+    [attr.aria-describedby]="errorKey() ? errorId() : null"
+  />
+  <span class="tipo-cuerpo">{{ labelKey() | transloco }}</span>
+</label>
+
+<!-- El enlace va FUERA de la etiqueta y no dentro. Dentro, pulsarlo marcaria la
+     casilla ademas de abrir el documento, porque la etiqueta reenvia el clic al
+     control: la persona aceptaria sin haber leido, con un solo gesto. -->
+@if (linkTo(); as destino) {
+  <p class="enlace-legal tipo-secundario">
+    <!-- En pestana nueva para no perder el formulario a medio llenar. rel es
+         obligatorio con target: sin noopener, la pagina abierta puede reescribir
+         esta desde window.opener. -->
+    <a [routerLink]="destino" target="_blank" rel="noopener noreferrer">
+      {{ linkLabelKey() | transloco }}
+      <!-- Que se abre otra pestana no puede verse solo: quien usa lector de
+           pantalla o lupa esta a mitad de un formulario de seis campos y tiene
+           que saber que cambio de contexto. -->
+      <span class="solo-lectores">{{ 'form.opensInNewTab' | transloco }}</span>
+    </a>
+  </p>
+}
+
+@if (errorKey(); as error) {
+  <p class="error tipo-leyenda" [id]="errorId()" role="alert">{{ error | transloco }}</p>
+}

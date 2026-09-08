@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import { APP_CONFIG } from '../../../core/config/app-config';
 import { LanguageService } from '../../../core/i18n/language.service';
@@ -26,12 +25,9 @@ import { formatearComision } from './business-figures';
  */
 @Component({
   selector: 'sendik-how-it-works-page',
-  imports: [RouterLink, TranslocoPipe, Button],
+  imports: [RouterLink, TranslocoPipe],
   templateUrl: './how-it-works-page.html',
-  host: {
-    class:
-      'block [grid-column:content] max-w-prose print:bg-paper print:text-paper-ink print:[&_a]:bg-paper print:[&_a]:text-paper-ink',
-  },
+  styleUrl: './content-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HowItWorksPage {

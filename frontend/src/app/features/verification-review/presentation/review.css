@@ -1,0 +1,270 @@
+/* Hoja compartida por la bandeja y el detalle: son la misma clase de pantalla y
+   corregir una separacion no puede consistir en repetir el arreglo dos veces.
+
+   Pantallas internas. **Nada de esto lleva el acento bronce**: es el unico de la
+   marca y esta reservado a lo verificado, que es una senal de cara al comprador y
+   no un control de moderacion. Aqui las dos acciones son aprobar y rechazar, y se
+   distinguen por forma y texto, nunca solo por color. */
+
+/* El carril de contenido de la rejilla de <main>. Hoy lo asigna ya
+   `.contenido > *` desde src/styles.css, que por ser hoja global si alcanza al host
+   que inserta el router; esta linea es redundante y se conserva porque hace explicito
+   el carril de la pantalla. Cuando la asignacion vivia en app.css, con encapsulacion,
+   no llegaba y la pagina caia en un carril de sangria, pintada en una columna de
+   40px: lo mismo que le paso a las informativas y a las legales. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--medida);
+}
+
+/* ---------- Lista de solicitudes ---------- */
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin-top: var(--esp-24);
+}
+
+.solicitud + .solicitud {
+  margin-top: var(--esp-12);
+}
+
+/* El enlace envuelve la fila entera: el destino tactil es la fila y no el nombre.
+   En movil esto es una pila de tarjetas y no una tabla con desplazamiento
+   horizontal, que es lo que pide el criterio 14. */
+.enlace-de-fila {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  min-height: var(--destino-tactil);
+  padding: var(--esp-12) var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+/* La senal de que la fila es un enlace va en el nombre y no en el borde de la tarjeta.
+   Medido: el borde da 1.33:1 contra la superficie y la tarjeta 1.09:1 contra el fondo,
+   asi que apoyarse en ellos deja un control que no se distingue (WCAG 1.4.11). El
+   subrayado sobre el texto principal da 15.98:1. */
+.enlace-de-fila .titular {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.enlace-de-fila:hover {
+  border-color: var(--color-borde-control);
+}
+
+.datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-4) var(--esp-16);
+  color: var(--color-texto-suave);
+}
+
+.esqueleto-fila {
+  display: block;
+  height: var(--esp-64);
+}
+
+/* ---------- Discrepancia de titular, RN-012 ---------- */
+
+/* Lleva su propia palabra, no solo el borde: un color no puede ser el unico portador
+   de informacion, y quien revisa muchas al dia necesita leerlo, no deducirlo. */
+.marca-de-discrepancia {
+  align-self: flex-start;
+  padding: var(--esp-4) var(--esp-8);
+  border: 1px solid var(--color-aviso);
+  border-radius: var(--radio-sm);
+  color: var(--color-texto);
+  background: var(--color-superficie);
+}
+
+/* ---------- Estados ---------- */
+
+.aviso-de-error {
+  padding: var(--esp-16);
+  margin-top: var(--esp-24);
+  border: 1px solid var(--color-error);
+  border-left-width: var(--grosor-barra-aviso);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.vacio {
+  margin-top: var(--esp-24);
+}
+
+/* ---------- Botones ---------- */
+
+/* La distincion es por forma y texto, no por color: la historia lo pide y el
+   acento bronce no entra en una pantalla interna.
+
+   El borde va en --color-primario y no en --color-borde-control porque ese ultimo da
+   2.82:1 contra el fondo de pagina y no llega al minimo de 3:1 para un control (WCAG
+   1.4.11); --color-primario da 15.98:1. */
+.boton {
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8) var(--esp-24);
+  border: 1px solid var(--color-primario);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+/* La accion principal va rellena. Es el par de siempre del boton primario, 17.4:1. */
+.boton-principal {
+  border-color: transparent;
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ---------- Detalle de una solicitud ---------- */
+
+.seccion {
+  margin-top: var(--esp-32);
+}
+
+/* Los datos, en dos columnas: la etiqueta y el valor.
+
+   Sin esto el navegador pinta la <dl> con su sangria por omision y los pares quedan
+   escalonados, con el valor debajo y desplazado. Se ve, y se veia. La rejilla los alinea
+   y en movil cae a una sola columna, que es como se lee en un telefono. */
+.datos-de-la-solicitud {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--esp-4) var(--esp-16);
+  margin-top: var(--esp-12);
+}
+
+.datos-de-la-solicitud dt {
+  color: var(--color-texto-suave);
+}
+
+.datos-de-la-solicitud dd {
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .datos-de-la-solicitud {
+    grid-template-columns: max-content 1fr;
+  }
+}
+
+/* Las tres imagenes. Cada una se pide al abrirla, asi que lo que hay hasta entonces es
+   un boton: la caja reserva su sitio para que la pagina no salte al aparecer la foto. */
+.imagenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-16);
+  margin-top: var(--esp-16);
+}
+
+.imagen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+  min-width: var(--ancho-min-imagen-revision);
+  /* Tambien el alto: sin el, la ficha crece de golpe al llegar la foto y empuja el
+     formulario de decision hacia abajo justo cuando alguien iba a pulsarlo. */
+  min-height: var(--alto-max-imagen-revision);
+  margin: 0;
+  padding: var(--esp-12);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* La foto de un documento es apaisada y la selfie vertical: se limita el alto y se deja
+   que el ancho lo decida la imagen, para que ninguna de las dos se coma la pantalla. */
+.imagen img {
+  max-width: 100%;
+  max-height: var(--alto-max-imagen-revision);
+  border-radius: var(--radio-sm);
+}
+
+/* ---------- Formulario de la decision ---------- */
+
+/* Cada etiqueta en su renglon. Sin esto, `label` es en linea y el motivo, el desplegable
+   y la etiqueta de la nota acababan los tres en la misma fila.
+
+   El color lo pone .tipo-secundario en la plantilla: repetirlo aqui seria reimplementar
+   un rol de tipografia. */
+.campo {
+  display: block;
+  margin-top: var(--esp-16);
+  margin-bottom: var(--esp-4);
+}
+
+.control {
+  width: 100%;
+  max-width: var(--medida-formulario);
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+textarea.control {
+  resize: vertical;
+}
+
+.acciones,
+.confirmacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-12);
+  align-items: center;
+  margin-top: var(--esp-32);
+}
+
+/* La confirmacion se distingue de la fila de acciones: es un momento distinto y conviene
+   que se note que la pantalla esta preguntando algo. */
+.confirmacion {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.confirmacion > p {
+  margin: 0;
+}
+
+/* El mensaje de motivo obligatorio (criterio 9). Junto al campo, no al final del
+   formulario: es donde lo busca quien acaba de recibir el foco ahi. */
+.mensaje-de-error {
+  margin-top: var(--esp-8);
+  color: var(--color-error);
+}
+
+/* La confirmacion de lo que se acaba de hacer, al volver a la bandeja (criterio 8). */
+.aviso-hecho {
+  padding: var(--esp-12) var(--esp-16);
+  margin-bottom: var(--esp-24);
+  border: 1px solid var(--color-exito);
+  border-left-width: var(--grosor-barra-aviso);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* Un enlace de navegacion suelto tambien es un destino tactil. */
+.enlace-de-volver {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+}

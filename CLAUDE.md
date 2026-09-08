@@ -54,14 +54,14 @@ La fuente de verdad es `backend/gradle/libs.versions.toml` y
 
 Baseline del proyecto (agosto de 2026):
 
-| Componente            | Versión                               |
-| --------------------- | ------------------------------------- |
-| Java                  | 25 (Temurin)                          |
-| Spring Boot           | 4.1.1                                 |
-| Gradle                | 9.x                                   |
-| PostgreSQL            | 17                                    |
-| Node                  | 22 LTS                                |
-| Angular               | 21.x con SSR e hidratación            |
+| Componente | Versión |
+|---|---|
+| Java | 25 (Temurin) |
+| Spring Boot | 4.1.1 |
+| Gradle | 9.x |
+| PostgreSQL | 17 |
+| Node | 22 LTS |
+| Angular | 21.x con SSR e hidratación |
 | Runner de pruebas web | Vitest vía `@angular/build:unit-test` |
 
 Advertencia importante: buena parte del material de entrenamiento sobre Spring
@@ -72,42 +72,23 @@ el código existente del repositorio. Las prohibiciones concretas están en
 
 ## Diseño
 
-El motor de estilos es **Tailwind 4** y la fuente de verdad del color, el
-espaciado y el radio es `frontend/src/styles/tema.css` (ADR-0032). La estructura
-la dan las primitivas de `frontend/src/app/shared/ui/` y el comportamiento, el
-Angular CDK.
+Los tokens visuales ya están definidos y auditados. `frontend/src/styles/tokens.css` es
+**generado y de solo lectura**: nunca lo edites. Los componentes propios y los
+ajustes de modo oscuro van en `frontend/src/styles/marca.css`.
 
-`marca.css` y `tokens.css` están **retiradas**: ya no se importan. Las piezas de
-marca que seguían vivas viven en `tema.css` como `@utility`. `tipografia.css` se
-queda y sigue siendo la única fuente de verdad del texto.
-
-- Ningún HEX suelto, ninguna medida suelta, ningún `font-size` propio. El color
-  y la medida por utilidad de Tailwind (`bg-surface`, `text-text-muted`, `p-4`)
-  o por `var(--brand-*)`. Un valor arbitrario como `bg-[#fff]` es la misma fuga
-  por otra puerta.
-- Si falta un color o una medida, el sistema está incompleto: se nombra en
-  `tema.css` y se documenta. Es el único sitio: `marca.css` ya no existe y
-  `tokens.css` no entra en la compilación.
-- Los puntos de quiebre son **dos y solo dos**: `sm:` (640px) y `lg:` (1024px).
-  Los demás están borrados a propósito, así que `md:` no compila.
-- Modo oscuro con la clase `.dark` en el elemento raíz, escrita por el servidor
-  antes de pintar. Es el único marcador de tema: el atributo `data-tema` que se
-  escribía en paralelo se fue con `tokens.css`, que era quien lo leía.
-- El tipo se sigue aplicando con las clases de rol de `tipografia.css`
-  (`.tipo-h1`, `.tipo-cuerpo`, `.precio`), que continúa siendo la única fuente de
-  verdad del texto. Es lo único del sistema anterior que **no** está en retirada.
-- Los iconos van con `<sendik-icon>`, nunca con `<svg lucideIcon>` suelto: el
-  envoltorio impone las terminaciones rectas que Lucide no trae.
-- El acento bronce (`--brand-accent`, utilidades `*-accent`) aparece **una vez
-  por pantalla** y siempre en lo mismo: la insignia de vendedor verificado, como
-  línea de 2px y un icono. Nunca como relleno grande, nunca como color de texto.
-  **El botón principal va en tinta, no en bronce**, y por eso la directiva
-  `[sendikButton]` no tiene variante de acento: el valor no existe.
+- Ningún HEX, ningún píxel suelto, ningún `font-size` propio. Los colores y las
+  medidas por variable; el texto por clase de rol de
+  `frontend/src/styles/tipografia.css`, que es la única fuente de verdad del tipo.
+- Si falta un color o una medida, el sistema está incompleto: se agrega con
+  nombre en `marca.css` y se documenta.
+- El acento bronce `--color-acento` aparece **una vez por pantalla** y siempre
+  en lo mismo: la insignia de vendedor verificado, como línea de 2px y un icono.
+  Nunca como relleno grande, nunca como color de texto. **El botón principal va
+  en tinta, no en bronce.**
 - El bronce tiene **dos tonos y no se cruzan**: `#8A6428` solo sobre fondo claro
-  y `#B4884A` solo sobre fondo oscuro. Cruzarlos da 2.97:1. `tema.css` alterna el
-  correcto por modo, y dentro de `.franja-tinta`, que es oscura en los dos
-  modos, lo hace la propia utilidad en `tema.css` redefiniendo las variables de
-  marca dentro de su bloque.
+  y `#B4884A` solo sobre fondo oscuro. Cruzarlos da 2.97:1. `tokens.css` alterna
+  el correcto por modo; dentro de `.franja-tinta`, que es oscura en los dos
+  modos, lo hace `marca.css`.
 - La firma gráfica es el corte del isotipo, repetido fuera del logo como
   `.regla-corte`. Una sola vez por pieza.
 

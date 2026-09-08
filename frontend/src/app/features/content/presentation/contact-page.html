@@ -5,7 +5,7 @@
      ya lo registro como aviso al arrancar. Sin este canal no hay forma de
      ejercer los derechos del titular y se incumple la Ley 1581. -->
 @if (correoDeSoporte; as correo) {
-  <section class="mt-12 [&>*+*]:mt-4" aria-labelledby="canal">
+  <section class="seccion" aria-labelledby="canal">
     <h2 class="tipo-h2" id="canal">{{ 'contact.email.title' | transloco }}</h2>
     <!-- Enlace mailto y ademas texto legible: quien imprima la pagina o la lea
          sin poder pulsar tiene que poder copiarlo. -->
@@ -16,7 +16,7 @@
 }
 
 @if (tieneSesion()) {
-  <section class="mt-12 [&>*+*]:mt-4" aria-labelledby="mis-datos">
+  <section class="seccion" aria-labelledby="mis-datos">
     <h2 class="tipo-h2" id="mis-datos">{{ 'contact.account.title' | transloco }}</h2>
     <!-- Escribir un correo para cambiar un dato que se cambia solo es hacerle
          perder el tiempo a dos personas. -->
@@ -27,7 +27,7 @@
   </section>
 }
 
-<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="tus-datos">
+<section class="seccion" aria-labelledby="tus-datos">
   <h2 class="tipo-h2" id="tus-datos">{{ 'contact.rights.title' | transloco }}</h2>
   <!-- "Por este mismo canal" solo se afirma si hay canal. Sin SUPPORT_EMAIL la
        frase quedaba senalando a una seccion que no se pinta, es decir la pagina

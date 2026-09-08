@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import { VerificationStore } from '../application/verification.store';
 import { CaptureField } from './capture-field';
@@ -16,8 +15,9 @@ import { CaptureField } from './capture-field';
  */
 @Component({
   selector: 'sendik-selfie-capture-form',
-  imports: [TranslocoPipe, CaptureField, Button],
+  imports: [TranslocoPipe, CaptureField],
   templateUrl: './selfie-capture-form.html',
+  styleUrl: './bank-account-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SelfieCaptureForm {

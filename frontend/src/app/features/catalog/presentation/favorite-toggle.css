@@ -1,0 +1,18 @@
+:host {
+  display: block;
+}
+
+/* El destino tactil de 44px, el relleno, el gap y la caja los pone .btn. Aqui no se
+   repiten: lo unico propio de este control es que su icono va pegado al texto, y eso ya
+   lo hace el gap de .btn.
+
+   **No hay estilo para el estado marcado, y es deliberado.** Lo hubo -borde y peso- y las
+   dos declaraciones eran inertes: --color-texto y --color-primario son el mismo valor en
+   modo claro, asi que el borde no cambiaba, y .btn ya trae --peso-fuerte. El estado se
+   distingue por el relleno del icono y por el texto del boton, que son dos senales reales
+   y ninguna de color (criterio 17). */
+
+.favorito__error {
+  margin-top: var(--esp-8);
+  color: var(--color-error);
+}

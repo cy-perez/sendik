@@ -15,9 +15,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 import { AuthStore } from '../application/auth.store';
 import { esCorreoValido, faltaLaContrasena } from '../domain/credentials';
-import { SubmitButton } from '../../../shared/ui/field/submit-button';
-import { TextField } from '../../../shared/ui/field/text-field';
-import { FormError } from '../../../shared/ui/field/form-error';
+import { SubmitButton } from '../../../shared/ui/form/submit-button';
+import { TextField } from '../../../shared/ui/form/text-field';
 
 /**
  * Un origen que no existe, para resolver el destino de la vuelta sin tocar `window`.
@@ -41,8 +40,9 @@ const BASE_SINTETICA = 'http://sendik.invalid';
  */
 @Component({
   selector: 'sendik-login-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, TextField, SubmitButton, FormError],
+  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, TextField, SubmitButton],
   templateUrl: './login-page.html',
+  styleUrl: './login-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPage {

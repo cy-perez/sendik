@@ -34,10 +34,7 @@ import { formatearComision } from './business-figures';
   selector: 'sendik-faq-page',
   imports: [TranslocoPipe],
   templateUrl: './faq-page.html',
-  host: {
-    class:
-      'block [grid-column:content] max-w-prose print:bg-paper print:text-paper-ink print:[&_a]:bg-paper print:[&_a]:text-paper-ink',
-  },
+  styleUrl: './content-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FaqPage {

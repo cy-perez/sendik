@@ -3,8 +3,6 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 import { AuthStore } from '../application/auth.store';
-import { Button } from '../../../shared/ui/button/button';
-import { FormError } from '../../../shared/ui/field/form-error';
 
 /**
  * Confirma el correo nuevo con el enlace que llego a ese buzon. Criterio 21.
@@ -20,8 +18,9 @@ import { FormError } from '../../../shared/ui/field/form-error';
  */
 @Component({
   selector: 'sendik-confirm-email-change-page',
-  imports: [TranslocoPipe, RouterLink, Button, FormError],
+  imports: [TranslocoPipe, RouterLink],
   templateUrl: './confirm-email-change-page.html',
+  styleUrl: './confirm-email-change-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmEmailChangePage {

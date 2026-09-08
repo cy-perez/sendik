@@ -81,11 +81,7 @@ test.describe('renderizado en servidor', () => {
    */
   test('solo hay una llamada a la accion en toda la pagina', async ({ request }) => {
     const html = await (await request.get('/')).text();
-    // Por el atributo de variante y no por una clase de relleno: desde la
-    // ADR-0032 el boton principal se declara con [sendikButton] y su variante,
-    // y lo que esta regla vigila es la DECISION —una sola llamada a la accion
-    // por pantalla— y no con que utilidades se pinte hoy.
-    const elementos = html.match(/<[a-z]+[^>]*data-variant="primary"/g) ?? [];
+    const elementos = html.match(/<[a-z]+[^>]*\bclass="[^"]*\bbtn-primario\b[^"]*"/g) ?? [];
 
     expect(elementos).toHaveLength(1);
   });
@@ -169,10 +165,10 @@ test.describe('renderizado en servidor', () => {
 
   test('el tema llega resuelto en el HTML, sin parpadeo', async ({ request }) => {
     const claro = await request.get('/');
-    expect(await claro.text()).not.toContain('class="dark"');
+    expect(await claro.text()).toContain('data-tema="claro"');
 
     const oscuro = await request.get('/', { headers: { Cookie: 'sendik_theme=dark' } });
-    expect(await oscuro.text()).toContain('class="dark"');
+    expect(await oscuro.text()).toContain('data-tema="oscuro"');
   });
 
   test('los metadatos de la pagina salen traducidos', async ({ request }) => {

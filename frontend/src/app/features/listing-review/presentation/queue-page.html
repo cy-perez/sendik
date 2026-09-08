@@ -2,12 +2,7 @@
      sin que nadie navegue a ella, y quien usa un lector de pantalla no tiene otra señal
      de que la decisión se aplicó. -->
 @if (confirmacion(); as clave) {
-  <p
-    class="aviso-hecho tipo-cuerpo mb-6 rounded-md border border-l-4 border-success bg-surface px-4 py-3"
-    role="status"
-  >
-    {{ clave | transloco }}
-  </p>
+  <p class="aviso-hecho tipo-cuerpo" role="status">{{ clave | transloco }}</p>
 }
 
 <h1 class="tipo-h1">{{ 'listingReview.inbox.title' | transloco }}</h1>
@@ -15,24 +10,24 @@
 @if (consulta.isPending()) {
   <!-- El esqueleto se esconde de la accesibilidad: para quien no ve la pantalla es una
        lista de tres elementos vacíos. Lo que se anuncia es que está cargando. -->
-  <ul class="mt-6 list-none p-0 [&>li+li]:mt-3" aria-hidden="true">
+  <ul class="lista" aria-hidden="true">
     @for (fila of filasDelEsqueleto; track fila) {
-      <li class="publicacion"><span class="esqueleto block h-16"></span></li>
+      <li class="publicacion"><span class="esqueleto esqueleto-fila"></span></li>
     }
   </ul>
   <p class="solo-lectores" role="status">{{ 'listingReview.inbox.loading' | transloco }}</p>
 } @else if (consulta.isError()) {
-  <div class="tipo-cuerpo mt-6 rounded-md border border-l-4 border-error bg-surface p-4">
+  <div class="aviso-de-error tipo-cuerpo">
     <p>
       <strong>{{ 'listingReview.inbox.error.title' | transloco }}</strong>
     </p>
-    <button type="button" sendikButton variant="ghost" (click)="reintentar()">
+    <button type="button" class="btn" (click)="reintentar()">
       {{ 'listingReview.inbox.error.retry' | transloco }}
     </button>
   </div>
 } @else if (pendientes().length === 0) {
   <!-- Criterio 4: el estado vacío del sistema, no una tabla sin filas. -->
-  <div class="vacio tipo-cuerpo mt-6">
+  <div class="vacio tipo-cuerpo">
     <p>
       <strong>{{ 'listingReview.inbox.empty.title' | transloco }}</strong>
     </p>
@@ -42,15 +37,12 @@
   <!-- `aria-busy` mientras llega la página siguiente: la lista que se ve es todavía la
        anterior, y sin esta señal un lector de pantalla lee filas viejas como si fueran
        las nuevas. -->
-  <ul class="mt-6 list-none p-0 [&>li+li]:mt-3" [attr.aria-busy]="actualizando()">
+  <ul class="lista" [attr.aria-busy]="actualizando()">
     @for (publicacion of pendientes(); track publicacion.id) {
       <li class="publicacion">
         <!-- El enlace envuelve toda la fila para que el destino táctil sea la fila
              entera y no solo el título. -->
-        <a
-          class="enlace-de-fila flex min-h-touch items-start gap-4 rounded-md border border-border bg-surface px-4 py-3 text-text no-underline hover:border-control-border"
-          [routerLink]="[publicacion.id]"
-        >
+        <a class="enlace-de-fila" [routerLink]="[publicacion.id]">
           @if (publicacion.coverUrl; as portada) {
             <!--
               Medidas fijas porque NgOptimizedImage las exige y porque reservan el hueco:
@@ -61,7 +53,7 @@
               diga ya, y describirla obligaría a inventar un texto por publicación.
             -->
             <img
-              class="flex-none rounded-sm object-cover"
+              class="portada"
               [ngSrc]="portada"
               alt=""
               aria-hidden="true"
@@ -70,22 +62,16 @@
               [priority]="$index === 0"
             />
           } @else {
-            <span
-              class="portada--ausente block h-thumb-h w-thumb-w rounded-sm border border-border bg-surface-raised"
-              aria-hidden="true"
-            ></span>
+            <span class="portada portada--ausente" aria-hidden="true"></span>
           }
 
-          <span class="flex flex-1 flex-col gap-1">
+          <span class="datos-de-la-fila">
             <!-- Subrayado: la tarjeta es casi del color del fondo y su borde no llega al
                  contraste mínimo, así que sin esto lo único que dice «aquí se pulsa» es
                  un borde que casi no se ve. -->
-            <span
-              class="titulo tipo-titulo-tarjeta underline [text-underline-offset:0.18em] [overflow-wrap:anywhere]"
-              >{{ publicacion.title }}</span
-            >
+            <span class="titulo tipo-titulo-tarjeta">{{ publicacion.title }}</span>
 
-            <span class="flex flex-wrap gap-x-4 gap-y-1 text-text-muted">
+            <span class="datos tipo-secundario">
               <span class="precio">{{ precio(publicacion.price) }}</span>
               <span>{{
                 'listingReview.inbox.waitingSince'
@@ -97,9 +83,7 @@
               <!-- Criterio 6: con texto y no solo con color. Un color no puede ser el
                    único portador de información. El motivo concreto va en el detalle:
                    en una fila no cabe, y saberlo no cambia si se abre o no. -->
-              <span
-                class="tipo-leyenda self-start rounded-sm border px-2 py-1 text-text bg-surface border-warning"
-              >
+              <span class="marca-de-atencion tipo-leyenda">
                 {{ 'listingReview.inbox.attention' | transloco }}
               </span>
             }
@@ -107,9 +91,7 @@
             @if (publicacion.own) {
               <!-- Criterio 12 y RN-063, dicho ya en la lista: quien revisa sabe antes de
                    abrir que sobre ésta no va a poder decidir. -->
-              <span
-                class="tipo-leyenda self-start rounded-sm border px-2 py-1 text-text bg-surface border-control-border"
-              >
+              <span class="marca-propia tipo-leyenda">
                 {{ 'listingReview.decision.ownListing' | transloco }}
               </span>
             }
@@ -135,8 +117,7 @@
   <nav class="paginacion" [attr.aria-label]="'listingReview.inbox.pagination.label' | transloco">
     <button
       type="button"
-      sendikButton
-      variant="secondary"
+      class="btn btn-secundario"
       [attr.aria-disabled]="!hayAnterior()"
       (click)="anterior()"
     >
@@ -146,14 +127,13 @@
     <!-- La página se anuncia como región viva: al pulsar, lo único que cambia es la
          lista, y quien no ve la pantalla no tendría ninguna señal de que pasó algo. Va en
          base 1 porque es lo que se lee, aunque el servidor cuente desde 0. -->
-    <p class="tipo-secundario m-0" role="status">
+    <p class="pagina-actual tipo-secundario" role="status">
       {{ 'listingReview.inbox.pagination.page' | transloco: { numero: pagina() + 1 } }}
     </p>
 
     <button
       type="button"
-      sendikButton
-      variant="secondary"
+      class="btn btn-secundario"
       [attr.aria-disabled]="!hayMas()"
       (click)="siguiente()"
     >

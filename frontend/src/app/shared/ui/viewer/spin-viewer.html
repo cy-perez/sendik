@@ -1,0 +1,72 @@
+@if (actual(); as fotograma) {
+  <!--
+    `role="slider"` y no `group`. `group` es un rol estructural: con un lector de pantalla
+    el cursor virtual se queda con las flechas para recorrer el documento y el `keydown` de
+    aquí **no llega a ejecutarse nunca**, así que el criterio 15 fallaba justo para quien lo
+    necesita. `slider` es un rol de widget: el lector cede las flechas y anuncia el valor.
+
+    Con `aria-valuetext` en lugar de una región viva: se lee solo cuando el foco está en el
+    control, y no se dispara con el ratón. La región viva anterior cambiaba en cada
+    `pointermove` —decenas de veces por segundo— y llenaba la cola del lector.
+
+    `aria-busy` mientras no se puede girar: el marco ya es enfocable antes de que lleguen
+    los cuatro fotogramas, y sin esto prometía unas flechas que todavía no hacían nada.
+  -->
+  <div
+    #marco
+    class="visor"
+    tabindex="0"
+    role="slider"
+    aria-valuemin="0"
+    [attr.aria-valuemax]="total() - 1"
+    [attr.aria-valuenow]="indice()"
+    [attr.aria-valuetext]="'catalog.viewer.frame' | transloco: { grados: fotograma.grados }"
+    [attr.aria-roledescription]="'catalog.viewer.roleDescription' | transloco"
+    [attr.aria-label]="titulo()"
+    [attr.aria-busy]="!activo()"
+    [attr.aria-describedby]="idInstrucciones"
+    (pointerdown)="alEmpezar($event)"
+    (pointermove)="alMover($event)"
+    (pointerup)="alSoltar($event)"
+    (pointercancel)="alSoltar($event)"
+    (keydown)="alTeclear($event)"
+  >
+    <!--
+      Criterio 18: esto es una imagen normal y sale del servidor ya pintada. El `alt` lleva
+      el título del producto porque es lo que un buscador indexa; "vista frontal" a secas no
+      describiría nada.
+
+      `draggable="false"` porque el arrastre nativo de una imagen secuestra el gesto: el
+      navegador empieza a arrastrar la foto y el visor deja de recibir `pointermove`.
+    -->
+    <img
+      class="visor__foto"
+      [src]="fotograma.url"
+      width="900"
+      height="1200"
+      draggable="false"
+      [alt]="'catalog.viewer.fallbackAlt' | transloco: { titulo: titulo() }"
+    />
+  </div>
+
+  <!--
+    Mientras no se puede girar se dice eso, y no cómo girar: prometer unas flechas que aún
+    no responden es peor que no decir nada (criterio 14 visto desde el teclado).
+  -->
+  <p [id]="idInstrucciones" class="tipo-secundario">
+    @if (activo()) {
+      {{ 'catalog.viewer.instructions' | transloco }}
+    } @else {
+      {{ 'catalog.viewer.loading' | transloco }}
+    }
+  </p>
+
+  <!--
+    Criterio 14: el visor ya gira con los fotogramas que hay y avisa, discreto, de que
+    faltan. Solo cuando ya está activo: antes de eso el aviso lo da el párrafo de arriba, y
+    los dos a la vez decían lo mismo dos veces.
+  -->
+  @if (activo() && cargando()) {
+    <p class="tipo-secundario" aria-hidden="true">{{ 'catalog.viewer.loading' | transloco }}</p>
+  }
+}

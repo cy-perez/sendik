@@ -27,7 +27,7 @@ const visibles = (page: Page): Promise<string[]> =>
 
 const aOscuro = async (page: Page): Promise<void> => {
   await page.getByRole('button', { name: /oscuro/i }).click();
-  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(page.locator('html')).toHaveAttribute('data-tema', 'oscuro');
 };
 
 test.describe('logo de la cabecera', () => {

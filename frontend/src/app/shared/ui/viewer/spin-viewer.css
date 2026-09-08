@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+/*
+  `touch-action` es el criterio 17 y es una línea: el navegador se queda con el
+  desplazamiento vertical y nos deja el horizontal. Sin esto habría que decidir a mano, en
+  cada `pointermove`, si el gesto era un giro o un desplazamiento de la página, y ese cálculo
+  se equivoca justo en el gesto diagonal, que es el que hace la mayoría.
+
+  `pinch-zoom` va explícito porque `pan-y` a secas **también descarta el pellizco para
+  ampliar**, y esta es la foto principal del producto: justo lo que alguien con baja visión
+  necesita agrandar. Nunca `none`: eso atraparía el desplazamiento entero, que es lo
+  contrario del criterio.
+*/
+.visor {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--relacion-foto);
+  overflow: hidden;
+  border-radius: var(--radio-md);
+  background-color: var(--color-fondo);
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+  /* Sin esto, arrastrar sobre el visor selecciona el texto de alrededor. */
+  user-select: none;
+}
+
+.visor:active {
+  cursor: grabbing;
+}
+
+.visor__foto {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* La foto no se arrastra: el gesto es del visor. */
+  -webkit-user-drag: none;
+}

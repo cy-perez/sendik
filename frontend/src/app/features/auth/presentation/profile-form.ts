@@ -17,8 +17,8 @@ import {
   elTelefonoEsValido,
   laCiudadEsValida,
 } from '../domain/profile';
-import { SubmitButton } from '../../../shared/ui/field/submit-button';
-import { TextField } from '../../../shared/ui/field/text-field';
+import { SubmitButton } from '../../../shared/ui/form/submit-button';
+import { TextField } from '../../../shared/ui/form/text-field';
 
 /**
  * Los datos del perfil que se editan de una vez. Criterio 21 de HU-001.
@@ -35,6 +35,7 @@ import { TextField } from '../../../shared/ui/field/text-field';
   selector: 'sendik-profile-form',
   imports: [ReactiveFormsModule, TranslocoPipe, TextField, SubmitButton],
   templateUrl: './profile-form.html',
+  styleUrl: './profile-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileForm {

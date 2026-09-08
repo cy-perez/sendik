@@ -7,9 +7,9 @@ import {
   input,
   signal,
   viewChild,
+  ViewEncapsulation,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import type { LegalContent } from '../application/legal-content.resolver';
 import { esBorrador } from '../domain/legal-document';
@@ -35,9 +35,11 @@ import { esBorrador } from '../domain/legal-document';
  */
 @Component({
   selector: 'sendik-legal-page',
-  imports: [TranslocoPipe, Button],
+  imports: [TranslocoPipe],
   templateUrl: './legal-page.html',
+  styleUrl: './legal-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class LegalPage {
   /** Lo entrega el resolutor de la ruta a traves de withComponentInputBinding. */
@@ -58,7 +60,7 @@ export class LegalPage {
   protected readonly esUnBorrador = computed(() => esBorrador(this.documento().version));
 
   /**
-   * La medida vive en {@code styles/tema.css}, en {@code --container-legal-clamp}, y se lee
+   * La medida vive en {@code marca.css}, en {@code --altura-recorte-legal}, y se lee
    * de ahi en vez de repetirla aqui.
    *
    * <p>No es purismo: son dos usos del mismo numero -el CSS recorta a esa altura y
@@ -67,7 +69,7 @@ export class LegalPage {
    * documentos cortados sin boton con el que abrirlos, que es la peor de las dos
    * averias porque se lleva por delante el final de un contrato.
    */
-  private static readonly MEDIDA_DEL_RECORTE = '--container-legal-clamp';
+  private static readonly MEDIDA_DEL_RECORTE = '--altura-recorte-legal';
 
   private readonly texto = viewChild<ElementRef<HTMLElement>>('textoDelDocumento');
 

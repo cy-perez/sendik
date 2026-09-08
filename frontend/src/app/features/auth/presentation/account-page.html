@@ -2,7 +2,7 @@
 
 <!-- Criterio 21. Va primero: es lo que la persona viene a mirar; las sesiones y
      el cierre son lo que viene a revisar de vez en cuando. -->
-<section class="mt-12 max-w-[var(--medida)] [&>p]:mt-2">
+<section class="bloque">
   <h2 class="tipo-h2">{{ 'auth.account.profile.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'auth.account.profile.body' | transloco }}</p>
 
@@ -12,7 +12,7 @@
 <!-- Criterio 21. Bloque propio y no un campo mas del formulario del perfil: la
      foto se sube al elegirla y el resto se guarda al enviar, asi que no comparten
      ritmo ni boton. -->
-<section class="mt-12 max-w-[var(--medida)] [&>p]:mt-2">
+<section class="bloque">
   <h2 class="tipo-h2">{{ 'auth.account.avatar.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'auth.account.avatar.body' | transloco }}</p>
 
@@ -21,7 +21,7 @@
 
 <!-- Criterio 21. Aparte del perfil porque no termina al guardar: termina cuando
      alguien abre el enlace que llega al correo nuevo. -->
-<section class="mt-12 max-w-[var(--medida)] [&>p]:mt-2">
+<section class="bloque">
   <h2 class="tipo-h2">{{ 'auth.account.email.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'auth.account.email.body' | transloco }}</p>
 
@@ -29,29 +29,26 @@
 </section>
 
 <!-- Criterio 17 -->
-<section class="mt-12 max-w-[var(--medida)] [&>p]:mt-2">
+<section class="bloque">
   <h2 class="tipo-h2">{{ 'auth.account.sessions.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'auth.account.sessions.body' | transloco }}</p>
 
   @if (sesiones.isPending()) {
-    <p class="esqueleto mt-6 h-5 max-w-[320px]" aria-hidden="true"></p>
+    <p class="esqueleto barra" aria-hidden="true"></p>
     <p class="solo-lectores" role="status">{{ 'auth.account.sessions.loading' | transloco }}</p>
   } @else if (errorDeLista(); as error) {
-    <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ error | transloco }}</p>
+    <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
   } @else if (sesiones.data(); as lista) {
-    <ul class="m-0 mt-4 list-none p-0" role="list">
+    <ul class="sesiones" role="list">
       @for (sesion of lista; track sesion.id) {
-        <li
-          class="sesion flex flex-wrap items-center justify-between gap-3 border-b border-border py-3"
-        >
+        <li class="sesion">
           <div>
             <p class="tipo-cuerpo">
               {{ sesion.userAgent ?? ('auth.account.sessions.unknownBrowser' | transloco) }}
               @if (sesion.current) {
-                <span
-                  class="tipo-leyenda ml-2 inline-block rounded-full border border-control-border px-2 text-text-muted"
-                  >{{ 'auth.account.sessions.current' | transloco }}</span
-                >
+                <span class="actual tipo-leyenda">{{
+                  'auth.account.sessions.current' | transloco
+                }}</span>
               }
             </p>
             <p class="tipo-secundario">
@@ -64,9 +61,7 @@
 
           <button
             type="button"
-            sendikButton
-            variant="ghost"
-            class="tipo-secundario"
+            class="accion tipo-secundario"
             [attr.aria-busy]="cierreDeSesion.isPending() ? 'true' : null"
             (click)="cerrarSesion(sesion.id)"
           >
@@ -82,15 +77,13 @@
 </section>
 
 <!-- Criterio 22 -->
-<section class="mt-12 max-w-[var(--medida)] [&>p]:mt-2">
+<section class="bloque">
   <h2 class="tipo-h2">{{ 'auth.account.export.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'auth.account.export.body' | transloco }}</p>
 
   <button
     type="button"
-    sendikButton
-    variant="ghost"
-    class="tipo-secundario"
+    class="accion tipo-secundario"
     [attr.aria-busy]="descarga.isPending() ? 'true' : null"
     (click)="descargar()"
   >
@@ -100,44 +93,37 @@
 
 <!-- Criterio 23. Va al final y detras de una confirmacion escrita, no porque
      estorbe sino porque no se deshace. -->
-<section class="peligro mt-12 max-w-[var(--medida)] rounded-md border border-error p-4 [&>p]:mt-2">
+<section class="bloque peligro">
   <h2 class="tipo-h2">{{ 'auth.account.close.title' | transloco }}</h2>
   <p class="tipo-cuerpo">{{ 'auth.account.close.body' | transloco }}</p>
 
   @if (cierreDeCuenta.isSuccess()) {
     <p class="tipo-entradilla" role="status">{{ 'auth.account.close.done' | transloco }}</p>
   } @else if (!cerrando()) {
-    <button
-      type="button"
-      sendikButton
-      variant="ghost"
-      class="tipo-secundario"
-      (click)="cerrando.set(true)"
-    >
+    <button type="button" class="accion tipo-secundario" (click)="cerrando.set(true)">
       {{ 'auth.account.close.start' | transloco }}
     </button>
   } @else {
-    <form class="mt-8 max-w-form" [formGroup]="form" (ngSubmit)="cerrarCuenta()" novalidate>
+    <form class="formulario" [formGroup]="form" (ngSubmit)="cerrarCuenta()" novalidate>
       @if (errorDeCierre(); as error) {
-        <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ error | transloco }}</p>
+        <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
       }
 
       <sendik-text-field
         fieldId="confirmacion"
         type="email"
         autocomplete="off"
-        [label]="'auth.account.close.fields.confirmation' | transloco"
-        [hint]="'auth.account.close.hints.confirmation' | transloco"
+        labelKey="auth.account.close.fields.confirmation"
+        hintKey="auth.account.close.hints.confirmation"
         [control]="control()"
-        [error]="errorDeConfirmacion() ? (errorDeConfirmacion() | transloco) : null"
+        [errorKey]="errorDeConfirmacion()"
       />
 
       <!-- Sin deshabilitar. Un boton deshabilitado no dice por que lo esta, y
            quien usa lector de pantalla se queda sin saberlo; se valida al enviar,
            como en el resto de los formularios del sitio. -->
       <sendik-submit-button
-        [label]="'auth.account.close.confirm' | transloco"
-        [loadingLabel]="'form.sending' | transloco"
+        labelKey="auth.account.close.confirm"
         [loading]="cierreDeCuenta.isPending()"
       />
     </form>

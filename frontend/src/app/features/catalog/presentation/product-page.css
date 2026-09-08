@@ -1,0 +1,114 @@
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--ancho-max);
+  padding: var(--esp-24) var(--esp-16);
+}
+
+/* Dos columnas en escritorio, una en móvil. Las fotos mandan: la columna de datos se
+   adapta a lo que sobre. */
+.ficha {
+  display: grid;
+  gap: var(--esp-32);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .ficha {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}
+
+/* El carrusel se desplaza con el dedo y se detiene en cada toma. `scroll-snap` y no un
+   componente con estado: el teclado lo recorre porque son elementos en el orden del
+   documento, y no hay que replicar los botones para el lector de pantalla. */
+.ficha__tomas {
+  display: flex;
+  gap: var(--esp-8);
+  margin: 0;
+  padding: 0 0 var(--esp-8);
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+
+.ficha__toma {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(100%, 420px);
+  scroll-snap-align: start;
+}
+
+.ficha__toma img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--relacion-foto);
+  object-fit: cover;
+  border-radius: var(--radio-md);
+  border: 1px solid var(--color-borde);
+}
+
+/* El rótulo de RN-066 va sobre la foto y no debajo: debajo se pierde al desplazar el
+   carrusel, y la regla pide que se vea en el carrusel también. */
+.ficha__referencia {
+  position: absolute;
+  inset-block-start: var(--esp-8);
+  inset-inline-start: var(--esp-8);
+  margin: 0;
+  padding: var(--esp-4) var(--esp-8);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+}
+
+.ficha__datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+}
+
+.ficha__datos h1,
+.ficha__datos h2,
+.ficha__datos p {
+  margin: 0;
+}
+
+.ficha__datos h2 {
+  margin-top: var(--esp-16);
+}
+
+.ficha__precio {
+  margin-top: var(--esp-8);
+}
+
+.ficha__vendedor {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-8);
+  flex-wrap: wrap;
+  min-height: var(--destino-tactil);
+}
+
+.ficha__descripcion {
+  margin-top: var(--esp-16);
+  white-space: pre-line;
+}
+
+/* Dos columnas: etiqueta y valor. La etiqueta no se estira, el valor ocupa el resto. */
+.ficha__declarado {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--esp-4) var(--esp-16);
+  margin: var(--esp-8) 0 0;
+}
+
+.ficha__declarado dt,
+.ficha__declarado dd {
+  margin: 0;
+}
+
+.ficha__esqueleto {
+  aspect-ratio: var(--relacion-foto);
+  max-width: 420px;
+}

@@ -1,0 +1,74 @@
+.pie {
+  margin-top: var(--esp-64);
+  padding-bottom: var(--esp-48);
+}
+
+/* La regla ya trae su propio margen vertical desde marca.css; aqui solo se
+   quita el superior para que quede pegada al borde de la franja. */
+.pie .regla-corte {
+  margin-top: 0;
+}
+
+/* Una sola columna en movil y tantas como quepan a partir de ahi. La de
+   identidad manda mas ancho porque lleva la direccion completa. */
+.columnas {
+  display: grid;
+  gap: var(--esp-32);
+  margin-top: var(--esp-24);
+}
+
+@media (min-width: 640px) {
+  .columnas {
+    grid-template-columns: minmax(0, 2fr) repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+.logo-pie {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.lema {
+  margin: var(--esp-12) 0 0;
+}
+
+/* address llega en cursiva por omision del navegador y aqui no es una cita:
+   son los datos de la empresa. Cada dato en su linea.
+
+   El rol es .tipo-cuerpo y no .tipo-secundario a proposito: ese ultimo fija
+   --color-texto-suave, que sobre la franja oscura da 2.7:1 y no pasa. Los
+   enlaces si pueden llevarlo porque marca.css los recolorea con
+   `.franja-tinta a`; un <address> no es un enlace y se quedaria ilegible. El
+   matiz de "dato secundario" lo da la opacidad, que conserva el contraste. */
+.datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  font-style: normal;
+  margin-top: var(--esp-12);
+  opacity: 0.85;
+}
+
+.titulo-columna {
+  margin: 0 0 var(--esp-8);
+}
+
+.lista-enlaces {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* 44px de alto: son enlaces de lista, no enlaces dentro de un parrafo, asi que
+   la excepcion de texto corrido no aplica. El relleno lateral es cero para que
+   queden alineados con el resto de la columna. */
+.lista-enlaces a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+  /* La direccion de correo es larga y en movil no cabe en una linea. */
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,67 @@
+/* Franja completa bajo la cabecera: es un estado de la cuenta, no un mensaje de
+   la pantalla que se este mirando.
+
+   El fondo es el de tarjeta y no --color-primario-suave, que era lo primero que
+   probe. En oscuro ese token (#2B3145) y la superficie (#2D303F) son
+   practicamente el mismo color, 1.01:1, asi que la franja se fundia con la
+   cabecera pegajosa y su boton parecia un control mas de la barra. Con la
+   superficie, ademas, todos los pares que usa este componente son pares que
+   verificar.py ya comprueba, y no hace falta inventar ninguno. */
+.aviso {
+  background: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+  color: var(--color-texto);
+}
+
+.cuerpo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--esp-12);
+  row-gap: 0;
+  padding-top: var(--esp-12);
+  padding-bottom: var(--esp-12);
+  /* Lo que separa la franja de la cabecera, ya que comparten fondo. El bronce
+     no se usa aqui: --color-aviso es el semantico de advertencia y tiene su
+     matiz propio para no confundirse con el bronce del verificado (24 grados de
+     matiz frente a 35). Esta resuelto en los dos modos. */
+  border-left: 4px solid var(--color-aviso);
+}
+
+/* No lleva relleno de accion principal: esa es del contenido, y esta franja
+   sale en todas las pantallas. Mismo borde que .boton-icono de la cabecera, que
+   es un par ya verificado sobre esta superficie. */
+.reenviar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+.reenviar:hover {
+  background: var(--color-fondo);
+}
+
+/* Las dos regiones vivas estan siempre en el DOM y nunca en display:none, que
+   las sacaria del arbol de accesibilidad y volveria a dejarlas mudas. Vacias
+   miden cero, asi que no se ven; el hueco se abre con una clase enlazada y no
+   con :empty, que no casa cuando la plantilla deja saltos de linea dentro. */
+.mensaje {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.mensaje.con-texto {
+  margin-top: var(--esp-8);
+}
+
+.error {
+  color: var(--color-error);
+}

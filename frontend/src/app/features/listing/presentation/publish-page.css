@@ -1,0 +1,161 @@
+/* `grid-column` es obligatorio: <main> es una rejilla y sin asignar carril la pagina cae
+   en el de sangria. Y **sin `margin: 0 auto`**, que es lo que la encogia de verdad: un
+   margen automatico en un elemento de rejilla anula el estirado y lo deja del ancho de su
+   contenido —421px de los 1140 del carril—. Centrar ya lo hace el carril.
+
+   Se pintaba entera, asi que no se notaba mirandola; lo delato `rutas.spec.ts` al medir
+   el ancho del contenido. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--ancho-max);
+  padding: var(--esp-24) var(--esp-16);
+}
+
+.publicar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-24);
+}
+
+.publicar__cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+.publicar__estado {
+  font-weight: var(--peso-fuerte);
+}
+
+.publicar__formulario,
+.publicar__inicio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-16);
+}
+
+.publicar__inicio {
+  max-width: var(--medida-formulario);
+}
+
+.publicar__bloque,
+.publicar__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+  margin: 0;
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+}
+
+.publicar__opciones {
+  padding: var(--esp-12);
+}
+
+.publicar__etiqueta {
+  font-weight: var(--peso-medio);
+}
+
+.publicar__control {
+  width: 100%;
+  max-width: var(--medida-formulario);
+  /* El token que el sistema creo para esto, y no una medida de la escala de
+     espaciado que da la casualidad de cumplirlo. */
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8) var(--esp-12);
+  /* El borde de un control, no el de un separador: --color-borde da 1.27:1. */
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+.publicar__control:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+/* Un control deshabilitado sigue teniendo que leerse: el contraste minimo tambien
+   aplica cuando la publicacion esta en revision y el formulario no admite cambios. */
+.publicar__control:disabled {
+  background-color: var(--color-fondo);
+  color: var(--color-texto-suave);
+}
+
+.publicar__pareja {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+}
+
+.publicar__opcion,
+.publicar__medida {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-8);
+  min-height: var(--destino-tactil);
+}
+
+.publicar__medida {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-4);
+}
+
+.publicar__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+  align-items: flex-start;
+}
+
+.publicar__rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-8);
+  align-items: flex-start;
+  padding: var(--esp-16);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radio-md);
+}
+
+.publicar__aviso {
+  margin: 0;
+  padding: var(--esp-12);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+}
+
+.publicar__error {
+  color: var(--color-error);
+}
+
+.publicar__faltantes {
+  margin: var(--esp-4) 0 0;
+  padding-left: var(--esp-16);
+}
+
+/* El esqueleto de carga. marca.css pone el brillo; el tamano, cada pantalla. */
+.publicar__cargando {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-12);
+}
+
+.publicar__esqueleto {
+  height: var(--esp-24);
+  margin: 0;
+}
+
+.publicar__esqueleto--alto {
+  height: var(--esp-96);
+}
+
+/* `.publicar__rechazo` alinea sus hijos al principio, asi que el host del rastro se
+   dimensiona a su contenido y su caja con borde sale mas estrecha que los parrafos
+   hermanos. Se estira aqui, que es donde vive esa decision de alineacion. */
+.publicar__rechazo sendik-moderation-trail {
+  align-self: stretch;
+}

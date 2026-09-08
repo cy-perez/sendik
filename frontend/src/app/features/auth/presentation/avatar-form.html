@@ -1,8 +1,8 @@
 @if (perfil.isPending()) {
-  <p class="esqueleto mt-6 size-[120px] rounded-full" aria-hidden="true"></p>
+  <p class="esqueleto redondo" aria-hidden="true"></p>
   <p class="solo-lectores" role="status">{{ 'auth.account.avatar.loading' | transloco }}</p>
 } @else {
-  <div class="mt-6 flex flex-wrap items-center gap-6">
+  <div class="bloque-avatar">
     <!-- La foto, o el hueco donde iria.
 
          El hueco no lleva iniciales ni un icono de persona: no dice nada que el
@@ -10,31 +10,22 @@
          de alguien se lee como un error de carga. -->
     @if (avatarUrl(); as direccion) {
       <img
-        class="size-[120px] rounded-full border border-control-border bg-surface object-cover"
+        class="avatar"
         [ngSrc]="direccion"
         [alt]="'auth.account.avatar.alt' | transloco"
         width="120"
         height="120"
       />
     } @else {
-      <p
-        class="size-[120px] rounded-full border border-dashed border-control-border bg-surface object-cover"
-        aria-hidden="true"
-      ></p>
+      <p class="avatar sin-foto" aria-hidden="true"></p>
     }
 
-    <div class="flex flex-wrap gap-3">
+    <div class="acciones-avatar">
       <!-- Un `label` y no un boton: el campo de archivo nativo es lo unico que abre
            el selector del sistema, y ocultarlo tras un boton obliga a simular el
            clic con JavaScript. Asi funciona con teclado y con lector de pantalla
            sin nada mas, y el campo sigue siendo el que recibe el foco. -->
-      <label
-        sendikButton
-        variant="ghost"
-        class="tipo-secundario relative focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-focus"
-        [class.cursor-progress]="trabajando()"
-        [class.text-disabled]="trabajando()"
-      >
+      <label class="accion tipo-secundario" [class.ocupada]="trabajando()">
         {{
           (avatarUrl() === null ? 'auth.account.avatar.choose' : 'auth.account.avatar.replace')
             | transloco
@@ -50,30 +41,16 @@
 
       @if (avatarUrl() !== null) {
         @if (borrando()) {
-          <button
-            type="button"
-            sendikButton
-            variant="ghost"
-            class="tipo-secundario"
-            (click)="quitar()"
-          >
+          <button type="button" class="accion tipo-secundario" (click)="quitar()">
             {{ 'auth.account.avatar.confirmRemove' | transloco }}
           </button>
-          <button
-            type="button"
-            sendikButton
-            variant="ghost"
-            class="tipo-secundario"
-            (click)="borrando.set(false)"
-          >
+          <button type="button" class="accion tipo-secundario" (click)="borrando.set(false)">
             {{ 'auth.account.avatar.cancelRemove' | transloco }}
           </button>
         } @else {
           <button
             type="button"
-            sendikButton
-            variant="ghost"
-            class="tipo-secundario"
+            class="accion tipo-secundario"
             [disabled]="trabajando()"
             (click)="borrando.set(true)"
           >
@@ -91,7 +68,7 @@
   }
 
   @if (error(); as clave) {
-    <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ clave | transloco }}</p>
+    <p class="error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
   }
 
   <p class="tipo-secundario">{{ 'auth.account.avatar.hint' | transloco }}</p>

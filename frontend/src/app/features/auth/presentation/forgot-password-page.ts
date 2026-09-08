@@ -16,9 +16,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthStore } from '../application/auth.store';
 import { esCorreoValido } from '../domain/credentials';
 import { MINUTOS_DE_VIGENCIA } from '../domain/password-reset';
-import { SubmitButton } from '../../../shared/ui/field/submit-button';
-import { TextField } from '../../../shared/ui/field/text-field';
-import { FormError } from '../../../shared/ui/field/form-error';
+import { SubmitButton } from '../../../shared/ui/form/submit-button';
+import { TextField } from '../../../shared/ui/form/text-field';
 
 /**
  * Pide el enlace para poner una contrasena nueva. Criterio 19.
@@ -34,8 +33,9 @@ import { FormError } from '../../../shared/ui/field/form-error';
  */
 @Component({
   selector: 'sendik-forgot-password-page',
-  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, TextField, SubmitButton, FormError],
+  imports: [ReactiveFormsModule, TranslocoPipe, RouterLink, TextField, SubmitButton],
   templateUrl: './forgot-password-page.html',
+  styleUrl: './forgot-password-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForgotPasswordPage {

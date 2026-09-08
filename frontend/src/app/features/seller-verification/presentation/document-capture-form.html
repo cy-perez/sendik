@@ -1,25 +1,20 @@
-<form
-  class="mt-6 flex max-w-form flex-col gap-4"
-  [formGroup]="form"
-  (ngSubmit)="guardar()"
-  novalidate
->
+<form class="formulario" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
   @if (errorDelServidor(); as error) {
-    <p class="tipo-cuerpo text-error" role="alert">{{ error | transloco }}</p>
+    <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
   } @else if (envio.isSuccess()) {
-    <p class="tipo-cuerpo text-success" role="status">
+    <p class="guardado tipo-cuerpo" role="status">
       {{ 'sellerVerification.documentForm.saved' | transloco }}
     </p>
   }
 
-  <div class="flex flex-col gap-1">
-    <label class="tipo-secundario text-text" for="tipo-de-documento">
+  <div class="campo">
+    <label class="etiqueta tipo-secundario" for="tipo-de-documento">
       {{ 'sellerVerification.documentForm.type' | transloco }}
     </label>
 
     <select
       id="tipo-de-documento"
-      class="control-field tipo-cuerpo"
+      class="control tipo-cuerpo"
       formControlName="tipo"
       [attr.aria-invalid]="errorDeTipo() ? 'true' : null"
       [attr.aria-describedby]="errorDeTipo() ? 'tipo-de-documento-error' : null"
@@ -33,7 +28,7 @@
     </select>
 
     @if (errorDeTipo(); as error) {
-      <p id="tipo-de-documento-error" class="tipo-secundario text-error">
+      <p id="tipo-de-documento-error" class="error-campo tipo-secundario">
         {{ error | transloco }}
       </p>
     }
@@ -42,17 +37,17 @@
   <sendik-text-field
     fieldId="numero-de-documento"
     autocomplete="off"
-    [label]="'sellerVerification.documentForm.number' | transloco"
+    labelKey="sellerVerification.documentForm.number"
     [control]="control('numero')"
-    [error]="errorDeNumero() ? (errorDeNumero() | transloco) : null"
+    [errorKey]="errorDeNumero()"
   />
 
   <sendik-text-field
     fieldId="titular-del-documento"
     autocomplete="name"
-    [label]="'sellerVerification.documentForm.holder' | transloco"
+    labelKey="sellerVerification.documentForm.holder"
     [control]="control('titular')"
-    [error]="errorDeTitular() ? (errorDeTitular() | transloco) : null"
+    [errorKey]="errorDeTitular()"
   />
 
   <!-- Las dos caras. Cada campo emite su foto solo cuando pasa el umbral de nitidez,
@@ -70,12 +65,11 @@
   />
 
   @if (errorDeFotos(); as error) {
-    <p class="tipo-secundario text-error" role="alert">{{ error | transloco }}</p>
+    <p class="error-campo tipo-secundario" role="alert">{{ error | transloco }}</p>
   }
 
   <sendik-submit-button
-    [label]="'sellerVerification.documentForm.submit' | transloco"
-    [loadingLabel]="'form.sending' | transloco"
+    labelKey="sellerVerification.documentForm.submit"
     [loading]="envio.isPending()"
   />
 </form>

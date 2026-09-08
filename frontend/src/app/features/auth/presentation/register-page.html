@@ -2,7 +2,7 @@
   <!-- El mismo mensaje tanto si la cuenta se creo como si el correo ya tenia una:
        el servidor responde igual en los dos casos y aqui no se puede distinguir,
        que es exactamente lo que pide el criterio 2. -->
-  <section class="mt-8 max-w-form">
+  <section class="aviso">
     <h1 class="tipo-h1">{{ 'auth.register.sent.title' | transloco }}</h1>
     <p class="tipo-entradilla">{{ 'auth.register.sent.body' | transloco }}</p>
     <p class="tipo-secundario">{{ 'auth.register.sent.spam' | transloco }}</p>
@@ -11,41 +11,41 @@
   <h1 class="tipo-h1">{{ 'auth.register.title' | transloco }}</h1>
   <p class="tipo-entradilla">{{ 'auth.register.subtitle' | transloco }}</p>
 
-  <form class="mt-8 max-w-form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <form class="formulario" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     @if (errorDelServidor(); as error) {
-      <sendik-form-error>{{ error | transloco }}</sendik-form-error>
+      <p class="error-general tipo-cuerpo" role="alert">{{ error | transloco }}</p>
     }
 
     <sendik-text-field
       fieldId="correo"
       type="email"
       autocomplete="email"
-      [label]="'auth.register.fields.email' | transloco"
+      labelKey="auth.register.fields.email"
       [control]="control('email')"
-      [error]="emailError() ? (emailError() | transloco) : null"
+      [errorKey]="emailError()"
     />
 
     <sendik-text-field
       fieldId="nombre"
       autocomplete="name"
-      [label]="'auth.register.fields.displayName' | transloco"
-      [hint]="'auth.register.hints.displayName' | transloco"
+      labelKey="auth.register.fields.displayName"
+      hintKey="auth.register.hints.displayName"
       [control]="control('displayName')"
-      [error]="displayNameError() ? (displayNameError() | transloco) : null"
+      [errorKey]="displayNameError()"
     />
 
     <sendik-text-field
       fieldId="contrasena"
       type="password"
       autocomplete="new-password"
-      [label]="'auth.register.fields.password' | transloco"
-      [hint]="'auth.register.hints.password' | transloco"
+      labelKey="auth.register.fields.password"
+      hintKey="auth.register.hints.password"
       [control]="control('password')"
-      [error]="passwordError() ? (passwordError() | transloco) : null"
+      [errorKey]="passwordError()"
     />
 
     <!-- Indicador orientativo: informa, no bloquea (criterio 4). -->
-    <p class="tipo-leyenda -mt-4 mb-6 text-text-muted">
+    <p class="fuerza tipo-leyenda">
       {{ 'auth.register.strength.label' | transloco }}
       <strong>{{ 'auth.register.strength.' + fuerza() | transloco }}</strong>
     </p>
@@ -54,10 +54,10 @@
       fieldId="nacimiento"
       type="date"
       autocomplete="bday"
-      [label]="'auth.register.fields.birthDate' | transloco"
-      [hint]="'auth.register.hints.birthDate' | transloco"
+      labelKey="auth.register.fields.birthDate"
+      hintKey="auth.register.hints.birthDate"
       [control]="control('birthDate')"
-      [error]="birthDateError() ? (birthDateError() | transloco) : null"
+      [errorKey]="birthDateError()"
     />
 
     <!-- Antes de las casillas y no despues: el regimen pide informar las
@@ -71,28 +71,22 @@
          es si no se puede leer el documento. -->
     <sendik-checkbox-field
       fieldId="terminos"
-      [label]="'auth.register.fields.acceptsTerms' | transloco"
-      [linkLabel]="'auth.register.readTerms' | transloco"
-      [newTabLabel]="'form.opensInNewTab' | transloco"
+      labelKey="auth.register.fields.acceptsTerms"
+      linkLabelKey="auth.register.readTerms"
       [linkTo]="rutaDeTerminos"
       [control]="casilla('acceptsTerms')"
-      [error]="termsError() ? (termsError() | transloco) : null"
+      [errorKey]="termsError()"
     />
 
     <sendik-checkbox-field
       fieldId="privacidad"
-      [label]="'auth.register.fields.acceptsPrivacy' | transloco"
-      [linkLabel]="'auth.register.readPrivacy' | transloco"
-      [newTabLabel]="'form.opensInNewTab' | transloco"
+      labelKey="auth.register.fields.acceptsPrivacy"
+      linkLabelKey="auth.register.readPrivacy"
       [linkTo]="rutaDePrivacidad"
       [control]="casilla('acceptsPrivacy')"
-      [error]="privacyError() ? (privacyError() | transloco) : null"
+      [errorKey]="privacyError()"
     />
 
-    <sendik-submit-button
-      [label]="'auth.register.submit' | transloco"
-      [loadingLabel]="'form.sending' | transloco"
-      [loading]="registro.isPending()"
-    />
+    <sendik-submit-button labelKey="auth.register.submit" [loading]="registro.isPending()" />
   </form>
 }

@@ -14,7 +14,6 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import {
   categoriaPorId,
@@ -44,9 +43,9 @@ type Decision = 'aprobar' | 'rechazar' | null;
  */
 @Component({
   selector: 'sendik-review-listing-page',
-  imports: [TranslocoPipe, RouterLink, NgOptimizedImage, Button],
+  imports: [TranslocoPipe, RouterLink, NgOptimizedImage],
   templateUrl: './review-listing-page.html',
-  host: { class: 'block [grid-column:content] max-w-prose' },
+  styleUrl: './review-listing-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReviewListingPage {

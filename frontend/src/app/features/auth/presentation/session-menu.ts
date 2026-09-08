@@ -4,7 +4,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 import { SessionStore } from '../../../core/session/session.store';
 import { AuthStore } from '../application/auth.store';
-import { Button } from '../../../shared/ui/button/button';
 
 /**
  * Entrar o salir, segun haya sesion. Criterio 16 de HU-001.
@@ -21,9 +20,9 @@ import { Button } from '../../../shared/ui/button/button';
  */
 @Component({
   selector: 'sendik-session-menu',
-  imports: [RouterLink, TranslocoPipe, Button],
+  imports: [RouterLink, TranslocoPipe],
   templateUrl: './session-menu.html',
-  host: { class: 'inline-flex items-center gap-2' },
+  styleUrl: './session-menu.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionMenu {

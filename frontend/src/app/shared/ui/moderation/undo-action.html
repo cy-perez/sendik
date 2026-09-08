@@ -1,0 +1,104 @@
+@if (!abierto()) {
+  <button
+    #disparador
+    type="button"
+    class="btn btn-secundario tipo-etiqueta-boton"
+    [disabled]="enCurso()"
+    (click)="abrir()"
+  >
+    {{ accion() | transloco }}
+  </button>
+} @else {
+  <!--
+    `tabindex="-1"` para poder enfocarlo al abrirlo sin meterlo en el orden de tabulación,
+    y `role="group"` con su nombre para que un lector anuncie de qué va lo que apareció.
+    Es el mismo patrón que la confirmación de la bandeja de moderación.
+  -->
+  <div
+    #panel
+    class="deshacer"
+    tabindex="-1"
+    role="group"
+    aria-labelledby="deshacer-pregunta"
+    (keydown)="alTeclear($event)"
+  >
+    <p id="deshacer-pregunta" class="tipo-cuerpo">{{ confirmacion() | transloco }}</p>
+
+    <!--
+      El aviso va antes de los controles y no debajo del botón de confirmar: lo que dice
+      cambia la decisión, así que se lee antes de tomarla.
+    -->
+    @if (aviso(); as clave) {
+      <p class="deshacer__aviso tipo-secundario">{{ clave | transloco }}</p>
+    }
+
+    <div class="campo">
+      <label class="tipo-secundario" for="deshacer-motivo">
+        {{ 'moderation.undo.reasonLabel' | transloco }}
+      </label>
+      <select
+        id="deshacer-motivo"
+        class="control"
+        [attr.aria-invalid]="faltaMotivo() ? 'true' : null"
+        [attr.aria-describedby]="faltaMotivo() ? 'deshacer-motivo-error' : null"
+        (change)="elegir($any($event.target).value)"
+      >
+        <option value="">{{ 'moderation.undo.reasonPlaceholder' | transloco }}</option>
+        @for (opcion of motivos(); track opcion) {
+          <option [value]="opcion">{{ prefijoDeMotivos() + opcion | transloco }}</option>
+        }
+      </select>
+
+      @if (faltaMotivo()) {
+        <p id="deshacer-motivo-error" class="mensaje-de-error tipo-secundario" role="alert">
+          {{ 'moderation.undo.reasonRequired' | transloco }}
+        </p>
+      }
+    </div>
+
+    <div class="campo">
+      <label class="tipo-secundario" for="deshacer-nota">
+        {{ 'moderation.undo.noteLabel' | transloco }}
+      </label>
+      <!--
+        La ayuda va donde se escribe y no escondida: es la única barrera que tiene esa
+        regla, porque el campo es texto libre y ninguna validación la impone.
+      -->
+      <p id="deshacer-nota-ayuda" class="tipo-secundario">
+        {{ 'moderation.undo.noteHint' | transloco }}
+      </p>
+      <textarea
+        id="deshacer-nota"
+        class="control"
+        rows="3"
+        aria-describedby="deshacer-nota-ayuda"
+        [attr.maxlength]="maximoDeNota"
+        [value]="nota()"
+        (input)="nota.set($any($event.target).value)"
+      ></textarea>
+    </div>
+
+    <div class="acciones">
+      <button
+        type="button"
+        class="btn btn-primario tipo-etiqueta-boton"
+        [disabled]="enCurso()"
+        (click)="confirmar()"
+      >
+        {{ 'moderation.undo.confirm' | transloco }}
+      </button>
+      <button
+        type="button"
+        class="btn tipo-etiqueta-boton"
+        [disabled]="enCurso()"
+        (click)="cancelar()"
+      >
+        {{ 'moderation.undo.cancel' | transloco }}
+      </button>
+    </div>
+
+    @if (error(); as clave) {
+      <p class="mensaje-de-error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
+    }
+  </div>
+}

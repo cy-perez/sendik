@@ -9,13 +9,18 @@ export type Theme = 'light' | 'dark';
 export const THEME_COOKIE = 'sendik_theme';
 export const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
-/*
- * Aqui vivian themeAttribute y themeFromAttribute, que traducian el tema al
- * atributo data-tema del <html>. Ese atributo existia por una sola razon: era lo
- * que leia tokens.css, que estaba generado y usaba valores en espanol. Retirada
- * esa hoja (ADR-0032) el atributo no lo leia ya nadie, asi que se fue con ella y
- * las dos funciones con el. La marca es la clase, y solo la clase.
+/**
+ * El atributo que lee tokens.css. Los valores son los del sistema de diseno y
+ * estan en espanol: aqui se traduce una sola vez, en la frontera, en vez de
+ * arrastrar la cadena por toda la aplicacion.
  */
+export function themeAttribute(theme: Theme): 'claro' | 'oscuro' {
+  return theme === 'dark' ? 'oscuro' : 'claro';
+}
+
+export function themeFromAttribute(value: string | null | undefined): Theme {
+  return value === 'oscuro' ? 'dark' : 'light';
+}
 
 export interface ThemeResolution {
   readonly cookieHeader?: string | null;
@@ -39,17 +44,4 @@ export function resolveTheme(resolution: ThemeResolution): Theme {
 /** Cookie de primera parte, sin datos personales: es una preferencia de interfaz. */
 export function buildThemeCookie(theme: Theme): string {
   return `${THEME_COOKIE}=${theme}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
-}
-
-/**
- * La clase que lee la variante `dark` de Tailwind, declarada en
- * styles/tema.css. Es la unica marca de tema del documento: el atributo
- * data-tema que la acompanaba se fue con tokens.css en la ADR-0032, segun se
- * explica arriba. La escribe el servidor antes de pintar, que es lo que evita
- * el parpadeo.
- */
-export const THEME_DARK_CLASS = 'dark';
-
-export function isDark(theme: Theme): boolean {
-  return theme === 'dark';
 }

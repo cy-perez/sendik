@@ -3,13 +3,13 @@
   pintaban sin h1 y sin región con nombre, y la de carga es justo la que renderiza el
   servidor.
 -->
-<section class="flex flex-col gap-6">
-  <header class="flex flex-col gap-1">
+<section class="publicar">
+  <header class="publicar__cabecera">
     <h1 class="tipo-h1">
       {{ (id() === null ? 'listing.intro.title' : 'listing.edit.title') | transloco }}
     </h1>
     @if (publicacion(); as actual) {
-      <p class="tipo-secundario font-semibold">
+      <p class="publicar__estado tipo-secundario">
         {{ 'listing.status.' + actual.status | transloco }}
       </p>
       <p class="tipo-cuerpo">{{ 'listing.statusHelp.' + actual.status | transloco }}</p>
@@ -31,19 +31,19 @@
     <p class="tipo-cuerpo">{{ 'listing.intro.body' | transloco }}</p>
 
     @if (arbol.isPending()) {
-      <p class="esqueleto m-0 h-6" aria-hidden="true"></p>
+      <p class="esqueleto publicar__esqueleto" aria-hidden="true"></p>
     } @else if (arbol.isError()) {
-      <p class="publicar__error tipo-cuerpo text-error" role="alert">
+      <p class="tipo-cuerpo publicar__error" role="alert">
         {{ claveDeError(arbol.error()) | transloco }}
       </p>
     } @else {
       <form
-        class="flex max-w-form flex-col gap-4"
+        class="publicar__inicio"
         [formGroup]="formularioDeInicio"
         (ngSubmit)="crear()"
         novalidate
       >
-        <label class="font-medium" for="categoria-nueva">
+        <label class="publicar__etiqueta" for="categoria-nueva">
           {{ 'listing.form.category' | transloco }}
         </label>
         <p id="categoria-nueva-ayuda" class="tipo-secundario">
@@ -51,7 +51,7 @@
         </p>
         <select
           id="categoria-nueva"
-          class="control-field"
+          class="publicar__control"
           aria-describedby="categoria-nueva-ayuda"
           formControlName="categoryId"
         >
@@ -65,33 +65,30 @@
           }
         </select>
 
-        <button type="submit" sendikButton [disabled]="noSePuedeCrear()">
+        <button type="submit" class="btn btn-primario" [disabled]="noSePuedeCrear()">
           {{ 'listing.intro.start' | transloco }}
         </button>
 
         @if (creacion.isError()) {
-          <p class="publicar__error tipo-cuerpo text-error" role="alert">
+          <p class="publicar__error tipo-cuerpo" role="alert">
             {{ claveDeError(creacion.error()) | transloco }}
           </p>
         }
       </form>
     }
   } @else if (consulta.isPending()) {
-    <div class="flex flex-col gap-3" aria-hidden="true">
-      <p class="esqueleto m-0 h-6"></p>
-      <p class="esqueleto m-0 h-6"></p>
-      <p class="esqueleto m-0 h-24"></p>
+    <div class="publicar__cargando" aria-hidden="true">
+      <p class="esqueleto publicar__esqueleto"></p>
+      <p class="esqueleto publicar__esqueleto"></p>
+      <p class="esqueleto publicar__esqueleto publicar__esqueleto--alto"></p>
     </div>
   } @else if (consulta.isError()) {
-    <p class="publicar__error tipo-cuerpo text-error" role="alert">
+    <p class="tipo-cuerpo publicar__error" role="alert">
       {{ claveDeError(consulta.error()) | transloco }}
     </p>
   } @else if (publicacion(); as actual) {
     @if (actual.status === 'REJECTED') {
-      <section
-        class="flex flex-col items-start gap-2 rounded-md border border-error p-4 [&_sendik-moderation-trail]:self-stretch"
-        aria-labelledby="rechazo-titulo"
-      >
+      <section class="publicar__rechazo" aria-labelledby="rechazo-titulo">
         <h2 id="rechazo-titulo" class="tipo-titulo-tarjeta">
           {{ 'listing.rejected.title' | transloco }}
         </h2>
@@ -114,11 +111,16 @@
           la primera vez fue por otra cosa.
         -->
         <sendik-moderation-trail [publicacion]="actual.id" />
-        <button type="button" sendikButton [disabled]="retomada.isPending()" (click)="retomar()">
+        <button
+          type="button"
+          class="btn btn-primario"
+          [disabled]="retomada.isPending()"
+          (click)="retomar()"
+        >
           {{ 'listing.rejected.retry' | transloco }}
         </button>
         @if (retomada.isError()) {
-          <p class="publicar__error tipo-cuerpo text-error" role="alert">
+          <p class="publicar__error tipo-cuerpo" role="alert">
             {{ claveDeError(retomada.error()) | transloco }}
           </p>
         }
@@ -126,9 +128,7 @@
     }
 
     @if (volveraARevision()) {
-      <p class="tipo-cuerpo m-0 rounded-sm bg-surface p-3">
-        {{ 'listing.live.backToReview' | transloco }}
-      </p>
+      <p class="publicar__aviso tipo-cuerpo">{{ 'listing.live.backToReview' | transloco }}</p>
     }
 
     <!--
@@ -136,22 +136,19 @@
       sola opción y la sección «Cómo es» se colapsa entera sin decir por qué.
     -->
     @if (arbol.isError()) {
-      <p class="publicar__error tipo-cuerpo text-error" role="alert">
+      <p class="tipo-cuerpo publicar__error" role="alert">
         {{ claveDeError(arbol.error()) | transloco }}
       </p>
     }
 
-    <form class="flex flex-col gap-4" #formularioProducto [formGroup]="formulario">
-      <fieldset
-        class="m-0 flex flex-col gap-2 rounded-md border border-border p-4"
-        [disabled]="!editable()"
-      >
+    <form class="publicar__formulario" #formularioProducto [formGroup]="formulario">
+      <fieldset class="publicar__bloque" [disabled]="!editable()">
         <legend class="tipo-titulo-tarjeta">{{ 'listing.sections.what' | transloco }}</legend>
 
-        <label class="font-medium" for="categoria">
+        <label class="publicar__etiqueta" for="categoria">
           {{ 'listing.form.category' | transloco }}
         </label>
-        <select id="categoria" class="control-field" formControlName="categoryId">
+        <select id="categoria" class="publicar__control" formControlName="categoryId">
           @for (familia of arbol.data(); track familia.id) {
             <optgroup [label]="familia.nameEs">
               @for (hoja of familia.children; track hoja.id) {
@@ -161,13 +158,13 @@
           }
         </select>
 
-        <label class="font-medium" for="titulo">
+        <label class="publicar__etiqueta" for="titulo">
           {{ 'listing.form.title' | transloco }}
         </label>
         <p id="titulo-ayuda" class="tipo-secundario">{{ 'listing.form.titleHint' | transloco }}</p>
         <input
           id="titulo"
-          class="control-field"
+          class="publicar__control"
           type="text"
           maxlength="120"
           formControlName="title"
@@ -175,7 +172,7 @@
           [attr.aria-invalid]="falta('title') ? 'true' : null"
         />
 
-        <label class="font-medium" for="descripcion">
+        <label class="publicar__etiqueta" for="descripcion">
           {{ 'listing.form.description' | transloco }}
         </label>
         <p id="descripcion-ayuda" class="tipo-secundario">
@@ -183,7 +180,7 @@
         </p>
         <textarea
           id="descripcion"
-          class="control-field"
+          class="publicar__control"
           rows="4"
           maxlength="4000"
           formControlName="description"
@@ -191,32 +188,29 @@
           [attr.aria-invalid]="falta('description') ? 'true' : null"
         ></textarea>
 
-        <label class="font-medium" for="marca">
+        <label class="publicar__etiqueta" for="marca">
           {{ 'listing.form.brand' | transloco }}
           <span class="tipo-secundario">{{ 'listing.form.optional' | transloco }}</span>
         </label>
         <input
           id="marca"
-          class="control-field"
+          class="publicar__control"
           type="text"
           maxlength="60"
           formControlName="brand"
         />
       </fieldset>
 
-      <fieldset
-        class="m-0 flex flex-col gap-2 rounded-md border border-border p-4"
-        [disabled]="!editable()"
-      >
+      <fieldset class="publicar__bloque" [disabled]="!editable()">
         <legend class="tipo-titulo-tarjeta">{{ 'listing.sections.how' | transloco }}</legend>
 
-        <fieldset class="m-0 flex flex-col gap-2 rounded-md border border-border p-3">
-          <legend class="font-medium">{{ 'listing.form.condition' | transloco }}</legend>
+        <fieldset class="publicar__opciones">
+          <legend class="publicar__etiqueta">{{ 'listing.form.condition' | transloco }}</legend>
           @if (condiciones().length === 1) {
             <p class="tipo-secundario">{{ 'listing.condition.usedNotAllowed' | transloco }}</p>
           }
           @for (opcion of condiciones(); track opcion) {
-            <label class="flex min-h-touch items-center gap-2">
+            <label class="publicar__opcion">
               <input type="radio" [value]="opcion" formControlName="condition" />
               {{ 'listing.condition.' + opcion | transloco }}
             </label>
@@ -229,12 +223,12 @@
           apuntando al select, el segundo control se quedaba con un aria-label suelto,
           que es ARIA donde había HTML nativo.
         -->
-        <fieldset class="m-0 flex flex-col gap-2 rounded-md border border-border p-3">
-          <legend class="font-medium">{{ 'listing.form.size' | transloco }}</legend>
-          <div class="flex flex-wrap gap-2">
-            <label class="flex min-h-touch flex-col items-start gap-1">
+        <fieldset class="publicar__opciones">
+          <legend class="publicar__etiqueta">{{ 'listing.form.size' | transloco }}</legend>
+          <div class="publicar__pareja">
+            <label class="publicar__medida">
               {{ 'listing.form.sizeSystem' | transloco }}
-              <select class="control-field" formControlName="sizeSystem">
+              <select class="publicar__control" formControlName="sizeSystem">
                 <option value="">{{ 'listing.form.choose' | transloco }}</option>
                 @for (sistema of sistemasDeTalla(); track sistema) {
                   <option [value]="sistema">
@@ -243,24 +237,24 @@
                 }
               </select>
             </label>
-            <label class="flex min-h-touch flex-col items-start gap-1">
+            <label class="publicar__medida">
               {{ 'listing.form.sizeValue' | transloco }}
-              <input class="control-field" type="text" formControlName="sizeValue" />
+              <input class="publicar__control" type="text" formControlName="sizeValue" />
             </label>
           </div>
         </fieldset>
 
         @if (medidasPedidas().length > 0) {
-          <fieldset class="m-0 flex flex-col gap-2 rounded-md border border-border p-3">
-            <legend class="font-medium">
+          <fieldset class="publicar__opciones">
+            <legend class="publicar__etiqueta">
               {{ 'listing.form.measurements' | transloco }}
             </legend>
             <p class="tipo-secundario">{{ 'listing.form.measurementsHint' | transloco }}</p>
             @for (clase of medidasPedidas(); track clase) {
-              <label class="flex min-h-touch flex-col items-start gap-1">
+              <label class="publicar__medida">
                 {{ 'listing.measurement.' + clase | transloco }}
                 <input
-                  class="control-field"
+                  class="publicar__control"
                   type="number"
                   inputmode="decimal"
                   min="1"
@@ -273,8 +267,8 @@
           </fieldset>
         }
 
-        <label class="font-medium" for="color">{{ 'listing.form.color' | transloco }}</label>
-        <select id="color" class="control-field" formControlName="color">
+        <label class="publicar__etiqueta" for="color">{{ 'listing.form.color' | transloco }}</label>
+        <select id="color" class="publicar__control" formControlName="color">
           <option value="">{{ 'listing.form.choose' | transloco }}</option>
           @for (uno of colores; track uno) {
             <option [value]="uno">{{ 'listing.color.' + uno | transloco }}</option>
@@ -282,18 +276,18 @@
         </select>
 
         @if (esTecnologia()) {
-          <label class="flex min-h-touch items-center gap-2">
+          <label class="publicar__opcion">
             <input type="checkbox" formControlName="isSealed" />
             {{ 'listing.tech.sealed' | transloco }}
           </label>
           <p class="tipo-secundario">{{ 'listing.tech.sealedHelp' | transloco }}</p>
 
-          <label class="font-medium" for="garantia">
+          <label class="publicar__etiqueta" for="garantia">
             {{ 'listing.tech.warranty' | transloco }}
           </label>
           <input
             id="garantia"
-            class="control-field"
+            class="publicar__control"
             type="number"
             min="0"
             formControlName="warrantyMonths"
@@ -301,19 +295,16 @@
         }
       </fieldset>
 
-      <fieldset
-        class="m-0 flex flex-col gap-2 rounded-md border border-border p-4"
-        [disabled]="!editable()"
-      >
+      <fieldset class="publicar__bloque" [disabled]="!editable()">
         <legend class="tipo-titulo-tarjeta">{{ 'listing.sections.price' | transloco }}</legend>
 
-        <label class="font-medium" for="precio">
+        <label class="publicar__etiqueta" for="precio">
           {{ 'listing.form.price' | transloco }}
         </label>
         <p id="precio-ayuda" class="tipo-secundario">{{ 'listing.form.priceHint' | transloco }}</p>
         <input
           id="precio"
-          class="control-field precio"
+          class="publicar__control precio"
           type="number"
           inputmode="numeric"
           min="1"
@@ -327,14 +318,14 @@
           El peso y las tres medidas son un grupo: el envío se guarda entero o no se
           guarda, así que su nombre lo lleva el legend y no el label del peso.
         -->
-        <fieldset class="m-0 flex flex-col gap-2 rounded-md border border-border p-3">
-          <legend class="font-medium">{{ 'listing.form.shipping' | transloco }}</legend>
+        <fieldset class="publicar__opciones">
+          <legend class="publicar__etiqueta">{{ 'listing.form.shipping' | transloco }}</legend>
           <p id="envio-ayuda" class="tipo-secundario">{{ 'listing.shipping.help' | transloco }}</p>
 
-          <label class="flex min-h-touch flex-col items-start gap-1">
+          <label class="publicar__medida">
             {{ 'listing.shipping.weight' | transloco }}
             <input
-              class="control-field"
+              class="publicar__control"
               type="number"
               min="1"
               formControlName="weightGrams"
@@ -343,18 +334,18 @@
             />
           </label>
 
-          <div class="flex flex-wrap gap-2">
-            <label class="flex min-h-touch flex-col items-start gap-1">
+          <div class="publicar__pareja">
+            <label class="publicar__medida">
               {{ 'listing.shipping.length' | transloco }}
-              <input class="control-field" type="number" min="1" formControlName="lengthCm" />
+              <input class="publicar__control" type="number" min="1" formControlName="lengthCm" />
             </label>
-            <label class="flex min-h-touch flex-col items-start gap-1">
+            <label class="publicar__medida">
               {{ 'listing.shipping.width' | transloco }}
-              <input class="control-field" type="number" min="1" formControlName="widthCm" />
+              <input class="publicar__control" type="number" min="1" formControlName="widthCm" />
             </label>
-            <label class="flex min-h-touch flex-col items-start gap-1">
+            <label class="publicar__medida">
               {{ 'listing.shipping.height' | transloco }}
-              <input class="control-field" type="number" min="1" formControlName="heightCm" />
+              <input class="publicar__control" type="number" min="1" formControlName="heightCm" />
             </label>
           </div>
         </fieldset>
@@ -370,17 +361,17 @@
     />
 
     @if (subida.isError()) {
-      <p class="publicar__error tipo-cuerpo text-error" role="alert">
+      <p class="publicar__error tipo-cuerpo" role="alert">
         {{ claveDeError(subida.error()) | transloco }}
       </p>
     }
     @if (borradoDeImagen.isError()) {
-      <p class="publicar__error tipo-cuerpo text-error" role="alert">
+      <p class="publicar__error tipo-cuerpo" role="alert">
         {{ claveDeError(borradoDeImagen.error()) | transloco }}
       </p>
     }
 
-    <footer class="publicar__acciones flex flex-col items-start gap-2">
+    <footer class="publicar__acciones">
       <!--
         El guardado fallaba en silencio: la pantalla promete que no se pierde nada, así
         que el error tiene que verse.
@@ -390,7 +381,7 @@
         publicación viva —que es cuando se usan— un guardado perdido no dejaba rastro.
       -->
       @if (falloDelGuardado() !== null) {
-        <p class="publicar__error tipo-cuerpo text-error" role="alert">
+        <p class="publicar__error tipo-cuerpo" role="alert">
           {{ claveDeError(falloDelGuardado()) | transloco }}
         </p>
       } @else {
@@ -409,7 +400,7 @@
         </p>
         <button
           type="button"
-          sendikButton
+          class="btn btn-primario"
           [disabled]="!puedeEnviar() || envio.isPending()"
           (click)="enviarARevision()"
         >
@@ -419,25 +410,24 @@
         <p class="tipo-secundario">{{ 'listing.submit.withdrawHelp' | transloco }}</p>
         <button
           type="button"
-          sendikButton
-          variant="secondary"
+          class="btn btn-secundario"
           [disabled]="retirada.isPending()"
           (click)="retirar()"
         >
           {{ 'listing.submit.withdraw' | transloco }}
         </button>
         @if (retirada.isError()) {
-          <p class="publicar__error tipo-cuerpo text-error" role="alert">
+          <p class="publicar__error tipo-cuerpo" role="alert">
             {{ claveDeError(retirada.error()) | transloco }}
           </p>
         }
       }
 
       @if (envio.isError()) {
-        <div class="text-error" role="alert">
+        <div class="publicar__error" role="alert">
           <p class="tipo-cuerpo">{{ claveDeError(envio.error()) | transloco }}</p>
           @if (camposQueFaltan().length > 0) {
-            <ul class="publicar__faltantes mt-1 mb-0 pl-4">
+            <ul class="publicar__faltantes">
               @for (campo of camposQueFaltan(); track campo) {
                 <li class="tipo-secundario" [id]="'falta-' + campo">
                   {{ etiquetaDe(campo) | transloco }}
@@ -454,8 +444,6 @@
       entra por la rama de error—, pero sin este @else la página se quedaba completamente
       en blanco, que es la peor forma de fallar.
     -->
-    <p class="publicar__error tipo-cuerpo text-error" role="alert">
-      {{ 'errors.fallback' | transloco }}
-    </p>
+    <p class="tipo-cuerpo publicar__error" role="alert">{{ 'errors.fallback' | transloco }}</p>
   }
 </section>

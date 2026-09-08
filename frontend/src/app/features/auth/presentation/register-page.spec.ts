@@ -273,7 +273,7 @@ describe('RegisterPage', () => {
       );
     await asentar(fixture);
 
-    const aviso = fixture.nativeElement.querySelector('sendik-form-error') as HTMLElement;
+    const aviso = fixture.nativeElement.querySelector('.error-general') as HTMLElement;
     expect(aviso.textContent).toContain('filtración');
     expect(fixture.nativeElement.textContent).not.toContain('texto interno del servidor');
   });

@@ -1,0 +1,148 @@
+/* La cola de moderacion de publicaciones. HU-008.
+
+   Pantalla interna. **Nada de esto lleva el acento bronce**: es el unico de la marca y
+   esta reservado a lo verificado, que es una senal de cara al comprador y no un control
+   de moderacion.
+
+   Una hoja por pantalla y no una compartida como en HU-006. Alli las dos caben juntas;
+   aqui el detalle trae la rejilla de las ocho tomas y el formulario de decision, y la
+   suma pasaba del presupuesto de estilos por componente. Separarlas ademas evita que la
+   cola cargue reglas que no usa. Lo unico que se repite son `:host` y el aviso de error,
+   que son cuatro lineas y la alternativa era una hoja global para dos pantallas. */
+
+/* El carril de contenido de la rejilla de <main>. Redundante con `.contenido > *` de
+   src/styles.css, y se conserva porque hace explicito el carril de la pantalla. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--medida);
+}
+
+.aviso-de-error {
+  padding: var(--esp-16);
+  margin-top: var(--esp-24);
+  border: 1px solid var(--color-error);
+  border-left-width: var(--grosor-barra-aviso);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* ---------- Las filas ---------- */
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin-top: var(--esp-24);
+}
+
+.publicacion + .publicacion {
+  margin-top: var(--esp-12);
+}
+
+/* El enlace envuelve la fila entera: el destino tactil es la fila y no el titulo. En
+   movil esto es una pila de tarjetas y no una tabla con desplazamiento horizontal, que
+   es lo que pide el criterio 14. */
+.enlace-de-fila {
+  display: flex;
+  gap: var(--esp-16);
+  align-items: flex-start;
+  min-height: var(--destino-tactil);
+  padding: var(--esp-12) var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.enlace-de-fila:hover {
+  border-color: var(--color-borde-control);
+}
+
+.datos-de-la-fila {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--esp-4);
+}
+
+/* La senal de que la fila es un enlace va en el titulo y no en el borde de la tarjeta.
+   Medido en HU-006: el borde da 1.33:1 contra la superficie y la tarjeta 1.09:1 contra
+   el fondo, asi que apoyarse en ellos deja un control que no se distingue (WCAG 1.4.11).
+   El subrayado sobre el texto principal da 15.98:1. */
+.titulo {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  /* El titulo lo escribe el vendedor. A 360px la columna de texto queda en ~200px y uno
+     sin espacios se sale de la caja: `.tipo-titulo-tarjeta` no trae corte, solo lo traen
+     los roles de titular grande. */
+  overflow-wrap: anywhere;
+}
+
+/* La miniatura respeta 3:4, la relacion de la foto de producto (ADR-0010). Las medidas
+   van en los atributos, que es lo que exige NgOptimizedImage; aqui solo se redondea y se
+   impide que se deforme. */
+.portada {
+  flex: none;
+  border-radius: var(--radio-sm);
+  object-fit: cover;
+}
+
+/* Cuando la toma frontal no esta, el hueco se reserva igual: sin el, las filas con foto
+   y las que no la tienen alinean el titulo en sitios distintos. */
+.portada--ausente {
+  display: block;
+  width: var(--ancho-miniatura-cola);
+  height: var(--alto-miniatura-cola);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--superficie-alta);
+}
+
+.datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-4) var(--esp-16);
+  color: var(--color-texto-suave);
+}
+
+.esqueleto-fila {
+  display: block;
+  height: var(--esp-64);
+}
+
+/* ---------- Marcas de la fila ---------- */
+
+/* Las dos llevan su propia palabra, no solo el borde: un color no puede ser el unico
+   portador de informacion (criterio 6), y quien revisa muchas al dia necesita leerlo.
+   El borde las separa entre si, pero lo que de verdad las distingue es el texto: una
+   es una alerta y la otra no. */
+.marca-de-atencion,
+.marca-propia {
+  align-self: flex-start;
+  padding: var(--esp-4) var(--esp-8);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  color: var(--color-texto);
+  background: var(--color-superficie);
+}
+
+.marca-de-atencion {
+  border-color: var(--color-aviso);
+}
+
+/* ---------- Estados ---------- */
+
+.vacio {
+  margin-top: var(--esp-24);
+}
+
+/* La confirmacion de lo que se acaba de hacer, al volver de decidir (criterio 8). */
+.aviso-hecho {
+  padding: var(--esp-12) var(--esp-16);
+  margin-bottom: var(--esp-24);
+  border: 1px solid var(--color-exito);
+  border-left-width: var(--grosor-barra-aviso);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}

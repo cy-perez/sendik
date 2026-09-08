@@ -1,0 +1,26 @@
+/* .btn-primario trae de marca.css el relleno en tinta; aqui va solo la caja. */
+.enlace-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: var(--esp-24);
+  padding: 0 var(--esp-24);
+  border: 0;
+  border-radius: var(--radio-md);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* La barra de esqueleto de marca.css necesita su caja: el brillo va sobre un
+   bloque, no sobre un parrafo vacio de altura cero. */
+.barra {
+  height: 20px;
+  max-width: 320px;
+  margin-top: var(--esp-24);
+}
+
+.error-reenvio {
+  color: var(--color-error);
+  margin-top: var(--esp-12);
+}

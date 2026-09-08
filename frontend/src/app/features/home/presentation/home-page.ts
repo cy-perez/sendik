@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 /** Un paso del bloque de como funciona. El numero lo pinta la plantilla. */
 interface Paso {
@@ -26,12 +25,9 @@ interface Confianza {
  */
 @Component({
   selector: 'sendik-home-page',
-  imports: [RouterLink, TranslocoPipe, Button],
+  imports: [RouterLink, TranslocoPipe],
   templateUrl: './home-page.html',
-  // display:contents saca al host de la caja para que las secciones sean items
-  // de la rejilla de <main>: una rejilla solo coloca a sus hijos DIRECTOS, y sin
-  // esto el hero a sangre no llegaria al carril completo.
-  host: { class: 'contents' },
+  styleUrl: './home-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage {

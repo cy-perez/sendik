@@ -1,0 +1,212 @@
+/* El detalle de una publicacion en revision. HU-008.
+
+   Pantalla interna. **Nada de esto lleva el acento bronce**: es el unico de la marca y
+   esta reservado a lo verificado, que es una senal de cara al comprador y no un control
+   de moderacion.
+
+   Una hoja por pantalla y no una compartida como en HU-006. Alli las dos caben juntas;
+   aqui el detalle trae la rejilla de las ocho tomas y el formulario de decision, y la
+   suma pasaba del presupuesto de estilos por componente. Separarlas ademas evita que la
+   cola cargue reglas que no usa. Lo unico que se repite son `:host` y el aviso de error,
+   que son cuatro lineas y la alternativa era una hoja global para dos pantallas. */
+
+/* El carril de contenido de la rejilla de <main>. Redundante con `.contenido > *` de
+   src/styles.css, y se conserva porque hace explicito el carril de la pantalla. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--medida);
+}
+
+.aviso-de-error {
+  padding: var(--esp-16);
+  margin-top: var(--esp-24);
+  border: 1px solid var(--color-error);
+  border-left-width: var(--grosor-barra-aviso);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* Aprobar y rechazar se distinguen por forma y texto, nunca solo por color: los botones
+   son los del sistema (`.btn` y `.btn-primario`), que ya traen el destino tactil. */
+
+.esqueleto-detalle {
+  display: block;
+  height: var(--alto-esqueleto-detalle);
+  margin-top: var(--esp-24);
+}
+
+.seccion {
+  margin-top: var(--esp-32);
+}
+
+/* Un enlace de navegacion suelto tambien es un destino tactil. */
+.enlace-de-volver {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+}
+
+/* ---------- Marcas de atencion (RN-020) ---------- */
+
+/* Arriba y no perdidas entre los datos: son lo que decide si esta publicacion se mira
+   con mas calma. */
+.atencion {
+  padding: var(--esp-16);
+  margin-top: var(--esp-24);
+  border: 1px solid var(--color-aviso);
+  border-left-width: var(--grosor-barra-aviso);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.atencion ul {
+  margin: var(--esp-8) 0 0;
+  padding-left: var(--esp-24);
+}
+
+/* ---------- Los datos ---------- */
+
+/* En dos columnas: la etiqueta y el valor. Sin esto el navegador pinta la <dl> con su
+   sangria por omision y los pares quedan escalonados. En movil cae a una columna. */
+.datos-de-la-publicacion {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--esp-4) var(--esp-16);
+  margin-top: var(--esp-12);
+}
+
+.datos-de-la-publicacion dt {
+  color: var(--color-texto-suave);
+}
+
+.datos-de-la-publicacion dd {
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .datos-de-la-publicacion {
+    grid-template-columns: max-content 1fr;
+  }
+}
+
+.descripcion {
+  margin-top: var(--esp-8);
+  white-space: pre-wrap;
+  /* Lo escribe el vendedor y `pre-wrap` respeta sus saltos, pero no parte una palabra:
+     una direccion web pegada en la descripcion desborda a 360px. */
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Las ocho tomas ---------- */
+
+/* Rejilla que se adapta sola: en un telefono caben dos y en escritorio cuatro, sin
+   puntos de quiebre propios. */
+.tomas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--ancho-min-toma-revision), 1fr));
+  gap: var(--esp-16);
+  list-style: none;
+  padding: 0;
+  margin-top: var(--esp-16);
+}
+
+.toma {
+  margin: 0;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  overflow: hidden;
+}
+
+.toma img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* El hueco de una toma que no esta: ocupa el sitio de la foto que deberia estar, para
+   que la rejilla no se descoloque, y lo dice con palabras. */
+.toma--ausente {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--alto-min-toma-ausente);
+  padding: var(--esp-12);
+  margin: 0;
+  color: var(--color-texto-suave);
+  text-align: center;
+}
+
+/* ---------- El formulario de la decision ---------- */
+
+/* Cada etiqueta en su renglon. Sin esto, `label` es en linea y la etiqueta, el
+   desplegable y la ayuda acaban los tres en la misma fila. El color lo pone
+   .tipo-secundario en la plantilla. */
+.campo {
+  display: block;
+  margin-top: var(--esp-16);
+  margin-bottom: var(--esp-4);
+}
+
+.control {
+  width: 100%;
+  max-width: var(--medida-formulario);
+  min-height: var(--destino-tactil);
+  padding: var(--esp-8) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+textarea.control {
+  resize: vertical;
+}
+
+.acciones,
+.confirmacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-12);
+  align-items: center;
+  margin-top: var(--esp-32);
+}
+
+/* La confirmacion se distingue de la fila de acciones: es un momento distinto y conviene
+   que se note que la pantalla esta preguntando algo. */
+.confirmacion {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.confirmacion > p {
+  margin: 0;
+}
+
+/* El mensaje de motivo obligatorio (criterio 9). Junto al campo, no al final del
+   formulario: es donde lo busca quien acaba de recibir el foco ahi. */
+.mensaje-de-error {
+  margin-top: var(--esp-8);
+  color: var(--color-error);
+}
+
+/* Criterio 12: la publicacion es tuya y aqui no se decide. No es un error ni un peligro,
+   asi que no lleva el borde de error, sino el del boton secundario.
+
+   Aqui habia un comentario que decia que --color-borde-control da 2.82:1 contra el fondo
+   de pagina y no llegaba al minimo. Es falso con la paleta de hoy: verificar.py mide
+   3.36:1 en claro y 5.29:1 en oscuro, y los dos pasan. El numero venia repetido de la hoja
+   de HU-006 sin volver a medirlo. Se conserva --color-primario porque un aviso merece
+   destacarse mas que un campo, no porque el otro no cumpla. */
+.aviso-propia {
+  padding: var(--esp-16);
+  margin-top: var(--esp-32);
+  border: 1px solid var(--color-primario);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}

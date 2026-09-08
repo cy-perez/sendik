@@ -1,0 +1,53 @@
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--ancho-max);
+  padding: var(--esp-24) var(--esp-16);
+}
+
+.vendedor__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-16);
+  flex-wrap: wrap;
+  margin-bottom: var(--esp-32);
+}
+
+.vendedor__cabecera h1,
+.vendedor__cabecera p {
+  margin: 0;
+}
+
+.vendedor__sello {
+  margin-top: var(--esp-8);
+}
+
+.vendedor__foto {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--color-borde);
+}
+
+/* La misma rejilla del catálogo: es la misma tarjeta y el mismo contenido, y dos
+   rejillas distintas para lo mismo acaban divergiendo. */
+.vendedor__rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  gap: var(--esp-24) var(--esp-16);
+  margin: var(--esp-16) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vendedor__mas {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--esp-32);
+}
+
+.vendedor__esqueleto {
+  height: 96px;
+  max-width: 320px;
+}

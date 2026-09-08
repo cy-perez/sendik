@@ -13,9 +13,9 @@
 </p>
 
 @if (cargando()) {
-  <ul class="catalog-grid" aria-hidden="true">
+  <ul class="favoritos__rejilla" aria-hidden="true">
     @for (hueco of huecos; track hueco) {
-      <li><p class="esqueleto aspect-photo h-auto w-full"></p></li>
+      <li><p class="esqueleto favoritos__esqueleto"></p></li>
     }
   </ul>
 } @else if (!haySesion()) {
@@ -25,14 +25,14 @@
   -->
   <p class="tipo-cuerpo">{{ 'catalog.favorites.signedOut' | transloco }}</p>
   <p>
-    <a sendikButton routerLink="/ingresar">
+    <a class="btn btn-primario" routerLink="/ingresar">
       {{ 'catalog.favorites.signIn' | transloco }}
     </a>
   </p>
 } @else if (fallo()) {
   <div role="alert">
     <p class="tipo-cuerpo">{{ 'catalog.favorites.error' | transloco }}</p>
-    <button type="button" sendikButton variant="secondary" (click)="reintentar()">
+    <button type="button" class="btn btn-secundario" (click)="reintentar()">
       {{ 'catalog.favorites.retry' | transloco }}
     </button>
   </div>
@@ -42,19 +42,19 @@
     mundo, porque todo el mundo empieza sin favoritos, y explica para que sirve la lista
     antes de llevar al catalogo.
   -->
-  <div class="vacio mx-auto flex max-w-prose flex-col items-center gap-4">
+  <div class="vacio favoritos__vacio">
     <h2 class="tipo-titulo-tarjeta">{{ 'catalog.favorites.empty.title' | transloco }}</h2>
     <p class="tipo-cuerpo">{{ 'catalog.favorites.empty.body' | transloco }}</p>
     <p>
-      <a sendikButton routerLink="/catalogo">
+      <a class="btn btn-primario" routerLink="/catalogo">
         {{ 'catalog.favorites.empty.action' | transloco }}
       </a>
     </p>
   </div>
 } @else {
-  <p class="tipo-cuerpo mt-2 mb-6 text-text-muted">{{ 'catalog.favorites.intro' | transloco }}</p>
+  <p class="tipo-cuerpo favoritos__intro">{{ 'catalog.favorites.intro' | transloco }}</p>
 
-  <ul class="catalog-grid">
+  <ul class="favoritos__rejilla">
     @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {
       <li>
         <sendik-product-card [publicacion]="publicacion" [primera]="primera" />
@@ -63,11 +63,10 @@
   </ul>
 
   @if (hayMas()) {
-    <div class="mt-8 flex justify-center">
+    <div class="favoritos__mas">
       <button
         type="button"
-        sendikButton
-        variant="secondary"
+        class="btn btn-secundario"
         [disabled]="trayendoMas()"
         (click)="verMas()"
       >

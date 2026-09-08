@@ -4,7 +4,6 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 import { AuthStore } from '../application/auth.store';
 import { ACEPTA_IMAGENES, elTipoDeImagenEsAceptado } from '../domain/profile';
-import { Button } from '../../../shared/ui/button/button';
 
 /**
  * La foto de perfil. Criterio 21 de HU-001.
@@ -24,8 +23,9 @@ import { Button } from '../../../shared/ui/button/button';
  */
 @Component({
   selector: 'sendik-avatar-form',
-  imports: [NgOptimizedImage, TranslocoPipe, Button],
+  imports: [NgOptimizedImage, TranslocoPipe],
   templateUrl: './avatar-form.html',
+  styleUrl: './avatar-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AvatarForm {

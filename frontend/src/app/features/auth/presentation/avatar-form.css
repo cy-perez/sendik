@@ -1,0 +1,101 @@
+/* La foto y sus acciones en fila, y en columna cuando no cabe. 44px de destino
+   tactil se respeta en los dos casos. */
+.bloque-avatar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-24);
+  margin-top: var(--esp-24);
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  /* Redonda porque es una cara, no un producto: la proporcion 3:4 de la guia
+     visual es de las tomas de prenda y aqui no aplica. */
+  border-radius: var(--radio-completo);
+  /* La imagen la sube quien quiera y puede no ser cuadrada. `cover` recorta al
+     centro en lugar de deformar la cara, que es lo que haria el ajuste por
+     omision. */
+  object-fit: cover;
+  border: 1px solid var(--color-borde-control);
+  background: var(--color-superficie);
+}
+
+/* El hueco cuando no hay foto. Mismo tamano y misma forma que la imagen para que
+   poner o quitar la foto no mueva el resto de la pantalla. */
+.sin-foto {
+  border-style: dashed;
+}
+
+.acciones-avatar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-12);
+}
+
+/* `.accion` se repite en cada componente que la usa, como en session-menu y en la
+   pantalla de cuenta: los estilos de componente van encapsulados, asi que la
+   definicion del padre no llega hasta aqui. La alternativa era subirla a marca.css
+   y eso es un componente base del sistema de diseno, no algo que se decida dentro
+   de una rebanada. */
+.accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.accion:hover {
+  background: var(--color-primario-suave);
+}
+
+.accion:disabled {
+  color: var(--color-deshabilitado);
+  cursor: default;
+}
+
+/* El campo de archivo vive dentro de la etiqueta y esta fuera de la vista, no
+   oculto: `display: none` lo saca del orden de tabulacion y entonces no se puede
+   elegir una foto con el teclado. `.solo-lectores` lo deja alcanzable, asi que el
+   foco cae en el campo y la etiqueta es lo que se ve. */
+label.accion {
+  position: relative;
+}
+
+/* El anillo de foco se pinta sobre la etiqueta, porque el campo que recibe el foco
+   esta fuera de la vista y su propio anillo no se veria. Sin esto, quien navega con
+   teclado pierde el rastro justo en este control. */
+label.accion:focus-within {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+/* Mientras sube, la etiqueta deja de invitar a pulsar. El campo de dentro va
+   deshabilitado de verdad; esto es solo lo que se ve. */
+label.accion.ocupada {
+  cursor: progress;
+  color: var(--color-deshabilitado);
+}
+
+.error {
+  margin-top: var(--esp-16);
+  color: var(--color-error);
+}
+
+/* El esqueleto necesita su caja, y aqui es redonda para que la espera tenga la
+   forma de lo que va a llegar. */
+.redondo {
+  width: 120px;
+  height: 120px;
+  margin-top: var(--esp-24);
+  border-radius: var(--radio-completo);
+}

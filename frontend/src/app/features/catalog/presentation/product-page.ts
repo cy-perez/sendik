@@ -12,9 +12,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { precioFormateado } from '../../../shared/domain/listing';
-import { SpinViewer, type FotogramaDelVisor } from '../../../shared/viewer/spin-viewer';
+import { SpinViewer, type FotogramaDelVisor } from '../../../shared/ui/viewer/spin-viewer';
 import { MOTIVOS_DE_RECHAZO_DE_PUBLICACION } from '../../../shared/domain/listing';
-import { UndoAction, type DecisionDeshecha } from '../../../shared/moderation/undo-action';
+import { UndoAction, type DecisionDeshecha } from '../../../shared/ui/moderation/undo-action';
 import { CatalogStore } from '../application/catalog.store';
 import { ModerationStore } from '../application/moderation.store';
 import { FavoriteToggle } from './favorite-toggle';
@@ -45,9 +45,7 @@ import {
   standalone: true,
   imports: [FavoriteToggle, RouterLink, SpinViewer, TranslocoPipe, UndoAction],
   templateUrl: './product-page.html',
-  // grid-column es obligatorio: <main> es una rejilla y sin asignar carril la
-  // pagina cae en el de sangria y se pinta en una columna de 40px.
-  host: { class: 'block [grid-column:content] max-w-content px-4 py-6' },
+  styleUrl: './product-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductPage {

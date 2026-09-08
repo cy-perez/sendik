@@ -13,7 +13,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
-import { Button } from '../../../shared/ui/button/button';
 
 import { TOMAS_DE_LA_SECUENCIA, type Listing } from '../../../shared/domain/listing';
 import { estaNivelado } from '../../../shared/domain/tilt';
@@ -40,9 +39,9 @@ type EstadoDelPermiso = 'pendiente' | 'concedido' | 'negado';
  */
 @Component({
   selector: 'sendik-capture-wizard',
-  imports: [RouterLink, TranslocoPipe, Button],
+  imports: [RouterLink, TranslocoPipe],
   templateUrl: './capture-wizard.html',
-  host: { class: 'block' },
+  styleUrl: './capture-wizard.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CaptureWizard {

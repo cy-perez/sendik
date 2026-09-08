@@ -1,0 +1,127 @@
+/* El host desaparece de la caja para que las secciones sean items de la rejilla
+   de <main>. Sin esto, .a-sangre no llegaria al carril completo: una rejilla
+   solo coloca a sus hijos directos. */
+:host {
+  display: contents;
+}
+
+/* Y el carril hay que asignarlo desde aqui. Estas dos reglas **no** son
+   redundantes con las de src/styles.css, al contrario que las de las demas
+   paginas: `display: contents` cambia el arbol de CAJAS, no el del DOM, y
+   `.contenido > *` sigue exigiendo que el padre en el DOM sea .contenido,
+   mientras que el padre real de estas secciones es <sendik-home-page>. Sin
+   ellas las secciones caen en `grid-column: auto`, la rejilla las auto-coloca
+   en los carriles de sangria y el hero acaba midiendo 16px. */
+:host > * {
+  grid-column: content;
+}
+
+:host > .a-sangre {
+  grid-column: full;
+}
+
+/* ---------- Hero ---------- */
+
+/* El margen negativo cancela el padding superior de .contenido: la franja se
+   pega a la cabecera, como en la guia visual. */
+.hero {
+  margin-top: calc(var(--esp-32) * -1);
+  padding: var(--esp-48) 0;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .hero {
+    padding: var(--esp-64) 0;
+  }
+}
+
+/* 52ch: por encima de eso la linea se vuelve incomoda de leer, y el hero es
+   justo donde mas gente lee de verdad. */
+.hero-cuerpo {
+  max-width: 52ch;
+  margin: var(--esp-16) auto 0;
+}
+
+/**
+ * Solo la caja. El relleno y el color del texto los pone .btn-primario de
+ * marca.css, que dentro de .franja-tinta se invierte solo: la franja redefine
+ * --color-primario y --color-sobre-primario, asi que el boton pasa a relleno
+ * claro con tinta encima. Un boton en tinta sobre fondo de tinta no se veria, y
+ * el manual prohibe resolverlo poniendolo en bronce.
+ *
+ * El color del texto ya NO se repite aqui. Hacia falta mientras
+ * `.franja-tinta a` (0,1,1) le ganaba a `.btn-primario` (0,1,0) y dejaba el
+ * boton con texto claro sobre relleno claro. La regla que lo arregla de verdad
+ * —`.franja-tinta a.btn-primario`, (0,2,1)— ya vive en marca.css, que es del
+ * proyecto: no hay motivo para parchearlo desde la portada.
+ */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--destino-tactil);
+  margin-top: var(--esp-24);
+  padding: 0 var(--esp-32);
+  border: 1px solid transparent;
+  border-radius: var(--radio-md);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* .tipo-secundario fija --color-texto-suave, que sobre la franja de tinta no
+   pasa el contraste minimo. Aqui se hereda el color de la franja y el matiz de
+   nota lo da la opacidad, que si lo conserva. Los enlaces no necesitan esto:
+   marca.css ya los recolorea con `.franja-tinta a`. */
+.hero-nota {
+  color: inherit;
+  opacity: 0.85;
+  margin: var(--esp-16) 0 0;
+}
+
+/* ---------- Bloques de contenido ---------- */
+
+.bloque {
+  margin-top: var(--esp-48);
+}
+
+.pasos,
+.tarjetas {
+  display: grid;
+  gap: var(--esp-24);
+  margin: var(--esp-24) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Una columna en movil; las tres caben a partir de 640px. minmax con 0 como
+   minimo evita que un titulo largo en ingles ensanche la columna. */
+@media (min-width: 640px) {
+  .pasos,
+  .tarjetas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.paso h3,
+.tarjeta h3 {
+  margin: 0 0 var(--esp-8);
+}
+
+.paso p,
+.tarjeta p {
+  margin: 0;
+}
+
+.numero {
+  display: block;
+  color: var(--color-primario);
+  margin-bottom: var(--esp-8);
+}
+
+.tarjeta {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  padding: var(--esp-24);
+}

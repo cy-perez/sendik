@@ -142,7 +142,7 @@ describe('ResetPasswordPage', () => {
       );
     await asentar(fixture);
 
-    const aviso = fixture.nativeElement.querySelector('sendik-form-error') as HTMLElement;
+    const aviso = fixture.nativeElement.querySelector('.error-general') as HTMLElement;
     expect(aviso.textContent).toContain('30 minutos');
     // Y se ofrece pedir otro, porque el enlace ya no sirve.
     expect(aviso.querySelector('a[href="/recuperar-contrasena"]')).not.toBeNull();
@@ -166,7 +166,7 @@ describe('ResetPasswordPage', () => {
       );
     await asentar(fixture);
 
-    const aviso = fixture.nativeElement.querySelector('sendik-form-error') as HTMLElement;
+    const aviso = fixture.nativeElement.querySelector('.error-general') as HTMLElement;
     expect(aviso.textContent).toContain('filtración');
     expect(aviso.querySelector('a')).toBeNull();
   });

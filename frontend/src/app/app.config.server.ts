@@ -14,7 +14,7 @@ import { readAppConfigForBootstrap } from './core/config/read-app-config';
 import { ACTIVE_LOCALE, provideI18n } from './core/i18n/i18n.providers';
 import { resolveLocale } from './core/i18n/locale';
 import { BundledTranslationLoader } from './core/i18n/bundled-translation-loader';
-import { isDark, resolveTheme, THEME_DARK_CLASS } from './core/theme/theme';
+import { resolveTheme, themeAttribute } from './core/theme/theme';
 
 /**
  * Se lee una sola vez, al cargar el modulo. La validacion estricta vive en
@@ -52,18 +52,16 @@ const serverConfig: ApplicationConfig = {
       const documentElement = inject(DOCUMENT).documentElement;
       const headers = inject(REQUEST)?.headers;
 
-      const theme = resolveTheme({
-        cookieHeader: headers?.get('cookie'),
-        colorSchemeHint: headers?.get('sec-ch-prefers-color-scheme'),
-      });
-
       documentElement.setAttribute('lang', inject(ACTIVE_LOCALE));
-
-      // La clase, antes de pintar. Es lo que lee la variante dark de Tailwind, y
-      // ponerla aqui es lo que hace que el HTML salga ya en el modo correcto.
-      if (isDark(theme)) {
-        documentElement.classList.add(THEME_DARK_CLASS);
-      }
+      documentElement.setAttribute(
+        'data-tema',
+        themeAttribute(
+          resolveTheme({
+            cookieHeader: headers?.get('cookie'),
+            colorSchemeHint: headers?.get('sec-ch-prefers-color-scheme'),
+          }),
+        ),
+      );
     }),
   ],
 };

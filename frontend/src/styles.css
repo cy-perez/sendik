@@ -1,44 +1,20 @@
-/* Orden obligatorio. Lo fija la ADR-0032, que sustituye al orden anterior del
-   kit de interfaz al pasar Tailwind a ser el motor de estilos.
+/* Orden obligatorio, definido por el kit de interfaz:
 
-   La declaracion de capas de abajo es lo que hace posible la migracion
-   incremental, y no es cosmetica. En Tailwind 4 las utilidades viven en
-   @layer utilities, y en CSS el estilo SIN capa le gana a cualquier estilo CON
-   capa, por especifico que sea el segundo. Si las cuatro hojas heredadas se
-   dejaran sueltas, ni una sola utilidad de Tailwind podria sobrescribir a
-   marca.css y la migracion no avanzaria un solo componente: se veria funcionar
-   en una plantilla nueva y fallar en cuanto tocara una pantalla existente.
-   Metiendolas en la capa `legacy`, declarada ANTES de utilities, lo heredado
-   sigue pintando igual que hoy y lo nuevo puede reemplazarlo pieza a pieza.
+     fuentes.css      declara los archivos de tipografía. Del proyecto
+     tokens.css       variables del sistema. GENERADO, no se edita
+     tipografia.css   roles de texto, escala fluida y respaldos. Del proyecto
+     marca.css        componentes de Sendik y ajustes de modo oscuro. Del proyecto
 
-   El orden de esta linea es el unico que manda: las @layer que declare Tailwind
-   despues no reordenan una capa ya declarada aqui. */
-@layer theme, base, roles, components, utilities;
+   Solo tokens.css sale del generador: lo escribe docs/ui/generador y lo copia
+   publicar.py. Las otras tres se editan aquí mismo.
 
-/* fuentes.css va FUERA de capa a proposito: son declaraciones @font-face, que no
-   compiten en la cascada, y meterlas en una capa solo anade una duda. */
+   marca.css va al final porque carga después y sobrescribiría lo que
+   tipografia.css define. Alterar este orden rompe el sistema en silencio. */
+
 @import './styles/fuentes.css';
-
-@import 'tailwindcss';
-@import 'tw-animate-css';
-
-/* La paleta y las variantes. Fuente de verdad del color desde la ADR-0032. */
-@import './styles/tema.css';
-
-/* Hojas heredadas, en retirada. Siguen aqui porque la refactorizacion es
-   incremental y hoy pintan el sitio entero; salen cuando la Fase 3 termine de
-   migrar las plantillas que las usan. tokens.css es generado y de solo lectura:
-   no se edita, se deja de importar el dia que sobre. */
-/* tokens.css RETIRADA (ADR-0032). Era la ultima hoja generada: la escala de
-   tipo, los pesos y los interlineados se movieron a tipografia.css, que es la
-   fuente de verdad del tipo; el color, el espaciado y el radio los tiene
-   tema.css desde el principio. El archivo sigue en disco porque es de escritura
-   denegada, pero ya no entra en la compilacion. */
-@import './styles/tipografia.css' layer(roles);
-/* marca.css RETIRADA (ADR-0032). Sus seis piezas de marca vivas —el brillo de
-   carga, el estado vacio, la regla de corte, la insignia de verificado, la barra
-   de paginacion y la franja de tinta— estan en tema.css como utilidades, con sus
-   reglas de contraste intactas. */
+@import './styles/tokens.css';
+@import './styles/tipografia.css';
+@import './styles/marca.css';
 
 /* A partir de aquí, estilos globales del proyecto. Ningún HEX, ningún píxel
    suelto, ningún tamaño de letra: el tipo se aplica con las clases de rol
@@ -53,17 +29,16 @@
 
 body {
   margin: 0;
-  background: var(--brand-background);
-  color: var(--brand-text);
+  background: var(--color-fondo);
+  color: var(--color-texto);
   /* El tamaño y la familia los define tipografia.css sobre el propio <body>, y
      no se redeclaran aquí. */
 }
 
 /* El anillo de foco es de 3px y no se retira nunca. Dentro de .franja-tinta,
-   tema.css redefine --brand-focus para que siga siendo visible sobre tinta: sin
-   eso el anillo es tinta sobre tinta y da 1.6:1. */
+   marca.css ya redefine --color-foco para que siga siendo visible sobre tinta. */
 :focus-visible {
-  outline: 3px solid var(--brand-focus);
+  outline: 3px solid var(--color-foco);
   outline-offset: 2px;
 }
 
@@ -102,20 +77,20 @@ body {
  */
 .contenido {
   flex: 1;
-  --sangria: calc(var(--spacing) * 4);
+  --sangria: var(--esp-16);
   display: grid;
   align-content: start;
   grid-template-columns:
     [full-start] minmax(var(--sangria), 1fr)
-    [content-start] min(var(--container-content), calc(100% - var(--sangria) * 2)) [content-end]
+    [content-start] min(var(--ancho-max), calc(100% - var(--sangria) * 2)) [content-end]
     minmax(var(--sangria), 1fr) [full-end];
-  padding-top: calc(var(--spacing) * 8);
-  padding-bottom: calc(var(--spacing) * 12);
+  padding-top: var(--esp-32);
+  padding-bottom: var(--esp-48);
 }
 
 @media (min-width: 640px) {
   .contenido {
-    --sangria: calc(var(--spacing) * 6);
+    --sangria: var(--esp-24);
   }
 }
 
@@ -135,14 +110,14 @@ body {
    hace falta la excepción. */
 .contenedor {
   width: 100%;
-  max-width: var(--container-content);
+  max-width: var(--ancho-max);
   margin: 0 auto;
-  padding: 0 calc(var(--spacing) * 4);
+  padding: 0 var(--esp-16);
 }
 
 @media (min-width: 640px) {
   .contenedor {
-    padding: 0 calc(var(--spacing) * 6);
+    padding: 0 var(--esp-24);
   }
 }
 

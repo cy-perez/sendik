@@ -1,8 +1,8 @@
-<div class="mt-6 flex max-w-form flex-col gap-4">
+<div class="formulario">
   @if (errorDelServidor(); as error) {
-    <p class="tipo-cuerpo text-error" role="alert">{{ error | transloco }}</p>
+    <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
   } @else if (envio.isSuccess()) {
-    <p class="tipo-cuerpo text-success" role="status">
+    <p class="guardado tipo-cuerpo" role="status">
       {{ 'sellerVerification.selfieForm.saved' | transloco }}
     </p>
   }
@@ -14,14 +14,12 @@
   />
 
   @if (errorDeFoto(); as error) {
-    <p class="tipo-secundario text-error" role="alert">{{ error | transloco }}</p>
+    <p class="error-campo tipo-secundario" role="alert">{{ error | transloco }}</p>
   }
 
   <button
     type="button"
-    sendikButton
-    variant="ghost"
-    class="tipo-secundario"
+    class="accion tipo-secundario"
     [disabled]="envio.isPending()"
     (click)="guardar()"
   >

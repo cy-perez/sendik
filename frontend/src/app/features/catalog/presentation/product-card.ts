@@ -22,12 +22,10 @@ import { portada, type PublicListing } from '../domain/public-listing';
  */
 @Component({
   selector: 'sendik-product-card',
-  // La tarjeta es el elemento de una rejilla: el host tiene que ser un bloque o
-  // el enlace de dentro no ocupa la celda entera.
-  host: { class: 'block' },
   standalone: true,
   imports: [NgOptimizedImage, RouterLink, TranslocoPipe],
   templateUrl: './product-card.html',
+  styleUrl: './product-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductCard {

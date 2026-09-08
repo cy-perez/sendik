@@ -1,0 +1,19 @@
+.formulario {
+  max-width: 480px;
+  margin-top: var(--esp-24);
+}
+
+.error {
+  margin-top: var(--esp-16);
+  color: var(--color-error);
+}
+
+/* Se distingue por el borde y por el texto, no por el color: quien no lo
+   distingue tiene que enterarse igual de que el enlace salio. */
+.enviado {
+  padding: var(--esp-12) var(--esp-16);
+  margin-top: var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}

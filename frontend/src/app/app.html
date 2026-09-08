@@ -9,11 +9,7 @@
 <!-- tabindex="-1" es lo que hace que el enlace de salto mueva el foco de verdad
      y no solo el desplazamiento. Sin el, el teclado sigue en la cabecera. -->
 <main id="contenido" class="contenido" tabindex="-1">
-  <!-- El componente de la ruta se inserta como HERMANO de <router-outlet>, no
-       dentro. El propio outlet no pinta nada, pero es hijo directo de la rejilla
-       de carriles y consumiria una fila: display:contents lo saca del flujo sin
-       sacar a su hermano. -->
-  <router-outlet class="contents" />
+  <router-outlet />
 </main>
 
 <sendik-site-footer />

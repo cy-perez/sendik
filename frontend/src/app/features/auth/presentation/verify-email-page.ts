@@ -11,7 +11,6 @@ import { RouterLink } from '@angular/router';
 
 import { ApiError } from '../../../core/http/api-error';
 import { AuthStore } from '../application/auth.store';
-import { Button } from '../../../shared/ui/button/button';
 
 /**
  * Pantalla que abre el enlace del correo. Criterios 7 a 9 de HU-001.
@@ -26,8 +25,9 @@ import { Button } from '../../../shared/ui/button/button';
  */
 @Component({
   selector: 'sendik-verify-email-page',
-  imports: [TranslocoPipe, RouterLink, Button],
+  imports: [TranslocoPipe, RouterLink],
   templateUrl: './verify-email-page.html',
+  styleUrl: './verify-email-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerifyEmailPage {
