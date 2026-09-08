@@ -114,3 +114,23 @@ riesgo con el mismo instrumental, y la suite volvería a decir que todo está bi
 Cuando exista una forma de ver una regresión visual antes de fusionar. Ese es el disparador
 para reabrir la ADR-0032 y no otro: ni que la rama se quede vieja, ni que Tailwind saque
 versión. Sin esa condición, un segundo intento repetiría el primero.
+
+### La condición se cumplió el 8 de septiembre de 2026
+
+`frontend/e2e/maquetacion.spec.ts` compara doce capturas de página completa —tres pantallas
+públicas, los dos modos, dos anchos— contra imágenes de referencia generadas en el
+contenedor oficial de Playwright, que es el mismo Linux donde corre la canalización. Cuando
+algo se mueve, las imágenes de diferencia viajan en el artefacto que el flujo ya subía, así
+que **la regresión se ve antes de fusionar y no después**. El detalle está en
+`docs/ui/regresion-visual.md`.
+
+Con esto **la ADR-0032 se puede reabrir**, y reabrirla sigue siendo una decisión aparte que
+nadie ha tomado todavía. Lo que cambia es que el segundo intento ya no correría el mismo
+riesgo con el mismo instrumental: esta vez la suite sí puede contradecir a quien diga que
+todo está bien.
+
+Dos límites que conviene tener presentes antes de confiarse. El primero: la comparación
+cubre las pantallas **públicas**, y las que piden sesión —publicación, moderación, panel del
+vendedor— siguen sin que nadie mire su maquetación. El segundo: una captura dice que algo
+cambió, no que algo esté mal; sigue haciendo falta que una persona mire el resultado y
+decida. Lo que se acabó es fusionar sin que nadie se entere.

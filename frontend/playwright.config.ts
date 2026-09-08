@@ -26,6 +26,43 @@ export default defineConfig({
 
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 
+  /**
+   * Comparacion de capturas para las pruebas de maquetacion (ADR-0033).
+   *
+   * <strong>El caso que vienen a cubrir.</strong> El 7 de septiembre de 2026 se
+   * fusiono una migracion del sistema de diseno con la canalizacion entera en
+   * verde y el sitio quedo descuadernado. No fue un fallo de la suite: axe mide
+   * contraste, nombres accesibles, jerarquia y orden de foco, y ninguna de esas
+   * cosas se rompe porque un ancho, un espaciado o una alineacion cambien. Nadie
+   * miraba la maquetacion, y esto es lo que la mira.
+   *
+   * `maxDiffPixelRatio` en cinco milesimas y no en cero porque el suavizado de
+   * los bordes de las letras puede mover un punado de pixeles entre dos maquinas
+   * sin que nada este mal. Un descuadre de verdad mueve ordenes de magnitud mas
+   * que eso: desplazar una columna repinta media pantalla. El umbral separa las
+   * dos cosas con holgura, y si algun dia hay que subirlo, es senal de que hay
+   * que regenerar las referencias, no de que el umbral sea corto.
+   */
+  expect: {
+    toHaveScreenshot: {
+      animations: 'disabled',
+      caret: 'hide',
+      maxDiffPixelRatio: 0.005,
+    },
+  },
+
+  /**
+   * El sistema operativo va en la ruta, y es a proposito.
+   *
+   * Las referencias se generan en el contenedor oficial de Playwright, que es
+   * Linux, porque es donde corre la canalizacion. Si alguien lanza estas pruebas
+   * desde Windows o macOS, con el sistema en la ruta la prueba dice «falta la
+   * referencia» en vez de comparar contra una que no le corresponde y pintar de
+   * rojo un cambio que no existe. `docs/ui/regresion-visual.md` cuenta como se
+   * generan.
+   */
+  snapshotPathTemplate: '{testDir}/__capturas__/{platform}/{arg}{ext}',
+
   webServer: {
     /**
      * En integracion continua no se vuelve a construir: el flujo ya lo hizo en

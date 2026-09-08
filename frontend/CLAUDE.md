@@ -186,6 +186,15 @@ Es requisito de aceptación, no un extra. Cada componente entra con:
   entre el backend y `ListingReviewStore` solo se comprueba ahí, porque una prueba de
   componente inventa ese código ella misma al simular la respuesta. La compra llega
   con su fase.
+- **La maquetación la comprueba `e2e/maquetacion.spec.ts` y no la comprueba nada más.**
+  Compara doce capturas de página completa —portada, cómo funciona y registro, en
+  los dos modos y en dos anchos— contra referencias generadas en el contenedor
+  oficial de Playwright. Existe porque axe no mide maquetación: el 7 de septiembre
+  de 2026 se fusionó una migración del sistema de diseño con la canalización entera
+  en verde y el sitio quedó descuadernado (ADR-0033). **Cuando se pone roja no dice
+  que algo esté mal, dice que algo cambió**: si el cambio era el buscado, se
+  regeneran las referencias y el commit las lleva. Lo que no se hace es subir el
+  umbral para que pase. Cómo se regeneran, en `../docs/ui/regresion-visual.md`.
 - **La cámara en `e2e-completo/` es la falsa de Chromium**, con
   `--use-fake-device-for-media-stream` y el permiso concedido en el proyecto. Su
   patrón tiene zonas de degradado suave y algunos fotogramas caen por debajo del
