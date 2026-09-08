@@ -10,8 +10,8 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-import { SubmitButton } from '../../../shared/ui/form/submit-button';
-import { TextField } from '../../../shared/ui/form/text-field';
+import { SubmitButton } from '../../../shared/ui/field/submit-button';
+import { TextField } from '../../../shared/ui/field/text-field';
 import { InstitutionsStore } from '../application/institutions.store';
 import { VerificationStore } from '../application/verification.store';
 import {
@@ -42,7 +42,6 @@ import {
   selector: 'sendik-bank-account-form',
   imports: [ReactiveFormsModule, TranslocoPipe, TextField, SubmitButton],
   templateUrl: './bank-account-form.html',
-  styleUrl: './bank-account-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BankAccountForm {

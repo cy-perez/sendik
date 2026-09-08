@@ -1,49 +1,91 @@
-<fieldset class="captura">
+<fieldset class="mt-4 flex flex-col items-start gap-2 rounded-md border border-border p-4">
   <legend class="tipo-secundario">{{ labelKey() | transloco }}</legend>
 
   @if (error(); as clave) {
-    <p class="error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
+    <p class="tipo-cuerpo text-error" role="alert">{{ clave | transloco }}</p>
   }
 
   @if (tomada(); as fuente) {
     <!-- El alt describe lo que es, no "imagen": quien no la ve necesita saber que ese
          paso ya tiene foto. -->
     <img
-      class="vista-previa"
+      class="block w-full max-w-form rounded-sm"
       [src]="fuente"
       [alt]="'sellerVerification.capture.preview' | transloco"
     />
 
-    <button type="button" class="accion tipo-secundario" [disabled]="ocupada()" (click)="repetir()">
+    <button
+      type="button"
+      sendikButton
+      variant="ghost"
+      class="tipo-secundario"
+      [disabled]="ocupada()"
+      (click)="repetir()"
+    >
       {{ 'sellerVerification.capture.retake' | transloco }}
     </button>
   } @else if (abierta()) {
     <p class="tipo-secundario">{{ guia() | transloco }}</p>
 
-    <div class="visor">
+    <div class="relative w-full max-w-form">
       <!-- `muted` y `playsinline` para que el movil no lo abra a pantalla completa ni
            pida sonido que no existe. -->
-      <video #video class="video" autoplay playsinline muted></video>
+      <video
+        #video
+        class="block w-full rounded-sm bg-background"
+        autoplay
+        playsinline
+        muted
+      ></video>
       <!-- La guia de encuadre es decorativa: lo que dice ya esta en el texto de arriba. -->
-      <div class="guia" [class.guia-rostro]="encuadre() === 'rostro'" aria-hidden="true"></div>
+      <!--
+        Dos encuadres y solo dos: la cedula es mas ancha que alta, y el rostro es un
+        ovalo centrado, mas alto que ancho. Va como una sola expresion y no como
+        clases sueltas porque son cuatro medidas y un radio que cambian juntos:
+        separarlas deja combinaciones que nadie eligio.
+      -->
+      <div
+        [class]="
+          encuadre() === 'rostro'
+            ? 'pointer-events-none absolute inset-y-[8%] inset-x-[22%] rounded-full guide-stroke border-focus'
+            : 'pointer-events-none absolute inset-y-[10%] inset-x-[6%] rounded-sm guide-stroke border-focus'
+        "
+        aria-hidden="true"
+      ></div>
     </div>
 
-    <button type="button" class="accion tipo-secundario" [disabled]="ocupada()" (click)="tomar()">
+    <button
+      type="button"
+      sendikButton
+      variant="ghost"
+      class="tipo-secundario"
+      [disabled]="ocupada()"
+      (click)="tomar()"
+    >
       {{ 'sellerVerification.capture.take' | transloco }}
     </button>
 
     @if (borrosa()) {
-      <p class="error tipo-cuerpo" role="alert">
+      <p class="tipo-cuerpo text-error" role="alert">
         {{ 'sellerVerification.capture.blurry' | transloco }}
       </p>
     }
   } @else {
-    <button type="button" class="accion tipo-secundario" [disabled]="ocupada()" (click)="abrir()">
+    <button
+      type="button"
+      sendikButton
+      variant="ghost"
+      class="tipo-secundario"
+      [disabled]="ocupada()"
+      (click)="abrir()"
+    >
       {{ 'sellerVerification.capture.activate' | transloco }}
     </button>
 
     <!-- Se dice por que no hay boton de subir archivo, en lugar de dejar el hueco sin
          explicacion (criterio 3). -->
-    <p class="pista tipo-secundario">{{ 'sellerVerification.capture.noGallery' | transloco }}</p>
+    <p class="tipo-secundario m-0 text-text-muted">
+      {{ 'sellerVerification.capture.noGallery' | transloco }}
+    </p>
   }
 </fieldset>

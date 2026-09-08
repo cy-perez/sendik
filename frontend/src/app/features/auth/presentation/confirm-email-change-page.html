@@ -1,7 +1,7 @@
 @if (sinToken()) {
   <h1 class="tipo-h1">{{ 'auth.confirmEmail.missing.title' | transloco }}</h1>
   <p class="tipo-entradilla">{{ 'auth.confirmEmail.missing.body' | transloco }}</p>
-  <p class="alternativa tipo-cuerpo">
+  <p class="tipo-cuerpo mt-6 max-w-form">
     <a routerLink="/mi-cuenta">{{ 'auth.confirmEmail.goToAccount' | transloco }}</a>
   </p>
 } @else if (confirmacion.isSuccess()) {
@@ -9,7 +9,7 @@
   <p class="tipo-entradilla">{{ 'auth.confirmEmail.done.body' | transloco }}</p>
   <!-- Se entra de nuevo a mano: quien abrio el enlace puede estar en otro
        dispositivo, y aqui no se abre sesion por haber llegado al buzon. -->
-  <a class="btn-primario enlace-cta tipo-etiqueta-boton" routerLink="/ingresar">
+  <a sendikButton class="mt-6" routerLink="/ingresar">
     {{ 'auth.confirmEmail.done.goToLogin' | transloco }}
   </a>
 } @else {
@@ -17,14 +17,15 @@
   <p class="tipo-entradilla">{{ 'auth.confirmEmail.subtitle' | transloco }}</p>
 
   @if (errorDelServidor(); as error) {
-    <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
+    <sendik-form-error class="mt-6 max-w-form">{{ error | transloco }}</sendik-form-error>
   }
 
   <!-- El enlace se consume aqui y no al abrir la pagina: una vista previa de
        enlace lo gastaria antes de que nadie lo hubiera visto. -->
   <button
     type="button"
-    class="btn-primario enlace-cta tipo-etiqueta-boton"
+    sendikButton
+    class="mt-6"
     [disabled]="confirmacion.isPending()"
     [attr.aria-busy]="confirmacion.isPending() ? 'true' : null"
     (click)="confirmar()"

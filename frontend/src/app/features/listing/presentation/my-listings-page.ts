@@ -17,6 +17,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
+import { Button } from '../../../shared/ui/button/button';
 import { ListingStore } from '../application/listing.store';
 import { ModerationTrail } from './moderation-trail';
 import {
@@ -39,9 +40,13 @@ import {
  */
 @Component({
   selector: 'sendik-my-listings-page',
-  imports: [ModerationTrail, NgOptimizedImage, RouterLink, TranslocoPipe],
+  imports: [ModerationTrail, NgOptimizedImage, RouterLink, TranslocoPipe, Button],
   templateUrl: './my-listings-page.html',
-  styleUrl: './my-listings-page.css',
+  // grid-column es obligatorio: <main> es una rejilla y sin asignar carril la
+  // pagina cae en el de sangria. Y SIN margin auto, que en un elemento de
+  // rejilla anula el estirado y la dejaba en 421px de los 1140 del carril;
+  // centrar ya lo hace el carril. Lo delato rutas.spec.ts midiendo el ancho.
+  host: { class: 'block [grid-column:content] max-w-content px-4 py-6' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MyListingsPage {

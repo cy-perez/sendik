@@ -27,14 +27,14 @@ test.describe('cascaron del sitio', () => {
   test('el conmutador de tema cambia el modo y lo recuerda', async ({ page }) => {
     await page.goto('/');
     const root = page.locator('html');
-    await expect(root).toHaveAttribute('data-tema', 'claro');
+    await expect(root).not.toHaveClass(/dark/);
 
     await page.getByRole('button', { name: 'Cambiar a modo oscuro' }).click();
-    await expect(root).toHaveAttribute('data-tema', 'oscuro');
+    await expect(root).toHaveClass(/dark/);
 
     // Al recargar, el servidor ya lo sabe por la cookie: llega oscuro de origen.
     await page.reload();
-    await expect(root).toHaveAttribute('data-tema', 'oscuro');
+    await expect(root).toHaveClass(/dark/);
   });
 
   test('el selector de idioma cambia el texto y lo recuerda', async ({ page }) => {

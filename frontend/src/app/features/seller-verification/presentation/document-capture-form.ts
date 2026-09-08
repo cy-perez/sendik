@@ -3,8 +3,8 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-import { SubmitButton } from '../../../shared/ui/form/submit-button';
-import { TextField } from '../../../shared/ui/form/text-field';
+import { SubmitButton } from '../../../shared/ui/field/submit-button';
+import { TextField } from '../../../shared/ui/field/text-field';
 import { VerificationStore } from '../application/verification.store';
 import type { IdentityDocumentType } from '../domain/verification';
 import { CaptureField } from './capture-field';
@@ -22,7 +22,6 @@ import { CaptureField } from './capture-field';
   selector: 'sendik-document-capture-form',
   imports: [ReactiveFormsModule, TranslocoPipe, TextField, SubmitButton, CaptureField],
   templateUrl: './document-capture-form.html',
-  styleUrl: './bank-account-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DocumentCaptureForm {

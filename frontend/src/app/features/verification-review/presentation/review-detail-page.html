@@ -7,11 +7,13 @@
      acaba de pulsar se quedaria sin saber que paso. El aviso es de la accion, no de la
      fila. -->
 @if (yaResuelta()) {
-  <p class="aviso-de-error tipo-cuerpo" role="alert">
+  <p class="tipo-cuerpo mt-6 rounded-md border border-l-4 bg-surface p-4 border-error" role="alert">
     {{ 'verificationReview.decision.alreadyResolved' | transloco }}
   </p>
 } @else if (claveDeError(); as clave) {
-  <p class="aviso-de-error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
+  <p class="tipo-cuerpo mt-6 rounded-md border border-l-4 bg-surface p-4 border-error" role="alert">
+    {{ clave | transloco }}
+  </p>
 }
 
 @if (solicitud(); as actual) {
@@ -19,7 +21,7 @@
     {{ actual.documentHolderName ?? ('verificationReview.inbox.noName' | transloco) }}
   </p>
 
-  <p class="datos tipo-secundario">
+  <p class="flex flex-wrap gap-x-4 gap-y-1 text-text-muted">
     <span>{{ 'verificationReview.inbox.attempt' | transloco: { intento: actual.attempts } }}</span>
     <!-- Criterio 5: desde cuándo espera. Es lo que decide a quién atender primero, así
          que tiene que estar también aquí y no solo en la lista. -->
@@ -28,14 +30,18 @@
 
   @if (discrepa()) {
     <!-- Criterio 7. Con texto, no solo con color. -->
-    <p class="marca-de-discrepancia tipo-cuerpo">
+    <p
+      class="tipo-cuerpo self-start rounded-sm border border-warning bg-surface px-2 py-1 text-text"
+    >
       {{ 'verificationReview.detail.holderMismatch' | transloco }}
     </p>
   }
 
-  <section class="seccion">
+  <section class="mt-8">
     <h2 class="tipo-h2">{{ 'verificationReview.detail.documentSection' | transloco }}</h2>
-    <dl class="datos-de-la-solicitud tipo-cuerpo">
+    <dl
+      class="datos-de-la-solicitud tipo-cuerpo mt-3 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[max-content_1fr] [&_dd]:m-0 [&_dt]:text-text-muted"
+    >
       <dt>{{ 'verificationReview.detail.documentType' | transloco }}</dt>
       <dd>{{ tipoDeDocumento() | transloco }}</dd>
       <dt>{{ 'verificationReview.detail.holder' | transloco }}</dt>
@@ -57,9 +63,11 @@
     </dl>
   </section>
 
-  <section class="seccion">
+  <section class="mt-8">
     <h2 class="tipo-h2">{{ 'verificationReview.detail.bankSection' | transloco }}</h2>
-    <dl class="datos-de-la-solicitud tipo-cuerpo">
+    <dl
+      class="datos-de-la-solicitud tipo-cuerpo mt-3 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-[max-content_1fr] [&_dd]:m-0 [&_dt]:text-text-muted"
+    >
       <dt>{{ 'verificationReview.detail.bank' | transloco }}</dt>
       <dd>{{ actual.bank ?? ('verificationReview.detail.missingValue' | transloco) }}</dd>
       <dt>{{ 'verificationReview.detail.accountType' | transloco }}</dt>
@@ -79,12 +87,12 @@
     </dl>
   </section>
 
-  <section class="seccion">
+  <section class="mt-8">
     <!-- Se dice siempre, y no es relleno legal: la bitácora existe y quien revisa
          tiene derecho a saber que también se le registra a él. -->
     <p class="tipo-secundario">{{ 'verificationReview.images.notice' | transloco }}</p>
 
-    <div class="imagenes">
+    <div class="mt-4 flex flex-wrap gap-4">
       @for (imagen of imagenes(); track imagen.cual) {
         <sendik-verification-image
           [solicitud]="actual.id"
@@ -99,20 +107,20 @@
   @if (esPropia()) {
     <!-- Criterio 12 y RN-060. No se ofrece decidir, y tampoco los campos con los que se
          decidiría: enseñar un formulario que no se puede enviar es peor que no tenerlo. -->
-    <p class="aviso-de-error tipo-cuerpo">
+    <p class="tipo-cuerpo mt-6 rounded-md border border-l-4 bg-surface p-4 border-error">
       {{ 'verificationReview.decision.ownApplication' | transloco }}
     </p>
   } @else {
     <!-- Un <form> de verdad: así el envío es nativo y la validación del criterio 9 puede
          señalar el campo en vez de apagar el botón, que sale del orden de tabulación y no
          dice por qué. -->
-    <form class="seccion" (submit)="alEnviar($event)">
-      <label class="campo tipo-secundario" for="motivo">
+    <form class="mt-8" (submit)="alEnviar($event)">
+      <label class="tipo-secundario mt-4 mb-1 block" for="motivo">
         {{ 'verificationReview.decision.reasonLabel' | transloco }}
       </label>
       <select
         id="motivo"
-        class="control"
+        class="control-field resize-y"
         [value]="motivoElegido()"
         [attr.aria-invalid]="faltaMotivo() ? 'true' : null"
         [attr.aria-describedby]="faltaMotivo() ? 'error-motivo' : null"
@@ -125,12 +133,12 @@
       </select>
 
       @if (faltaMotivo()) {
-        <p id="error-motivo" class="tipo-cuerpo mensaje-de-error" role="alert">
+        <p id="error-motivo" class="tipo-cuerpo mt-2 text-error" role="alert">
           {{ 'verificationReview.decision.reasonRequired' | transloco }}
         </p>
       }
 
-      <label class="campo tipo-secundario" for="nota">
+      <label class="tipo-secundario mt-4 mb-1 block" for="nota">
         {{ 'verificationReview.decision.noteLabel' | transloco }}
       </label>
       <!-- La ayuda va donde se escribe y no escondida: es la única barrera que tiene esa
@@ -140,7 +148,7 @@
       </p>
       <textarea
         id="nota"
-        class="control"
+        class="control-field resize-y"
         rows="3"
         [attr.maxlength]="maximoDeNota"
         aria-describedby="ayuda-nota"
@@ -148,17 +156,23 @@
         (input)="nota.set($any($event.target).value)"
       ></textarea>
 
-      <div class="acciones">
+      <div class="mt-8 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          class="boton boton-principal"
+          sendikButton
           [disabled]="enCurso()"
           (click)="pedirConfirmacion('aprobar')"
         >
           {{ 'verificationReview.decision.approve' | transloco }}
         </button>
         <!-- Habilitado siempre: si falta el motivo lo dice el mensaje de arriba. -->
-        <button type="submit" class="boton" [disabled]="enCurso()">
+        <button
+          type="submit"
+          sendikButton
+          variant="ghost"
+          class="border-primary disabled:opacity-60"
+          [disabled]="enCurso()"
+        >
           {{ 'verificationReview.decision.reject' | transloco }}
         </button>
       </div>
@@ -170,7 +184,7 @@
            que recorrer la página entera para llegar a «Confirmar». -->
       <div
         #confirmacion
-        class="confirmacion"
+        class="mt-8 flex flex-col flex-wrap items-start gap-3 rounded-md border border-control-border bg-surface p-4 [&>p]:m-0"
         role="group"
         tabindex="-1"
         aria-labelledby="texto-confirmacion"
@@ -183,16 +197,18 @@
             ) | transloco
           }}
         </p>
-        <div class="acciones">
-          <button
-            type="button"
-            class="boton boton-principal"
-            [disabled]="enCurso()"
-            (click)="confirmar()"
-          >
+        <div class="mt-8 flex flex-wrap items-center gap-3">
+          <button type="button" sendikButton [disabled]="enCurso()" (click)="confirmar()">
             {{ 'verificationReview.decision.confirm' | transloco }}
           </button>
-          <button type="button" class="boton" [disabled]="enCurso()" (click)="cancelar()">
+          <button
+            type="button"
+            sendikButton
+            variant="ghost"
+            class="border-primary disabled:opacity-60"
+            [disabled]="enCurso()"
+            (click)="cancelar()"
+          >
             {{ 'verificationReview.decision.cancel' | transloco }}
           </button>
         </div>
@@ -202,15 +218,15 @@
 } @else if (consulta.isPending()) {
   <!-- El esqueleto no se anuncia: para quien no ve la pantalla es una caja vacía. Lo que
        se anuncia es que está cargando. -->
-  <span class="esqueleto esqueleto-fila" aria-hidden="true"></span>
+  <span class="esqueleto block h-16" aria-hidden="true"></span>
   <p class="solo-lectores" role="status">{{ 'verificationReview.inbox.loading' | transloco }}</p>
 } @else {
   <!-- Ya se resolvió, o la dirección es de una que nunca estuvo. -->
   <p class="tipo-entradilla">{{ 'verificationReview.detail.notFound' | transloco }}</p>
 }
 
-<p class="seccion">
-  <a class="enlace-de-volver" routerLink="/moderacion/verificaciones">
+<p class="mt-8">
+  <a class="inline-flex min-h-touch items-center" routerLink="/moderacion/verificaciones">
     {{ 'verificationReview.detail.back' | transloco }}
   </a>
 </p>

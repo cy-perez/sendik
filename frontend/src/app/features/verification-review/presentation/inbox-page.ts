@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Button } from '../../../shared/ui/button/button';
 
 import { ReviewStore } from '../application/review.store';
 import { hayDiscrepanciaDeTitular } from '../domain/pending-verification';
@@ -25,9 +26,9 @@ import { hayDiscrepanciaDeTitular } from '../domain/pending-verification';
  */
 @Component({
   selector: 'sendik-inbox-page',
-  imports: [TranslocoPipe, RouterLink],
+  imports: [TranslocoPipe, RouterLink, Button],
   templateUrl: './inbox-page.html',
-  styleUrl: './review.css',
+  host: { class: 'block [grid-column:content] max-w-prose' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InboxPage {

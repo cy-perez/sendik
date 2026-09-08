@@ -2,6 +2,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Button } from '../../../shared/ui/button/button';
 
 import {
   posicionesAPintar,
@@ -40,9 +41,9 @@ export interface Casilla {
  */
 @Component({
   selector: 'sendik-shots-field',
-  imports: [NgOptimizedImage, RouterLink, TranslocoPipe],
+  imports: [NgOptimizedImage, RouterLink, TranslocoPipe, Button],
   templateUrl: './shots-field.html',
-  styleUrl: './shots-field.css',
+  host: { class: 'block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShotsField {

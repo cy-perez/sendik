@@ -355,7 +355,7 @@ test.describe('contacto impreso', () => {
       { name: 'sendik_theme', value: 'dark', url: 'http://localhost:4173' },
     ]);
     await page.goto('/contacto');
-    await expect(page.locator('html')).toHaveAttribute('data-tema', 'oscuro');
+    await expect(page.locator('html')).toHaveClass(/dark/);
 
     await page.emulateMedia({ media: 'print' });
 

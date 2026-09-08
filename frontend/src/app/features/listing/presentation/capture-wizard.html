@@ -7,13 +7,24 @@
   en el DOM ya con su texto dentro no se anuncia de forma fiable: la región tiene que
   existir antes de que el contenido cambie.
 -->
-<section class="asistente" aria-labelledby="asistente-titulo">
-  <header class="asistente__cabecera">
+<section
+  class="asistente mx-auto flex max-w-form flex-col items-start gap-3 p-4"
+  aria-labelledby="asistente-titulo"
+>
+  <header
+    class="flex w-full flex-wrap items-baseline justify-between gap-4 [&_h1:focus:not(:focus-visible)]:outline-none"
+  >
     <h1 id="asistente-titulo" class="tipo-h1" tabindex="-1" #titulo>
       {{ 'listing.capture.entry.action' | transloco }}
     </h1>
 
-    <button type="button" class="btn btn-secundario tipo-etiqueta-boton" (click)="salir()">
+    <button
+      type="button"
+      sendikButton
+      variant="secondary"
+      class="tipo-etiqueta-boton"
+      (click)="salir()"
+    >
       {{ 'listing.capture.close' | transloco }}
     </button>
   </header>
@@ -22,9 +33,11 @@
 
   @if (cargando()) {
     <p class="solo-lectores">{{ 'listing.capture.loading' | transloco }}</p>
-    <p class="esqueleto asistente__esqueleto"></p>
+    <p class="esqueleto h-[320px] w-full"></p>
   } @else if (noDisponible()) {
-    <p class="error tipo-cuerpo" role="alert">{{ 'listing.capture.notFound' | transloco }}</p>
+    <p class="error tipo-cuerpo text-error" role="alert">
+      {{ 'listing.capture.notFound' | transloco }}
+    </p>
     <p>
       <a routerLink="/mis-publicaciones">{{ 'listing.capture.backToListings' | transloco }}</a>
     </p>
@@ -45,7 +58,7 @@
       {{ 'listing.capture.progress.aria' | transloco: { hechas: hechas(), total: total } }}
     </p>
     <progress
-      class="asistente__progreso"
+      class="asistente__progreso h-2 w-full accent-primary"
       [value]="hechas()"
       [max]="total"
       [attr.aria-label]="
@@ -73,20 +86,25 @@
     }
 
     @if (error(); as clave) {
-      <p class="error tipo-cuerpo" role="alert">{{ clave | transloco }}</p>
+      <p class="error tipo-cuerpo text-error" role="alert">{{ clave | transloco }}</p>
     }
 
     @if (abierta()) {
-      <div class="visor">
+      <div
+        class="visor relative mx-auto aspect-photo max-h-[55svh] w-full overflow-hidden rounded-md bg-background"
+      >
         <!-- `muted` y `playsinline` para que el móvil no lo abra a pantalla completa. -->
-        <video #video class="visor__video" autoplay playsinline muted></video>
+        <video #video class="block size-full object-cover" autoplay playsinline muted></video>
 
         <!--
           La silueta y la cuadrícula del criterio 2. Decorativas: lo que dicen ya está en
           el nombre de la toma, arriba, y repetirlo en un lector de pantalla sería ruido.
         -->
-        <div class="visor__silueta" aria-hidden="true"></div>
-        <div class="visor__rejilla" aria-hidden="true"></div>
+        <div
+          class="pointer-events-none absolute inset-y-[8%] inset-x-[18%] rounded-lg guide-stroke border-dashed border-camera-guide outline outline-camera-guide-outline -outline-offset-1"
+          aria-hidden="true"
+        ></div>
+        <div class="camera-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
       </div>
 
       <!--
@@ -95,7 +113,11 @@
         permanente de arriba, no por un `status` que nace ya con su texto.
       -->
       @if (hayNivel()) {
-        <p class="nivel tipo-secundario" [class.nivel--torcido]="!nivelado()">
+        <p
+          class="tipo-secundario"
+          [class.text-success]="nivelado()"
+          [class.text-warning]="!nivelado()"
+        >
           @if (nivelado()) {
             {{ 'listing.capture.level.ok' | transloco }}
           } @else {
@@ -124,7 +146,8 @@
       -->
       <button
         type="button"
-        class="btn btn-primario tipo-etiqueta-boton asistente__obturador"
+        sendikButton
+        class="tipo-etiqueta-boton w-full"
         [attr.aria-disabled]="ocupada() || !nivelado()"
         [attr.aria-describedby]="!nivelado() ? 'nivel-aviso' : null"
         (click)="tomar()"
@@ -151,7 +174,8 @@
 
       <button
         type="button"
-        class="btn btn-primario tipo-etiqueta-boton"
+        sendikButton
+        class="tipo-etiqueta-boton"
         [attr.aria-disabled]="ocupada()"
         (click)="empezar()"
       >
@@ -164,13 +188,18 @@
       esta es la única vía, y ofrecerla desde el principio evita que quien ya sabe que su
       cámara no funciona tenga que chocarse con el error para encontrarla.
     -->
-    <div class="galeria">
-      <label class="btn btn-secundario tipo-etiqueta-boton" for="galeria">
+    <div class="galeria flex w-full flex-col items-start gap-1">
+      <label
+        sendikButton
+        variant="secondary"
+        class="tipo-etiqueta-boton has-[+input:focus-visible]:outline-3 has-[+input:focus-visible]:outline-offset-2 has-[+input:focus-visible]:outline-focus"
+        for="galeria"
+      >
         {{ 'listing.capture.gallery.action' | transloco }}
       </label>
       <input
         id="galeria"
-        class="galeria__campo"
+        class="solo-lectores"
         type="file"
         accept="image/*"
         [disabled]="ocupada()"
@@ -187,13 +216,13 @@
       en orden. Con `aria-disabled` por lo mismo que el obturador: `ocupada()` cambia en
       cada subida y `disabled` movería el foco al `body` bajo los pies de quien navega.
     -->
-    <ul class="pasos">
+    <ul class="m-0 flex w-full list-none flex-wrap gap-2 p-0">
       @for (paso of pasos(); track paso.posicion) {
         <li>
           <button
             type="button"
-            class="pasos__paso tipo-etiqueta-boton"
-            [class.pasos__paso--hecha]="paso.hecha"
+            class="tipo-etiqueta-boton min-h-touch cursor-pointer rounded-full border border-control-border bg-surface px-3 py-1 text-text aria-[current=step]:border-2 aria-[current=step]:border-primary aria-disabled:cursor-not-allowed aria-disabled:text-text-muted aria-disabled:opacity-70"
+            [class.bg-primary-soft]="paso.hecha"
             [attr.aria-current]="paso.posicion === pasoActual()?.posicion ? 'step' : null"
             [attr.aria-disabled]="ocupada()"
             (click)="irA(paso.posicion)"

@@ -1,14 +1,17 @@
 @if (perfil.isPending()) {
-  <p class="esqueleto barra" aria-hidden="true"></p>
+  <p class="esqueleto mt-6 h-5 max-w-[320px]" aria-hidden="true"></p>
   <p class="solo-lectores" role="status">{{ 'auth.account.profile.loading' | transloco }}</p>
 } @else if (errorDeCarga(); as error) {
-  <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
+  <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ error | transloco }}</p>
 } @else {
-  <form class="formulario" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <form class="mt-8 max-w-form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     @if (errorDelServidor(); as error) {
-      <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
+      <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ error | transloco }}</p>
     } @else if (guardado.isSuccess()) {
-      <p class="guardado tipo-cuerpo" role="status">
+      <p
+        class="tipo-cuerpo mb-4 rounded-md border border-control-border bg-surface px-3 py-2"
+        role="status"
+      >
         {{ 'auth.account.profile.done' | transloco }}
       </p>
     }
@@ -16,30 +19,34 @@
     <sendik-text-field
       fieldId="nombre-visible"
       autocomplete="name"
-      labelKey="auth.account.profile.fields.displayName"
+      [label]="'auth.account.profile.fields.displayName' | transloco"
       [control]="control('displayName')"
-      [errorKey]="nombreError()"
+      [error]="nombreError() ? (nombreError() | transloco) : null"
     />
 
     <sendik-text-field
       fieldId="ciudad"
       autocomplete="address-level2"
-      labelKey="auth.account.profile.fields.city"
-      hintKey="auth.account.profile.hints.optional"
+      [label]="'auth.account.profile.fields.city' | transloco"
+      [hint]="'auth.account.profile.hints.optional' | transloco"
       [control]="control('city')"
-      [errorKey]="ciudadError()"
+      [error]="ciudadError() ? (ciudadError() | transloco) : null"
     />
 
     <sendik-text-field
       fieldId="telefono"
       type="text"
       autocomplete="tel"
-      labelKey="auth.account.profile.fields.phone"
-      hintKey="auth.account.profile.hints.phone"
+      [label]="'auth.account.profile.fields.phone' | transloco"
+      [hint]="'auth.account.profile.hints.phone' | transloco"
       [control]="control('phone')"
-      [errorKey]="telefonoError()"
+      [error]="telefonoError() ? (telefonoError() | transloco) : null"
     />
 
-    <sendik-submit-button labelKey="auth.account.profile.submit" [loading]="guardado.isPending()" />
+    <sendik-submit-button
+      [label]="'auth.account.profile.submit' | transloco"
+      [loadingLabel]="'form.sending' | transloco"
+      [loading]="guardado.isPending()"
+    />
   </form>
 }

@@ -1,0 +1,134 @@
+<!-- .franja-tinta es tinta en los dos modos y redefine dentro del bloque el
+     anillo de foco, el acento y el boton primario, que sobre tinta serian
+     invisibles. La regla de corte es el unico elemento decorativo del sistema
+     —el corte del isotipo repetido fuera del logo— y no se sustituye por una
+     linea continua.
+
+     Las dos siguen viniendo de marca.css y no se migran a utilidades: son
+     piezas de marca con comportamiento propio, no maquetacion. -->
+<footer class="franja-tinta mt-16 pb-12">
+  <div class="contenedor">
+    <!-- La regla trae su propio margen vertical desde marca.css; aqui solo se
+         quita el superior para que quede pegada al borde de la franja. -->
+    <hr class="regla-corte mt-0" />
+
+    <!-- Una sola columna en movil y tantas como quepan a partir de ahi. La de
+         identidad manda mas ancho porque lleva la direccion completa. -->
+    <div class="mt-6 grid gap-8 sm:grid-cols-[minmax(0,2fr)_repeat(auto-fit,minmax(160px,1fr))]">
+      <!-- Quien responde por el sitio. En Colombia el NIT y la direccion en el
+           pie son la senal de que la empresa existe, no un tramite. -->
+      <div>
+        <!-- Version monocroma negativa: el logo en tinta sobre la franja oscura
+             desaparece. El nombre accesible vive en la imagen porque aqui no
+             hay enlace que lo lleve, al contrario que en la cabecera. -->
+        <img
+          class="block h-auto max-w-full"
+          src="/logo-mono-negativo.svg"
+          [alt]="'layout.footer.logoAlt' | transloco"
+          width="139"
+          height="28"
+        />
+        <p class="tipo-entradilla mt-3">{{ 'layout.footer.tagline' | transloco }}</p>
+
+        <!-- address llega en cursiva por omision del navegador y aqui no es una
+             cita: son los datos de la empresa, cada uno en su linea.
+
+             El rol es .tipo-cuerpo y no .tipo-secundario a proposito: ese ultimo
+             fija --color-texto-suave, que sobre la franja oscura da 2.7:1 y no
+             pasa. Los enlaces si pueden llevarlo porque marca.css los recolorea
+             con `.franja-tinta a`; un <address> no es un enlace y se quedaria
+             ilegible. El matiz de «dato secundario» lo da la opacidad, que
+             conserva el contraste.
+
+             Cada dato se omite por separado: un despliegue al que le falte la
+             direccion sigue mostrando la razon social y el NIT. -->
+        <address class="tipo-cuerpo mt-3 flex flex-col gap-1 not-italic opacity-85">
+          @if (empresa.name) {
+            <span>{{ empresa.name }}</span>
+          }
+          @if (empresa.taxId) {
+            <span>{{ 'layout.footer.company.taxId' | transloco }} {{ empresa.taxId }}</span>
+          }
+          @if (empresa.address) {
+            <span>{{ empresa.address }}</span>
+          }
+        </address>
+      </div>
+
+      <!-- Las paginas informativas (HU-005). Van antes que las legales porque es
+           lo que alguien busca en un pie: entender el sitio. Los documentos
+           legales se buscan cuando ya se sabe que se busca. -->
+      <nav aria-labelledby="pie-sitio">
+        <h2 class="tipo-titulo-tarjeta mt-0 mb-2" id="pie-sitio">
+          {{ 'layout.footer.contentLabel' | transloco }}
+        </h2>
+        <ul class="lista-enlaces m-0 flex list-none flex-col p-0" role="list">
+          @for (pagina of paginas; track pagina) {
+            <li>
+              <a
+                class="tipo-secundario inline-flex min-h-touch items-center [overflow-wrap:anywhere]"
+                [routerLink]="rutaDePagina(pagina)"
+              >
+                {{ 'layout.nav.pages.' + pagina | transloco }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <!-- La politica de tratamiento tiene que ser un enlace visible en el pie: es
+           obligatorio y es lo primero que revisa una autoridad
+           (docs/operacion/datos-personales.md). Los tres van juntos porque se
+           buscan en el mismo sitio.
+
+           El nombre de la region sale del encabezado que ya se ve. Con un
+           aria-label que repite ese mismo texto, el lector lo anuncia dos veces
+           seguidas. -->
+      <nav aria-labelledby="pie-legal">
+        <h2 class="tipo-titulo-tarjeta mt-0 mb-2" id="pie-legal">
+          {{ 'layout.footer.legalLabel' | transloco }}
+        </h2>
+        <!-- role="list" explicito: WebKit le quita el rol de lista a un ul con
+             list-style:none, y VoiceOver deja de anunciar "lista de 3 elementos",
+             que es lo que hace util agruparlos. -->
+        <ul class="lista-enlaces m-0 flex list-none flex-col p-0" role="list">
+          @for (documento of documentosLegales; track documento) {
+            <li>
+              <a
+                class="tipo-secundario inline-flex min-h-touch items-center [overflow-wrap:anywhere]"
+                [routerLink]="rutaDe(documento)"
+              >
+                {{ 'legal.' + documento + '.title' | transloco }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <!-- Criterio 13. El canal de contacto es hoy el correo, no una pagina: la
+           de /contacto llega con HU-005 y un enlace a una ruta que no existe es
+           peor que no tenerlo. Por aqui se ejercen ademas los derechos del
+           titular de los datos, asi que sin el se incumple la Ley 1581. -->
+      @if (empresa.supportEmail; as correo) {
+        <!-- <nav> y no <section>, igual que la columna legal: son dos listas de
+             enlaces con la misma forma y no tiene sentido que una sea landmark
+             de navegacion y la otra una region. -->
+        <nav aria-labelledby="pie-contacto">
+          <h2 class="tipo-titulo-tarjeta mt-0 mb-2" id="pie-contacto">
+            {{ 'layout.footer.contactLabel' | transloco }}
+          </h2>
+          <ul class="lista-enlaces m-0 flex list-none flex-col p-0" role="list">
+            <li>
+              <!-- La direccion de correo es larga y en movil no cabe en una linea. -->
+              <a
+                class="tipo-secundario inline-flex min-h-touch items-center [overflow-wrap:anywhere]"
+                [href]="'mailto:' + correo"
+                >{{ correo }}</a
+              >
+            </li>
+          </ul>
+        </nav>
+      }
+    </div>
+  </div>
+</footer>

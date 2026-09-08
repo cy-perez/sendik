@@ -19,6 +19,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { debounceTime, merge, Subject } from 'rxjs';
 
 import { APP_CONFIG } from '../../../core/config/app-config';
+import { Button } from '../../../shared/ui/button/button';
 import { CategoriesStore } from '../application/categories.store';
 import { ListingStore } from '../application/listing.store';
 import {
@@ -83,9 +84,12 @@ const CAMPOS_DE_ENVIO: readonly string[] = ['weightGrams', 'lengthCm', 'widthCm'
  */
 @Component({
   selector: 'sendik-publish-page',
-  imports: [ModerationTrail, ReactiveFormsModule, TranslocoPipe, ShotsField],
+  imports: [ModerationTrail, ReactiveFormsModule, TranslocoPipe, ShotsField, Button],
   templateUrl: './publish-page.html',
-  styleUrl: './publish-page.css',
+  // grid-column es obligatorio: <main> es una rejilla y sin asignar carril la
+  // pagina cae en el de sangria. Y SIN margin auto, que en un elemento de
+  // rejilla anula el estirado y la dejaba en 421px de los 1140 del carril.
+  host: { class: 'block [grid-column:content] max-w-content px-4 py-6' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublishPage {

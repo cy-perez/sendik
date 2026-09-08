@@ -1,8 +1,13 @@
 <!doctype html>
-<!-- El atributo lang y el atributo data-tema los reescribe el servidor en cada
-     peticion, antes de enviar el HTML. Ver src/server.ts. Asi la pagina llega
-     ya traducida y con el tema correcto: sin parpadeo al cargar. -->
-<html lang="es" data-tema="claro">
+<!-- El atributo lang lo reescribe el servidor en cada peticion, y la clase
+     `dark` la anade cuando toca, antes de enviar el HTML. Lo hace el
+     inicializador de src/app/app.config.server.ts. Asi la pagina llega ya
+     traducida y en el modo correcto: sin parpadeo al cargar.
+
+     Aqui no se escribe ninguna marca de tema. Ponerla obligaria a que el
+     servidor la borrara en cada respuesta del modo contrario, y olvidar ese
+     borrado es exactamente el parpadeo que se quiere evitar. -->
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <base href="/" />

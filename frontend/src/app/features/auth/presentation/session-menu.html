@@ -4,23 +4,31 @@
        "Entrar" mientras tanto le cambiaria el boton bajo el cursor a quien si
        tiene sesion. El hueco mide lo mismo que lo que va a ocupar despues, para
        que la barra no se mueva. -->
-  <span class="esqueleto hueco-de-sesion" aria-hidden="true"></span>
+  <span class="esqueleto inline-block h-touch w-[76px] rounded-md" aria-hidden="true"></span>
 } @else if (sesion.user(); as usuario) {
   <!-- El nombre es el enlace a la propia cuenta: dice de quien es la sesion y
        lleva a donde se administra. Por eso ya no se oculta en movil, como cuando
        era solo una etiqueta; se recorta el texto y el control se queda. -->
-  <a class="accion nombre tipo-secundario" routerLink="/mi-cuenta">{{ usuario.displayName }}</a>
+  <a
+    sendikButton
+    variant="ghost"
+    class="tipo-secundario max-w-[12ch] overflow-hidden text-ellipsis whitespace-nowrap sm:max-w-[20ch]"
+    routerLink="/mi-cuenta"
+    >{{ usuario.displayName }}</a
+  >
 
   <button
     type="button"
-    class="accion tipo-secundario"
+    sendikButton
+    variant="ghost"
+    class="tipo-secundario"
     [disabled]="cierre.isPending()"
     (click)="salir()"
   >
     {{ 'layout.session.logout' | transloco }}
   </button>
 } @else {
-  <a class="accion tipo-secundario" routerLink="/ingresar">
+  <a sendikButton variant="ghost" class="tipo-secundario" routerLink="/ingresar">
     {{ 'layout.session.login' | transloco }}
   </a>
 }

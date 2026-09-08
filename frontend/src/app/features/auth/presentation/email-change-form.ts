@@ -6,8 +6,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthStore } from '../application/auth.store';
 import { esCorreoValido } from '../domain/credentials';
 import { esElMismoCorreo } from '../domain/profile';
-import { SubmitButton } from '../../../shared/ui/form/submit-button';
-import { TextField } from '../../../shared/ui/form/text-field';
+import { SubmitButton } from '../../../shared/ui/field/submit-button';
+import { TextField } from '../../../shared/ui/field/text-field';
 
 /**
  * Cambiar el correo de la cuenta. Criterio 21 de HU-001.
@@ -26,7 +26,6 @@ import { TextField } from '../../../shared/ui/form/text-field';
   selector: 'sendik-email-change-form',
   imports: [ReactiveFormsModule, TranslocoPipe, TextField, SubmitButton],
   templateUrl: './email-change-form.html',
-  styleUrl: './email-change-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmailChangeForm {

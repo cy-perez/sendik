@@ -43,6 +43,26 @@
 
   --medida: 70ch; /* ancho de lectura: 60–75 caracteres (tokens.json) */
 
+  /* La escala fija, los pesos y los interlineados. Vivian en tokens.css, que era
+     generado, y se traen aqui al retirarla: esta hoja es la fuente de verdad del
+     tipo, asi que es donde tiene que estar la escala. Las familias ya se
+     declaraban aqui abajo.
+
+     Tres pesos y solo tres. La escala fija es la que usan los roles pequenos;
+     los titulares son fluidos y estan arriba. */
+  --peso-regular: 400;
+  --peso-medio: 500;
+  --peso-fuerte: 600;
+
+  --interlineado-titulares: 1.1;
+  --interlineado-texto: 1.55;
+
+  --texto-xs: 12px;
+  --texto-sm: 14px;
+  --texto-base: 16px;
+  --texto-lg: 20px;
+  --texto-2xl: 34px;
+
   /* Titulares en mayúscula. El manual es explícito: apretados se ven baratos, y
      ese es justo el efecto contrario al que busca la marca. No se aplica a los
      titulares normales, que van en caja mixta. */
@@ -165,14 +185,14 @@
   font-family: var(--fuente-texto);
   font-size: var(--texto-sm);
   line-height: 1.5;
-  color: var(--color-texto-suave);
+  color: var(--brand-text-muted);
 }
 .tipo-leyenda {
   font-family: var(--fuente-texto);
   font-size: var(--texto-xs);
   line-height: 1.45;
   letter-spacing: 0.01em; /* en tamaños chicos el espaciado ayuda */
-  color: var(--color-texto-suave);
+  color: var(--brand-text-muted);
 }
 .tipo-etiqueta-boton {
   font-family: var(--fuente-texto);
@@ -211,9 +231,9 @@
   font-family: var(--fuente-texto);
   font-size: var(--texto-sm);
   font-variant-numeric: tabular-nums;
-  color: var(--color-texto-suave);
+  color: var(--brand-text-muted);
   text-decoration: line-through;
-  margin-left: var(--esp-8);
+  margin-left: calc(var(--spacing) * 2);
   white-space: nowrap;
 }
 .codigo-pedido {

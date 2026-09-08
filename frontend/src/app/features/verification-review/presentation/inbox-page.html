@@ -2,7 +2,12 @@
      sin que nadie navegue a ella, y quien usa un lector de pantalla no tiene otra señal
      de que la decisión se aplicó. -->
 @if (confirmacion(); as clave) {
-  <p class="aviso-hecho tipo-cuerpo" role="status">{{ clave | transloco }}</p>
+  <p
+    class="aviso-hecho tipo-cuerpo mb-6 rounded-md border border-l-4 border-success bg-surface px-4 py-3"
+    role="status"
+  >
+    {{ clave | transloco }}
+  </p>
 }
 
 <!-- `tabindex="-1"` no lo mete en el orden de tabulacion: lo hace enfocable por codigo,
@@ -13,24 +18,30 @@
 @if (consulta.isPending()) {
   <!-- El esqueleto se esconde de la accesibilidad: para quien no ve la pantalla es una
        lista de tres elementos vacíos. Lo que se anuncia es que está cargando. -->
-  <ul class="lista" aria-hidden="true">
+  <ul class="lista m-0 mt-6 list-none p-0 [&>li+li]:mt-3" aria-hidden="true">
     @for (fila of filasDelEsqueleto; track fila) {
-      <li class="solicitud"><span class="esqueleto esqueleto-fila"></span></li>
+      <li class="solicitud"><span class="esqueleto block h-16"></span></li>
     }
   </ul>
   <p class="solo-lectores" role="status">{{ 'verificationReview.inbox.loading' | transloco }}</p>
 } @else if (consulta.isError()) {
-  <div class="aviso-de-error tipo-cuerpo">
+  <div class="tipo-cuerpo mt-6 rounded-md border border-l-4 bg-surface p-4 border-error">
     <p>
       <strong>{{ 'verificationReview.inbox.error.title' | transloco }}</strong>
     </p>
-    <button type="button" class="boton" (click)="reintentar()">
+    <button
+      type="button"
+      sendikButton
+      variant="ghost"
+      class="border-primary disabled:opacity-60"
+      (click)="reintentar()"
+    >
       {{ 'verificationReview.inbox.error.retry' | transloco }}
     </button>
   </div>
 } @else if (pendientes().length === 0) {
   <!-- Criterio 3: el estado vacío del sistema, no una tabla sin filas. -->
-  <div class="vacio tipo-cuerpo">
+  <div class="vacio tipo-cuerpo mt-6">
     <p>
       <strong>{{ 'verificationReview.inbox.empty.title' | transloco }}</strong>
     </p>
@@ -40,20 +51,25 @@
   <!-- `aria-busy` mientras llega la página siguiente: la lista que se ve es todavía la
        anterior, y sin esta señal un lector de pantalla lee filas viejas como si fueran
        las nuevas. Va aquí y no en la paginación, que es lo que no cambia. -->
-  <ul class="lista" [attr.aria-busy]="actualizando()">
+  <ul class="lista m-0 mt-6 list-none p-0 [&>li+li]:mt-3" [attr.aria-busy]="actualizando()">
     @for (solicitud of pendientes(); track solicitud.id) {
       <li class="solicitud">
         <!-- El enlace envuelve toda la fila para que el destino táctil sea la fila
              entera y no solo el nombre. -->
-        <a class="enlace-de-fila" [routerLink]="[solicitud.id]">
+        <a
+          class="enlace-de-fila flex min-h-touch items-start gap-4 rounded-md border border-border bg-surface px-4 py-3 text-text no-underline hover:border-control-border"
+          [routerLink]="[solicitud.id]"
+        >
           <!-- Subrayado: la tarjeta es casi del color del fondo y su borde no llega al
                contraste mínimo, así que sin esto lo único que dice «aquí se pulsa» es un
                borde que casi no se ve. -->
-          <span class="titular tipo-titulo-tarjeta">
+          <span
+            class="titular tipo-titulo-tarjeta underline [text-underline-offset:0.18em] [overflow-wrap:anywhere]"
+          >
             {{ solicitud.documentHolderName ?? ('verificationReview.inbox.noName' | transloco) }}
           </span>
 
-          <span class="datos tipo-secundario">
+          <span class="flex flex-wrap gap-x-4 gap-y-1 text-text-muted">
             <span>{{
               'verificationReview.inbox.waitingSince'
                 | transloco: { tiempo: desdeCuando(solicitud.waitingSince) }
@@ -66,7 +82,9 @@
           @if (discrepa(solicitud)) {
             <!-- Con texto y no solo con color: un color no puede ser el único portador
                  de información (RN-012, criterio 7). -->
-            <span class="marca-de-discrepancia tipo-leyenda">
+            <span
+              class="tipo-leyenda self-start rounded-sm border border-warning bg-surface px-2 py-1 text-text"
+            >
               {{ 'verificationReview.detail.holderMismatch' | transloco }}
             </span>
           }
@@ -97,7 +115,8 @@
   >
     <button
       type="button"
-      class="btn btn-secundario"
+      sendikButton
+      variant="secondary"
       [attr.aria-disabled]="!hayAnterior()"
       (click)="anterior()"
     >
@@ -107,13 +126,14 @@
     <!-- La página se anuncia como región viva: al pulsar, lo único que cambia es la lista,
          y quien no ve la pantalla no tendría ninguna señal de que pasó algo. Va en base 1
          porque es lo que se lee, aunque el servidor cuente desde 0. -->
-    <p class="pagina-actual tipo-secundario" role="status">
+    <p class="tipo-secundario m-0" role="status">
       {{ 'verificationReview.inbox.pagination.page' | transloco: { numero: pagina() + 1 } }}
     </p>
 
     <button
       type="button"
-      class="btn btn-secundario"
+      sendikButton
+      variant="secondary"
       [attr.aria-disabled]="!hayMas()"
       (click)="siguiente()"
     >

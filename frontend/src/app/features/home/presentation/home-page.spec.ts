@@ -97,7 +97,7 @@ describe('HomePage', () => {
   it('pinta exactamente una llamada a la accion', async () => {
     const fixture = await render();
 
-    expect(fixture.nativeElement.querySelectorAll('.btn-primario')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelectorAll('[data-variant="primary"]')).toHaveLength(1);
   });
 
   /**
@@ -119,7 +119,12 @@ describe('HomePage', () => {
   it('el boton principal es el que lleva el relleno', async () => {
     const fixture = await render();
 
-    expect(enlace(fixture.nativeElement, 'Crear cuenta')?.classList).toContain('btn-primario');
+    // Por la variante y no por una clase de utilidad: lo que se afirma es que
+    // este enlace es EL boton principal, y eso es la variante, no el relleno con
+    // el que Tailwind la pinte hoy.
+    expect(enlace(fixture.nativeElement, 'Crear cuenta')?.getAttribute('data-variant')).toBe(
+      'primary',
+    );
   });
 
   /** Criterio 4: publicar es gratis y solo se cobra al vender. */

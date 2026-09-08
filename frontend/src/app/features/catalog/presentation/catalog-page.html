@@ -14,23 +14,31 @@
     <a routerLink="/catalogo">{{ 'catalog.categories.backToAll' | transloco }}</a>
   </p>
 } @else {
-  <p class="tipo-cuerpo catalogo__intro">{{ 'catalog.list.intro' | transloco }}</p>
+  <p class="tipo-cuerpo mt-2 text-text-muted">{{ 'catalog.list.intro' | transloco }}</p>
 
   <!--
     La navegación por el árbol. Es un <nav> con su nombre porque son enlaces a otras
     páginas, no un filtro que cambie esta.
   -->
   @if (!falloElArbol() && !cargandoArbol()) {
-    <nav class="catalogo__categorias" [attr.aria-label]="'catalog.categories.title' | transloco">
-      <ul class="catalogo__ramas">
+    <nav
+      class="my-6 flex flex-col gap-2"
+      [attr.aria-label]="'catalog.categories.title' | transloco"
+    >
+      <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0">
         <li>
-          <a routerLink="/catalogo" [attr.aria-current]="familiaSlug() === null ? 'page' : null">
+          <a
+            class="inline-flex min-h-touch items-center py-2 text-inherit aria-[current=page]:font-semibold aria-[current=page]:decoration-[0.12em]"
+            routerLink="/catalogo"
+            [attr.aria-current]="familiaSlug() === null ? 'page' : null"
+          >
             {{ 'catalog.categories.all' | transloco }}
           </a>
         </li>
         @for (familia of familias(); track familia.id) {
           <li>
             <a
+              class="inline-flex min-h-touch items-center py-2 text-inherit aria-[current=page]:font-semibold aria-[current=page]:decoration-[0.12em]"
               [routerLink]="['/catalogo', familia.slug]"
               [attr.aria-current]="
                 familiaSlug() === familia.slug && categoriaSlug() === null ? 'page' : null
@@ -43,10 +51,11 @@
       </ul>
 
       @if (hijas().length > 0) {
-        <ul class="catalogo__hojas">
+        <ul class="m-0 flex list-none flex-wrap gap-x-4 gap-y-2 border-l border-border p-0 pl-4">
           @for (hija of hijas(); track hija.id) {
             <li>
               <a
+                class="inline-flex min-h-touch items-center py-2 text-inherit aria-[current=page]:font-semibold aria-[current=page]:decoration-[0.12em]"
                 [routerLink]="['/catalogo', familiaSlug(), hija.slug]"
                 [attr.aria-current]="categoriaSlug() === hija.slug ? 'page' : null"
               >
@@ -67,15 +76,18 @@
 
   @if (cargando()) {
     <p class="solo-lectores" role="status">{{ 'catalog.list.loading' | transloco }}</p>
-    <ul class="catalogo__rejilla" aria-hidden="true">
+    <ul
+      class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(var(--container-card-min),1fr))] gap-x-4 gap-y-6 p-0"
+      aria-hidden="true"
+    >
       @for (hueco of [0, 1, 2, 3, 4, 5, 6, 7]; track hueco) {
-        <li><p class="esqueleto catalogo__esqueleto"></p></li>
+        <li><p class="esqueleto aspect-photo h-auto w-full"></p></li>
       }
     </ul>
   } @else if (fallo()) {
     <div role="alert">
       <p class="tipo-cuerpo">{{ 'catalog.list.error' | transloco }}</p>
-      <button type="button" class="btn btn-secundario" (click)="reintentar()">
+      <button type="button" sendikButton variant="secondary" (click)="reintentar()">
         {{ 'catalog.list.retry' | transloco }}
       </button>
     </div>
@@ -86,7 +98,9 @@
       }}
     </p>
   } @else {
-    <ul class="catalogo__rejilla">
+    <ul
+      class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(var(--container-card-min),1fr))] gap-x-4 gap-y-6 p-0"
+    >
       @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {
         <li>
           <sendik-product-card [publicacion]="publicacion" [primera]="primera" />
@@ -95,10 +109,11 @@
     </ul>
 
     @if (hayMas()) {
-      <div class="catalogo__mas">
+      <div class="mt-8 flex justify-center">
         <button
           type="button"
-          class="btn btn-secundario"
+          sendikButton
+          variant="secondary"
           [disabled]="trayendoMas()"
           (click)="verMas()"
         >

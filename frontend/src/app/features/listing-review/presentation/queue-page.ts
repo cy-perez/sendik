@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { NgOptimizedImage } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { Button } from '../../../shared/ui/button/button';
 
 import { precioFormateado, type Money } from '../../../shared/domain/listing';
 import { ListingReviewStore } from '../application/listing-review.store';
@@ -19,9 +20,10 @@ import { ListingReviewStore } from '../application/listing-review.store';
  */
 @Component({
   selector: 'sendik-queue-page',
-  imports: [TranslocoPipe, RouterLink, NgOptimizedImage],
+  imports: [TranslocoPipe, RouterLink, NgOptimizedImage, Button],
   templateUrl: './queue-page.html',
-  styleUrl: './queue-page.css',
+  // El carril de contenido de la rejilla de <main>, explicito.
+  host: { class: 'block [grid-column:content] max-w-prose' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QueuePage {

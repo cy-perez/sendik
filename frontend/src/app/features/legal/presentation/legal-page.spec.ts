@@ -126,7 +126,7 @@ describe('LegalPage', () => {
           get(objetivo, propiedad) {
             if (propiedad === 'getPropertyValue') {
               return (nombre: string) =>
-                nombre === '--altura-recorte-legal' ? valor : objetivo.getPropertyValue(nombre);
+                nombre === '--container-legal-clamp' ? valor : objetivo.getPropertyValue(nombre);
             }
             const leido = Reflect.get(objetivo, propiedad);
             return typeof leido === 'function' ? leido.bind(objetivo) : leido;

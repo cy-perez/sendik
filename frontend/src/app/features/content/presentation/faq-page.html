@@ -1,14 +1,17 @@
 <h1 class="tipo-h1">{{ 'faq.title' | transloco }}</h1>
 <p class="tipo-entradilla">{{ 'faq.intro' | transloco }}</p>
 
-<section class="seccion" aria-labelledby="faq-comprador">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="faq-comprador">
   <h2 class="tipo-h2" id="faq-comprador">{{ 'faq.buyer.title' | transloco }}</h2>
 
   @for (pregunta of preguntasDelComprador; track pregunta) {
     <!-- details/summary nativos: se abren con teclado, anuncian su estado a un
          lector de pantalla y dejan el texto dentro del documento aunque esten
          plegados. Nada de eso hay que escribirlo. -->
-    <details class="pregunta" [id]="pregunta">
+    <details
+      class="scroll-mt-24 [&>summary]:min-h-touch [&>summary]:cursor-pointer [&>summary]:py-2 [&>summary>h3]:inline"
+      [id]="pregunta"
+    >
       <!-- La pregunta es un encabezado de verdad (criterio 12): `summary` no
            aporta rol de encabezado, asi que sin el h3 ninguna de las preguntas
            aparece en el indice de un lector de pantalla. Va dentro del summary,
@@ -23,11 +26,14 @@
   }
 </section>
 
-<section class="seccion" aria-labelledby="faq-vendedor">
+<section class="mt-12 [&>*+*]:mt-4" aria-labelledby="faq-vendedor">
   <h2 class="tipo-h2" id="faq-vendedor">{{ 'faq.seller.title' | transloco }}</h2>
 
   @for (pregunta of preguntasDelVendedor; track pregunta) {
-    <details class="pregunta" [id]="pregunta">
+    <details
+      class="scroll-mt-24 [&>summary]:min-h-touch [&>summary]:cursor-pointer [&>summary]:py-2 [&>summary>h3]:inline"
+      [id]="pregunta"
+    >
       <!-- La pregunta es un encabezado de verdad (criterio 12): `summary` no
            aporta rol de encabezado, asi que sin el h3 ninguna de las preguntas
            aparece en el indice de un lector de pantalla. Va dentro del summary,

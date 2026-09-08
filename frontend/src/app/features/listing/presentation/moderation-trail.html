@@ -1,4 +1,4 @@
-<div class="rastro">
+<div class="flex flex-col gap-3">
   <!--
     Región viva **permanente**, fuera del @if: un role="status" que se inserta con el texto
     ya dentro no se anuncia de forma fiable, que es la regla que ya está escrita en las dos
@@ -23,7 +23,9 @@
   -->
   <button
     type="button"
-    class="btn btn-secundario rastro__interruptor"
+    sendikButton
+    variant="secondary"
+    class="self-start"
     [attr.aria-expanded]="abierto()"
     [attr.aria-controls]="abierto() ? idDeLaRegion() : null"
     [attr.aria-describedby]="etiquetadoPor()"
@@ -38,20 +40,25 @@
       propio: el de :focus-visible no aplica a un destino programático, y marcar algo que
       nadie pulsó confunde más que ayuda.
     -->
-    <div class="rastro__cuerpo" [id]="idDeLaRegion()" #zonaDelRastro tabindex="-1">
+    <div
+      class="rounded-md border border-control-border p-3"
+      [id]="idDeLaRegion()"
+      #zonaDelRastro
+      tabindex="-1"
+    >
       @if (consulta.isPending()) {
         <!--
           El esqueleto del sistema, no un párrafo de texto: es lo que pide frontend/CLAUDE.md
           y lo que ya hace la lista de esta misma pantalla. Lo que se anuncia va por la región
           viva de arriba, así que esto es puramente visual.
         -->
-        <div class="rastro__cargando" aria-hidden="true">
+        <div class="flex flex-col gap-3" aria-hidden="true">
           @for (hueco of [0, 1]; track hueco) {
-            <p class="esqueleto rastro__esqueleto"></p>
+            <p class="esqueleto m-0 h-12"></p>
           }
         </div>
       } @else if (consulta.isError()) {
-        <div class="rastro__error">
+        <div class="flex flex-wrap items-center gap-3">
           <!--
             Sin role="alert": el mensaje ya sale por la región viva de arriba, y con los dos se
             anunciaba dos veces. Es la misma corrección que la fila de cifras de HU-012.
@@ -62,7 +69,7 @@
             así que el botón desaparece solo. Lo que sí hay que recoger es el foco, que se
             queda huérfano; lo hace el componente.
           -->
-          <button type="button" class="btn btn-secundario" (click)="reintentar()">
+          <button type="button" sendikButton variant="secondary" (click)="reintentar()">
             {{ 'listing.trail.retry' | transloco }}
           </button>
         </div>
@@ -71,20 +78,20 @@
           Criterio 6. Se dice que todavía no ha pasado nada; no se pinta una lista vacía, que
           se lee como «esto no cargó».
         -->
-        <p class="tipo-cuerpo rastro__vacio">{{ 'listing.trail.empty' | transloco }}</p>
+        <p class="tipo-cuerpo m-0 text-text-muted">{{ 'listing.trail.empty' | transloco }}</p>
       } @else {
         <!--
           Una lista ordenada porque el orden es la información: lo más reciente arriba. Cada
           paso dice **con palabras** qué pasó (WCAG 1.4.1): un rechazo no se distingue de una
           aprobación por el color.
         -->
-        <ol class="rastro__linea">
+        <ol class="m-0 flex list-none flex-col gap-4 p-0">
           @for (paso of pasos(); track paso.clave) {
-            <li class="rastro__paso">
-              <p class="rastro__que tipo-cuerpo">{{ paso.etiqueta | transloco }}</p>
+            <li class="flex flex-col gap-1 border-s-2 border-control-border ps-3">
+              <p class="tipo-cuerpo m-0">{{ paso.etiqueta | transloco }}</p>
 
               @if (paso.motivo; as motivo) {
-                <p class="rastro__motivo tipo-secundario">
+                <p class="tipo-secundario m-0 text-text-muted">
                   <strong>{{ 'listing.trail.reasonLabel' | transloco }}:</strong>
                   {{ motivo | transloco }}
                 </p>
@@ -95,7 +102,7 @@
                 formato de quien mira (criterio 9). Así lo que se lee es local y lo que una
                 máquina interpreta sigue siendo inequívoco.
               -->
-              <p class="rastro__cuando tipo-secundario">
+              <p class="tipo-secundario m-0 text-text-muted">
                 <time [attr.datetime]="paso.iso">{{ paso.cuando }}</time>
               </p>
             </li>

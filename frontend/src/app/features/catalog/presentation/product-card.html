@@ -4,32 +4,48 @@
 
   Su nombre accesible no es «Ver» repetido veinte veces —un lector de pantalla que
   lista los enlaces vería veinte iguales— sino el título del producto.
+
+  `group` es lo que permite que el borde de la foto reaccione al apuntar la tarjeta
+  entera. La variante hover de Tailwind ya va dentro de @media (hover: hover), así
+  que en pantalla táctil no se queda pegada tras el toque.
 -->
 <a
-  class="tarjeta"
+  class="group flex h-full flex-col gap-2 text-inherit no-underline focus-visible:rounded-md focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-focus"
   [routerLink]="['/producto', publicacion().id]"
   [attr.aria-label]="'catalog.card.a11yLink' | transloco: { titulo: titulo() }"
 >
   <!--
     El hueco de la foto ocupa lo mismo haya foto o no: sin eso la rejilla salta de alto
     entre una publicación con tomas y una sin ellas, que es el desplazamiento que más se
-    nota al desplazarse.
+    nota al desplazarse. Se reserva con la proporción del sistema y no con una altura
+    fija, para que la medida siga siendo la del sistema y no un número de esta pantalla.
   -->
-  <div class="tarjeta__foto">
+  <div
+    class="aspect-photo w-full overflow-hidden rounded-md border border-border bg-surface group-hover:border-text-muted"
+  >
     @if (toma(); as imagen) {
-      <img [ngSrc]="imagen.url" [priority]="primera()" width="600" height="800" [alt]="titulo()" />
+      <img
+        [ngSrc]="imagen.url"
+        [priority]="primera()"
+        width="600"
+        height="800"
+        [alt]="titulo()"
+        class="size-full object-cover"
+      />
     }
   </div>
 
-  <div class="tarjeta__datos">
-    <p class="tarjeta__titulo tipo-titulo-tarjeta">{{ titulo() }}</p>
+  <div class="flex flex-col gap-1">
+    <!-- Dos líneas y corta. Un título de 120 caracteres —el máximo que admite el
+         formulario— descuadraría la fila entera de la rejilla. -->
+    <p class="tipo-titulo-tarjeta m-0 line-clamp-2">{{ titulo() }}</p>
 
     @if (precio(); as valor) {
-      <p class="precio">{{ valor }}</p>
+      <p class="precio m-0">{{ valor }}</p>
     }
 
     @if (condicion(); as estado) {
-      <p class="tipo-secundario">{{ 'listing.condition.' + estado | transloco }}</p>
+      <p class="tipo-secundario m-0">{{ 'listing.condition.' + estado | transloco }}</p>
     }
   </div>
 </a>

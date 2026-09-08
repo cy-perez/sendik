@@ -1,5 +1,8 @@
-<section class="tomas" aria-labelledby="tomas-titulo">
-  <div class="tomas__encabezado">
+<section
+  class="flex flex-col gap-3 rounded-md border border-border p-4"
+  aria-labelledby="tomas-titulo"
+>
+  <div class="flex flex-wrap items-baseline justify-between gap-2">
     <h2 id="tomas-titulo" class="tipo-titulo-tarjeta">{{ 'listing.shots.title' | transloco }}</h2>
     <!--
       El número visible va junto al encabezado, que le da contexto. El anuncio lleva el
@@ -30,9 +33,11 @@
     poder. La rejilla se queda para repetir una toma suelta, que es el criterio 6.
   -->
   @if (conAsistente()) {
-    <p class="tomas__asistente">
+    <p class="m-0 flex flex-wrap items-center gap-2">
       <a
-        class="btn btn-secundario tipo-etiqueta-boton"
+        sendikButton
+        variant="secondary"
+        class="tipo-etiqueta-boton"
         [routerLink]="['/publicar', publicacion().id, 'capturar']"
       >
         {{ 'listing.capture.entry.action' | transloco }}
@@ -41,9 +46,9 @@
     </p>
   }
 
-  <ul class="tomas__rejilla">
+  <ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-4">
     @for (casilla of casillas(); track casilla.posicion) {
-      <li class="tomas__casilla" [class.tomas__casilla--canonica]="casilla.canonica">
+      <li class="tomas__casilla relative flex flex-col gap-2">
         @if (casilla.toma; as toma) {
           <!--
             width y height no son el tamano del archivo —una toma mide 900x1200 como
@@ -51,7 +56,7 @@
             Sin ellos la rejilla salta de alto cuando cada imagen termina de cargar.
           -->
           <img
-            class="tomas__foto"
+            class="aspect-photo w-full rounded-sm object-cover"
             [ngSrc]="toma.url"
             [alt]="'listing.shots.imageAlt' | transloco: { grados: casilla.grados }"
             width="300"
@@ -59,24 +64,32 @@
           />
           <button
             type="button"
-            class="btn btn-secundario tomas__quitar"
+            sendikButton
+            variant="secondary"
+            class="tomas__quitar self-stretch border-current"
             [disabled]="deshabilitado()"
             (click)="quitar.emit(toma.id)"
           >
             {{ 'listing.shots.remove' | transloco }}
           </button>
         } @else {
-          <label class="tomas__vacia" [for]="'toma-' + casilla.posicion">
-            <span class="tomas__grados tipo-secundario">{{ casilla.grados }}°</span>
+          <label
+            class="tomas__vacia aspect-photo flex h-auto min-h-max w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-control-border bg-surface p-2 text-center hover:border-text has-[+input:focus-visible]:outline-3 has-[+input:focus-visible]:outline-offset-2 has-[+input:focus-visible]:outline-focus has-[+input:disabled]:cursor-not-allowed has-[+input:disabled]:border-solid has-[+input:disabled]:text-text-muted"
+            [class.border-2]="casilla.canonica"
+            [class.border-solid]="casilla.canonica"
+            [class.border-dashed]="!casilla.canonica"
+            [for]="'toma-' + casilla.posicion"
+          >
+            <span class="tipo-secundario m-0">{{ casilla.grados }}°</span>
             @if (casilla.canonica) {
-              <span class="tomas__obligatoria tipo-secundario">
+              <span class="tomas__obligatoria tipo-secundario font-medium">
                 {{ 'listing.shots.canonical' | transloco }}
               </span>
             }
-            <span class="tomas__anadir">{{ 'listing.shots.add' | transloco }}</span>
+            <span class="m-0">{{ 'listing.shots.add' | transloco }}</span>
           </label>
           <input
-            class="tomas__archivo solo-lectores"
+            class="solo-lectores pointer-events-none"
             [id]="'toma-' + casilla.posicion"
             type="file"
             accept="image/jpeg,image/png"
@@ -86,7 +99,7 @@
         }
 
         @if (subiendo() === casilla.posicion) {
-          <p class="tomas__subiendo tipo-secundario" aria-hidden="true">
+          <p class="tipo-secundario m-0" aria-hidden="true">
             {{ 'listing.shots.uploading' | transloco }}
           </p>
         }
@@ -97,7 +110,7 @@
   <p class="tipo-secundario">{{ 'listing.shots.requirements' | transloco }}</p>
 
   @if (canonicasPendientes().length > 0) {
-    <p class="tomas__aviso tipo-secundario">
+    <p class="tomas__aviso tipo-secundario m-0 text-error">
       {{ 'listing.shots.missingCanonical' | transloco: { cuantas: canonicasPendientes().length } }}
     </p>
   }

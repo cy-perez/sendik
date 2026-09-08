@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { Button } from '../../../shared/ui/button/button';
 
 import { ReviewStore } from '../application/review.store';
 import type { VerificationImage as CualImagen } from '../domain/pending-verification';
@@ -30,9 +31,8 @@ import type { VerificationImage as CualImagen } from '../domain/pending-verifica
  */
 @Component({
   selector: 'sendik-verification-image',
-  imports: [TranslocoPipe],
+  imports: [TranslocoPipe, Button],
   templateUrl: './verification-image.html',
-  styleUrl: './review.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class VerificationImage {

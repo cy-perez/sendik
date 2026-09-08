@@ -5,25 +5,32 @@
 @if (peticion.isSuccess()) {
   <!-- Mismo aviso este la direccion libre u ocupada: el servidor responde igual
        en los dos casos y aqui no hay nada que distinguir. -->
-  <p class="enviado tipo-cuerpo" role="status">
+  <p
+    class="tipo-cuerpo mt-4 rounded-md border border-control-border bg-surface px-4 py-3"
+    role="status"
+  >
     {{ 'auth.account.email.sent' | transloco: { correo: enviadoA() } }}
   </p>
 } @else {
-  <form class="formulario" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <form class="mt-8 max-w-form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     @if (errorDelServidor(); as error) {
-      <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
+      <p class="tipo-cuerpo mt-4 text-error" role="alert">{{ error | transloco }}</p>
     }
 
     <sendik-text-field
       fieldId="correo-nuevo"
       type="email"
       autocomplete="email"
-      labelKey="auth.account.email.fields.newEmail"
-      hintKey="auth.account.email.hints.newEmail"
+      [label]="'auth.account.email.fields.newEmail' | transloco"
+      [hint]="'auth.account.email.hints.newEmail' | transloco"
       [control]="control()"
-      [errorKey]="correoError()"
+      [error]="correoError() ? (correoError() | transloco) : null"
     />
 
-    <sendik-submit-button labelKey="auth.account.email.submit" [loading]="peticion.isPending()" />
+    <sendik-submit-button
+      [label]="'auth.account.email.submit' | transloco"
+      [loadingLabel]="'form.sending' | transloco"
+      [loading]="peticion.isPending()"
+    />
   </form>
 }

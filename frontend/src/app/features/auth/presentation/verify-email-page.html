@@ -6,12 +6,12 @@
        donde la verificacion todavia no se ha lanzado. Sin esta rama, el HTML
        servido llegaria sin titulo y sin nada que anunciar. -->
   <h1 class="tipo-h1">{{ 'auth.verify.pending.title' | transloco }}</h1>
-  <p class="esqueleto barra" aria-hidden="true"></p>
+  <p class="esqueleto mt-6 h-5 max-w-[320px]" aria-hidden="true"></p>
   <p class="solo-lectores" role="status">{{ 'auth.verify.pending.title' | transloco }}</p>
 } @else if (verificacion.isSuccess()) {
   <h1 class="tipo-h1">{{ 'auth.verify.done.title' | transloco }}</h1>
   <p class="tipo-entradilla">{{ 'auth.verify.done.body' | transloco }}</p>
-  <a class="btn-primario enlace-cta tipo-etiqueta-boton" routerLink="/">
+  <a sendikButton class="mt-6" routerLink="/">
     {{ 'auth.verify.done.continue' | transloco }}
   </a>
 } @else if (errorDelServidor(); as error) {
@@ -25,14 +25,15 @@
       <p class="tipo-cuerpo">{{ 'auth.verify.failed.canResend' | transloco }}</p>
       <button
         type="button"
-        class="btn-primario enlace-cta tipo-etiqueta-boton"
+        sendikButton
+        class="mt-6"
         [disabled]="reenvio.isPending()"
         (click)="reenviar()"
       >
         {{ 'auth.verify.failed.resend' | transloco }}
       </button>
       @if (errorDelReenvio(); as fallo) {
-        <p class="error-reenvio tipo-leyenda" role="alert">{{ fallo | transloco }}</p>
+        <p class="tipo-leyenda mt-3 text-error" role="alert">{{ fallo | transloco }}</p>
       }
     }
   }

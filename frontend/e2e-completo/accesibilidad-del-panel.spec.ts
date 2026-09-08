@@ -39,7 +39,7 @@ async function abrirElPanelEn(page: Page, modo: (typeof MODOS)[number]): Promise
   const id = await publicarYEnviarARevision(page, `Camisa auditada ${Date.now()}`);
 
   await page.goto(RUTA_MIS_PUBLICACIONES);
-  await expect(page.locator('html')).toHaveAttribute('data-tema', modo.atributo);
+  await expect(page.locator('html')).toHaveClass(modo.esOscuro ? /dark/ : /^(?!.*dark).*$/);
 
   // Se espera a las cifras y no al titular: el titular esta desde el primer pintado, y
   // auditar antes de que lleguen seria auditar los esqueletos otra vez.

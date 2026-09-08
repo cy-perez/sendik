@@ -21,7 +21,10 @@ import { SessionStore } from '../../../core/session/session.store';
   selector: 'sendik-contact-page',
   imports: [RouterLink, TranslocoPipe],
   templateUrl: './contact-page.html',
-  styleUrl: './content-page.css',
+  host: {
+    class:
+      'block [grid-column:content] max-w-prose print:bg-paper print:text-paper-ink print:[&_a]:bg-paper print:[&_a]:text-paper-ink',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContactPage {
