@@ -194,7 +194,7 @@ los números.
 | Comprobación                                               | Resultado                          |
 | ---------------------------------------------------------- | ---------------------------------- |
 | Vitest                                                     | 867 pruebas, 74 archivos, en verde |
-| Playwright (`npm run e2e`)                                 | 205 pruebas, en verde              |
+| Playwright (`npm run e2e`)                                 | 205 en Windows; **204/205 en CI**  |
 | ESLint + Prettier                                          | limpio                             |
 | Cobertura de líneas                                        | 93.1%                              |
 | Bundle inicial                                             | 640.13 kB, bajo el aviso de 650    |
@@ -227,8 +227,30 @@ corregidos aquí:
   pone **solo** el grosor, así que las dos cámaras comparten el trazo sin
   compartir el color.
 
-Queda **una cosa abierta a propósito**, y se anota para que no se pierda: tres
-dependencias declaradas y sin usar —`@spartan-ng/brain`, `clsx` y
+### Un fallo abierto, y no es de este cierre
+
+`e2e/portada.spec.ts:166` —«el foco del boton principal es visible y mide 3px»—
+**falla en integración continua y pasa en Windows**. Mide el anillo de foco del
+botón principal contra el fondo de la franja de tinta y obtiene **1.086:1**,
+donde exige 3:1.
+
+No lo introdujo este cierre, y conviene que quede escrito por qué se sabe: el
+mismo caso falla con el mismo número en el commit anterior, `main` está en verde,
+y **el archivo de la prueba no lo tocó la migración**. La prueba es la de
+siempre; lo que cambió debajo fue el estilo. Es una regresión de la migración
+que solo se ve en Linux, y se escapó porque la verificación se corrió en
+Windows, donde pasa incluso forzando `CI=1`.
+
+Descartado ya: no es que la prueba enfoque el elemento equivocado —el volcado de
+accesibilidad de CI muestra un único enlace «Crear cuenta», y está activo— ni es
+intermitente, porque los tres intentos dan el mismo valor. Siguen en pie dos
+explicaciones: que `:focus-visible` no case en ese Chromium y `outlineColor` esté
+devolviendo `currentcolor`, o que la redefinición de `--brand-focus` dentro de
+`@utility franja-tinta` no llegue al botón por el orden de capas que introduce
+Tailwind. **Separarlas exige reproducir en Linux.**
+
+Queda además **una cosa abierta a propósito**, y se anota para que no se pierda:
+tres dependencias declaradas y sin usar —`@spartan-ng/brain`, `clsx` y
 `tw-animate-css`—. Spartan venía en el encargo original y no se usó: las cuatro
 primitivas se escribieron a mano sobre el CDK, que es lo que la propia decisión
 justifica. `styles.css` importa `tw-animate-css`, pero ninguna plantilla usa una
