@@ -86,12 +86,13 @@ queda y sigue siendo la única fuente de verdad del texto.
   o por `var(--brand-*)`. Un valor arbitrario como `bg-[#fff]` es la misma fuga
   por otra puerta.
 - Si falta un color o una medida, el sistema está incompleto: se nombra en
-  `tema.css` y se documenta. Nunca en `marca.css`, que está en retirada.
+  `tema.css` y se documenta. Es el único sitio: `marca.css` ya no existe y
+  `tokens.css` no entra en la compilación.
 - Los puntos de quiebre son **dos y solo dos**: `sm:` (640px) y `lg:` (1024px).
   Los demás están borrados a propósito, así que `md:` no compila.
 - Modo oscuro con la clase `.dark` en el elemento raíz, escrita por el servidor
-  antes de pintar. Mientras dure la migración se escribe también `data-tema`,
-  que es lo que lee `tokens.css`: son dos marcadores y se ponen los dos.
+  antes de pintar. Es el único marcador de tema: el atributo `data-tema` que se
+  escribía en paralelo se fue con `tokens.css`, que era quien lo leía.
 - El tipo se sigue aplicando con las clases de rol de `tipografia.css`
   (`.tipo-h1`, `.tipo-cuerpo`, `.precio`), que continúa siendo la única fuente de
   verdad del texto. Es lo único del sistema anterior que **no** está en retirada.
@@ -104,8 +105,9 @@ queda y sigue siendo la única fuente de verdad del texto.
   `[sendikButton]` no tiene variante de acento: el valor no existe.
 - El bronce tiene **dos tonos y no se cruzan**: `#8A6428` solo sobre fondo claro
   y `#B4884A` solo sobre fondo oscuro. Cruzarlos da 2.97:1. `tema.css` alterna el
-  correcto por modo; dentro de `.franja-tinta`, que es oscura en los dos modos,
-  lo sigue haciendo `marca.css` hasta que esa franja se migre.
+  correcto por modo, y dentro de `.franja-tinta`, que es oscura en los dos
+  modos, lo hace la propia utilidad en `tema.css` redefiniendo las variables de
+  marca dentro de su bloque.
 - La firma gráfica es el corte del isotipo, repetido fuera del logo como
   `.regla-corte`. Una sola vez por pieza.
 

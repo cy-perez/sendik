@@ -97,7 +97,7 @@ Se acepta perder:
   nombra (`--brand-primary-soft` en `.dark`), y las variantes `secondary` y `text`
   del boton dejan de usar `--brand-primary` como color de texto en oscuro. Es un
   argumento a favor de la decision: el token faltaba y el generador no lo decia.
-- **El presupuesto de bundle sube de 600 kB a 660 kB de aviso**, con el de error
+- **El presupuesto de bundle sube de 600 kB a 650 kB de aviso**, con el de error
   intacto en 700. No es un ajuste cosmético para callar la advertencia, así que
   van los números medidos: el inicial pasó a 634.16 kB. De ese crecimiento,
   **12.68 kB son las tres hojas heredadas** —medido quitando sus `@import` y
@@ -106,19 +106,25 @@ Se acepta perder:
   cuesta **8.6 kB** (625.54 → 634.16), y se paga a sabiendas porque corrige un
   fallo real de teclado.
 
-  El margen de 660 no es para gastarlo: es el techo de la transición. Cuando la
+  El margen de 650 no es para gastarlo: es el techo de la transición. Cuando la
   migración termine, el inicial debería bajar a unos 621 kB y **el presupuesto
   tiene que volver a bajar con él**. Si no baja, alguien se gastó el margen.
 
-- Durante la migración conviven dos sistemas. Es deuda con fecha: termina cuando
-  la Fase 3 migre la última plantilla y se retiren los tres `@import` de
-  `layer(legacy)`.
+- Durante la migración conviven dos sistemas. Era deuda con fecha y **quedó
+  saldada dentro de esta misma decisión**: no queda ningún `@import` en
+  `layer(legacy)` —la capa ni siquiera se llama así ya— y la única hoja heredada
+  que sobrevive es `tipografia.css`, que no es deuda sino la fuente de verdad
+  del tipo. Ver «Cierre», al final.
 
 Dos dependencias del encargo original **no** se adoptaron, y por el mismo motivo
 en los dos casos: npm las marca como obsoletas.
 
 - `@angular/animations` está deprecado; Angular 21.2 ya trae `animate.enter` y
-  `animate.leave` nativos en la plantilla. Se usan esos.
+  `animate.leave` nativos en la plantilla. Son el mecanismo a usar el día que
+  haga falta una entrada o una salida animada. Hoy **no hay ninguna**: todo el
+  movimiento del sistema son tres declaraciones —`transition-colors` en el
+  botón, `transition-shadow` en la tarjeta y `motion-safe:animate-spin` en el
+  botón de envío—, y ninguna necesita el paquete.
 - `lucide-angular` está deprecado en favor de `@lucide/angular`, que es el que
   se instaló.
 
@@ -178,3 +184,53 @@ Si al terminar la migración la verificación de contraste sobre la paleta nueva
 no se ha rehecho, la decisión de retirar `docs/ui/contraste.md` fue un préstamo
 que nadie devolvió: hay que reabrirla y decidir si se reconstruye la
 verificación o se declara a axe como única garantía, esta vez por escrito.
+
+## Cierre
+
+**El plan de migración queda cerrado el 7 de septiembre de 2026.** Se cierra
+sobre medidas, no sobre impresión: la validación se ejecutó entera y estos son
+los números.
+
+| Comprobación                                               | Resultado                          |
+| ---------------------------------------------------------- | ---------------------------------- |
+| Vitest                                                     | 867 pruebas, 74 archivos, en verde |
+| Playwright (`npm run e2e`)                                 | 205 pruebas, en verde              |
+| ESLint + Prettier                                          | limpio                             |
+| Cobertura de líneas                                        | 93.1%                              |
+| Bundle inicial                                             | 640.13 kB, bajo el aviso de 650    |
+| Hojas `.css` de componente                                 | ninguna                            |
+| HEX sueltos y valores arbitrarios de color                 | ninguno                            |
+| Puntos de quiebre fuera de `sm:` y `lg:`                   | ninguno                            |
+| Dependencias de `shared/ui` con Transloco o TanStack Query | ninguna                            |
+
+La revisión posterior al cierre encontró tres residuos, y los tres están
+corregidos aquí:
+
+- **`data-tema` sobrevivía muerto.** `index.html` seguía sirviendo
+  `data-tema="claro"` con un comentario que afirmaba que lo reescribía
+  `src/server.ts`. No lo reescribía nadie —el tema lo resuelve el inicializador
+  de `app.config.server.ts`— y ninguna hoja lo leía, porque la única que lo hacía
+  era `tokens.css`, ya fuera de la compilación. Atributo y comentario retirados.
+- **La documentación normativa contradecía al código en tres puntos.** `CLAUDE.md`
+  y `frontend/CLAUDE.md` seguían mandando escribir `data-tema` «porque es lo que
+  lee `tokens.css`», y seguían diciendo que dentro de `.franja-tinta` el bronce lo
+  alternaba `marca.css`, que ya no existe. El hook `revisar-convenciones.mjs`
+  arrastraba lo mismo: sus mensajes mandaban al infractor a `tokens.css` y a
+  `marca.css` y le ofrecían `var(--esp-N)` y `var(--radio-*)`, que son tokens del
+  sistema retirado. Es el peor sitio donde puede quedar una regla vieja, porque es
+  justo lo que lee quien acaba de equivocarse.
+- **Quedaban dos medidas sueltas.** `border-[3px]` estaba escrito a mano en la
+  captura de producto y en la de identidad. Se nombra como
+  `--brand-guide-stroke` con la utilidad `guide-stroke`, que existe porque
+  Tailwind 4 no tiene espacio de nombres de tema para el grosor de borde: su
+  escala es estática y 3px solo se alcanzaba con un valor arbitrario. La utilidad
+  pone **solo** el grosor, así que las dos cámaras comparten el trazo sin
+  compartir el color.
+
+Queda **una cosa abierta a propósito**, y se anota para que no se pierda: tres
+dependencias declaradas y sin usar —`@spartan-ng/brain`, `clsx` y
+`tw-animate-css`—. Spartan venía en el encargo original y no se usó: las cuatro
+primitivas se escribieron a mano sobre el CDK, que es lo que la propia decisión
+justifica. `styles.css` importa `tw-animate-css`, pero ninguna plantilla usa una
+utilidad suya. No se retiran en esta entrega para no mezclar limpieza de
+dependencias con cierre de migración; es tarea propia y de un solo commit.

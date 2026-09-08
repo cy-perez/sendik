@@ -152,16 +152,24 @@ configura desde CSS, y lo que en la versión 3 era `darkMode: 'class'` y
   bloquea igual.
 - **Modo oscuro con la clase `.dark`** en el elemento raíz, y la variante
   `dark:` en las plantillas. La preferencia se guarda en cookie y, si no la hay,
-  se sigue la del sistema; se resuelve en el servidor antes de pintar. Mientras
-  `tokens.css` siga importado se escribe **también** `data-tema`: son dos
-  marcadores y `ThemeService` pone los dos. Escribir uno solo deja media
-  pantalla en el modo contrario.
+  se sigue la del sistema; se resuelve en el servidor antes de pintar. La clase
+  es el **único** marcador: el atributo `data-tema` que se escribía en paralelo
+  existía solo para `tokens.css`, y se fue con ella en la ADR-0032. Ni
+  `ThemeService` ni `index.html` lo escriben ya.
 - **Dos puntos de quiebre y solo dos**: `sm:` (640px) y `lg:` (1024px). Los
   demás están borrados con `--breakpoint-*: initial`, así que `md:` no compila.
   Es deliberado: el sistema define dos y un tercero no lo decidió nadie.
 - Medidas fijas del sistema: cabecera 72px en escritorio y 56px en móvil, logo a
   34px (y solo el isotipo a 32px por debajo de 640px, porque el lockup tiene un
   mínimo de 130px de ancho), ancho máximo de contenido 1140px.
+- **Las líneas de encuadre de la cámara van con `guide-stroke`**, nunca con
+  `border-[3px]`. El grosor sale de `--brand-guide-stroke` y la utilidad existe
+  porque Tailwind 4 no tiene espacio de nombres de tema para el grosor de borde:
+  su escala es estática (`border`, `border-2`, `border-4`, `border-8`) y 3px solo
+  se alcanzaba con un valor arbitrario. La utilidad pone **solo** el grosor: el
+  color y el estilo siguen siendo utilidades normales, que es lo que permite que
+  la captura de producto y la de identidad compartan el trazo con colores
+  distintos.
 - Destinos táctiles de 44px como mínimo (`min-h-touch`). Sin excepción.
 - **El bronce no es el botón.** El acento aparece una sola vez por pantalla y
   siempre en la insignia de vendedor verificado, nunca como relleno grande ni
@@ -179,8 +187,9 @@ configura desde CSS, y lo que en la versión 3 era `darkMode: 'class'` y
   mismo error que cruzar los dos bronces, y ya se cometió una vez en el enlace
   del aviso de privacidad. Lo caza axe, no el compilador.
 - **El bronce tiene dos tonos y no se cruzan.** `#8A6428` solo sobre fondo claro
-  y `#B4884A` solo sobre fondo oscuro. `tema.css` alterna el correcto por modo;
-  dentro de `.franja-tinta` lo sigue haciendo `marca.css` hasta que se migre.
+  y `#B4884A` solo sobre fondo oscuro. `tema.css` alterna el correcto por modo, y
+  dentro de `.franja-tinta` lo hace la propia utilidad, que redefine las
+  variables de marca dentro de su bloque.
 - La regla de corte (`.regla-corte`) es el único elemento decorativo y va una
   sola vez por pieza. Si ya hay una insignia de verificado a la vista, la regla
   no.

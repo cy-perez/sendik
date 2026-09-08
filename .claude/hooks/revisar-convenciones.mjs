@@ -49,14 +49,14 @@ if (enFrontend && es('.css', '.scss', '.html') && !esHojaDelSistema && !esDocume
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<meta\s+name="theme-color"[^>]*>/g, '');
   if (/#[0-9a-fA-F]{3,8}\b/.test(sinComentarios)) {
-    hallazgos.push('Color literal en HEX. Usa una variable de tokens.css, por ejemplo var(--color-superficie). Si el color no existe, el sistema esta incompleto: se nombra en marca.css y se documenta.');
+    hallazgos.push('Color literal en HEX. Va por utilidad de Tailwind (bg-surface, text-text-muted) o por var(--brand-*). Si el color no existe, el sistema esta incompleto: se nombra en styles/tema.css y se documenta. Ni marca.css ni tokens.css son destino: la primera no existe y la segunda no se compila.');
   }
   if (/\b(rgb|rgba|hsl)\(/.test(sinComentarios)) {
     hallazgos.push('Color literal en rgb/hsl. Misma regla: va por variable.');
   }
   const px = sinComentarios.match(/(?<![\w-])(?:padding|margin|gap|border-radius|font-size)\s*:\s*[^;]*\d+px/g);
   if (px) {
-    hallazgos.push('Medida en px fuera del sistema. Espaciados con var(--esp-N), radios con var(--radio-*), tipografia con var(--texto-*). Las unicas medidas fijas permitidas son las del sistema: cabecera 72/56, logo 34 (isotipo 32), ancho maximo 1140, destino tactil 44.');
+    hallazgos.push('Medida en px fuera del sistema. Espaciados y radios por utilidad de Tailwind (p-4, gap-6, rounded-md) o con calc(var(--spacing) * N) dentro de un @utility; tipografia por clase de rol de tipografia.css. Las unicas medidas fijas permitidas son las del sistema: cabecera 72/56, logo 34 (isotipo 32), ancho maximo 1140, destino tactil 44.');
   }
   if (/font-size\s*:|font-family\s*:|font-weight\s*:\s*\d/.test(sinComentarios)) {
     hallazgos.push('Tipografia definida fuera del sistema. tipografia.css es la unica fuente de verdad del tipo: se aplica el rol (.tipo-h2, .tipo-cuerpo, .tipo-titulo-tarjeta, .precio, .tipo-secundario), no el tamano ni la familia. Si falta un rol, se agrega alli y se documenta.');
