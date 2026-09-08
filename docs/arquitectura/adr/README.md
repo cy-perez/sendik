@@ -54,3 +54,5 @@ la referencia.
 | 0029 | Volver al sitio después de ingresar: destino en la URL, intención en `sessionStorage` | Aceptada |
 | 0030 | La carrera del refresco se nombra, y no cierra la sesión | Aceptada |
 | 0031 | La entrega del correo transaccional se saca del contenedor: Cloud Tasks | Aceptada, pendiente de implementar |
+| 0032 | Tailwind como motor de estilos y fin del kit generado | **Revertida** el mismo día; ver ADR-0033 |
+| 0033 | La reversión de la migración a Tailwind, y qué se recupera de ella | Aceptada. Deja Tailwind aplazado, no descartado |

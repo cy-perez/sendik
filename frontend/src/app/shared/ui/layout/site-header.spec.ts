@@ -253,30 +253,53 @@ describe('SiteHeader', () => {
       expect(componente.atrapaFoco()).toBe(false);
     });
 
-    it('desde el ultimo enfocable el tabulador vuelve al boton', async () => {
+    /**
+     * Los enfocables de la barra, que es la region que se atrapa. El ciclo se
+     * cierra en sus extremos y no en los del panel: el idioma, el tema y la
+     * sesion viven fuera de `#menu-principal` y en movil se ven, asi que cerrarlo
+     * en el ultimo enlace los dejaba visibles y fuera del alcance del teclado.
+     */
+    const enfocablesDeLaBarra = (fixture: { nativeElement: unknown }) => [
+      ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
+        '.barra a[href], .barra button, .barra select',
+      ),
+    ];
+
+    it('desde el ultimo enfocable de la barra el tabulador vuelve al primero', async () => {
       const { fixture } = await enCompacto();
-      const dentro = [
-        ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
-          '.panel a[href], .panel button, .panel select',
-        ),
-      ];
+      const dentro = enfocablesDeLaBarra(fixture);
 
       tabular(dentro[dentro.length - 1]!);
 
-      expect(document.activeElement).toBe(byLabel('Cerrar el menú'));
+      expect(document.activeElement).toBe(dentro[0]);
     });
 
-    it('con shift desde el boton se va al ultimo enfocable', async () => {
+    it('con shift desde el primero se va al ultimo de la barra', async () => {
       const { fixture } = await enCompacto();
-      const dentro = [
-        ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>(
-          '.panel a[href], .panel button, .panel select',
-        ),
-      ];
+      const dentro = enfocablesDeLaBarra(fixture);
 
-      tabular(byLabel('Cerrar el menú') as HTMLElement, true);
+      tabular(dentro[0]!);
+      tabular(dentro[0]!, true);
 
       expect(document.activeElement).toBe(dentro[dentro.length - 1]);
+    });
+
+    /**
+     * La regresion que motivo ampliar la region: el ciclo NO puede cerrarse en el
+     * ultimo enlace del panel. Aqui solo se puede comprobar que el componente no
+     * intercepta esa pulsacion —jsdom no mueve el foco con Tab—, asi que el
+     * recorrido de verdad lo comprueba `e2e/foco-cabecera.spec.ts`.
+     */
+    it('el ultimo enlace del panel ya no cierra el ciclo', async () => {
+      const { fixture } = await enCompacto();
+      const enlaces = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.panel a[href]'),
+      ];
+      const ultimoEnlace = enlaces[enlaces.length - 1]!;
+
+      tabular(ultimoEnlace);
+
+      expect(document.activeElement).toBe(ultimoEnlace);
     });
 
     // En escritorio el tabulador tiene que salir de la cabecera con normalidad.

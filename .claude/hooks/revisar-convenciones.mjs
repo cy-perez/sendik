@@ -30,6 +30,17 @@ const enBackend = ruta.includes('backend/');
 // positivo que la cabecera de este archivo dice no admitir.
 const esDocumentoLegal = /frontend\/public\/legal\//.test(ruta);
 
+// Las pruebas de extremo a extremo son codigo de Node que conduce un navegador,
+// no codigo que se renderice en el servidor. Lo que va dentro de `page.evaluate`
+// se ejecuta en la pagina, asi que ahi `document` es lo correcto y no hay
+// plataforma que comprobar ni afterNextRender donde aislarlo: pedirselo dejaria
+// dos salidas, las dos malas —escribir la prueba peor, o acostumbrarse a ignorar
+// el hook—, que es el falso positivo que la cabecera de este archivo dice no
+// admitir. La excepcion es solo para la regla de API del navegador; el resto de
+// las reglas se les siguen aplicando, aunque ninguna pueda dispararse en un
+// archivo de pruebas.
+const esPruebaDeNavegador = /frontend\/(e2e|e2e-completo|e2e-comun)\//.test(ruta);
+
 // --- Estilos: ningun valor visual suelto ---------------------------------
 const esHojaDelSistema = /(src\/styles|docs\/ui)\/(tokens|tipografia|marca|fuentes)\.css$/.test(ruta);
 
@@ -87,8 +98,10 @@ if (enFrontend && es('.ts', '.html') && !esDocumentoLegal) {
     [/@Input\(|@Output\(/, 'Decoradores @Input/@Output. Se usan las funciones input(), output() y model().'],
     [/@ViewChild\(|@ContentChild\(/, 'Decorador de consulta antiguo. Se usan viewChild() y contentChild().'],
     [/HttpClientModule/, 'HttpClientModule. Se usa provideHttpClient().'],
-    [/localStorage|sessionStorage|window\.|document\./, 'Acceso directo a API del navegador. Rompe el renderizado en servidor: aislalo tras afterNextRender o una comprobacion de plataforma.'],
   ];
+  if (!esPruebaDeNavegador) {
+    reglas.push([/localStorage|sessionStorage|window\.|document\./, 'Acceso directo a API del navegador. Rompe el renderizado en servidor: aislalo tras afterNextRender o una comprobacion de plataforma.']);
+  }
   for (const [patron, mensaje] of reglas) if (patron.test(codigo)) hallazgos.push(mensaje);
 
   if (es('.ts') && /@Component\(/.test(texto) && !/OnPush/.test(texto)) {

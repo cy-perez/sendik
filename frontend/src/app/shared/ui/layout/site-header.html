@@ -8,7 +8,11 @@
      a hacerlo enfocable, y un contenedor que entra en el orden de tabulacion es
      una parada de mas para quien navega con teclado. -->
 <header class="cabecera">
-  <div class="contenedor barra">
+  <!-- La region que atrapa el foco cuando el menu compacto esta abierto. Es la
+       barra entera y no el panel: el idioma, el tema y la sesion se ven en movil y
+       viven fuera de #menu-principal, asi que un ciclo limitado al panel los
+       dejaba visibles y fuera del alcance del teclado. -->
+  <div #barra class="contenedor barra">
     <!-- El nombre accesible vive en el enlace. Las cuatro imagenes llevan alt
          vacio para que el lector de pantalla no anuncie "Sendik" cuatro veces;
          marca.css alterna claro/oscuro segun el tema y esta hoja alterna
@@ -66,7 +70,7 @@
     <!-- Un solo panel para los dos tamanos: en escritorio es una fila, en movil
          se despliega. No se duplican los enlaces porque el HTML servido tendria
          cada pagina dos veces y el buscador ve dos navegaciones donde hay una. -->
-    <div #panel id="menu-principal" class="panel" [class.desplegado]="abierto()">
+    <div id="menu-principal" class="panel" [class.desplegado]="abierto()">
       <!-- aria-label porque hay mas de un nav en la pagina: este y los dos del
            pie. Sin distinguirlos, un lector anuncia tres "navegacion" iguales. -->
       <nav class="navegacion" [attr.aria-label]="'layout.nav.label' | transloco">

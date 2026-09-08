@@ -45,7 +45,7 @@ export class SiteHeader {
   private readonly document = inject(DOCUMENT);
   private readonly esNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
-  private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
+  private readonly barra = viewChild<ElementRef<HTMLElement>>('barra');
   private readonly boton = viewChild<ElementRef<HTMLButtonElement>>('boton');
 
   protected readonly currentTheme = this.theme.current;
@@ -153,11 +153,11 @@ export class SiteHeader {
   }
 
   /**
-   * El ciclo del tabulador dentro del panel.
+   * El ciclo del tabulador dentro de la barra.
    *
-   * <p>Se consultan los elementos enfocables en el momento, no al abrir: el menu
-   * lleva dentro el hueco proyectado de la sesion, que cambia segun haya sesion
-   * o no, y una lista guardada al abrir se quedaria vieja.
+   * <p>Se consultan los elementos enfocables en el momento, no al abrir: la barra
+   * lleva el hueco proyectado de la sesion, que cambia segun haya sesion o no, y
+   * una lista guardada al abrir se quedaria vieja.
    */
   private atrapar(evento: KeyboardEvent): void {
     const dentro = this.enfocables();
@@ -179,24 +179,27 @@ export class SiteHeader {
   }
 
   private enfocables(): HTMLElement[] {
-    const raiz = this.panel()?.nativeElement;
+    // La barra entera y no el panel. El idioma, el tema y la sesion viven en
+    // `.acciones`, fuera de `#menu-principal`, y por debajo de 640px **se ven**:
+    // con el ciclo limitado al panel, el tabulador desde el ultimo enlace volvia
+    // al boton y no habia forma de alcanzarlos sin cerrar el menu. Un control
+    // visible que el teclado no alcanza incumple WCAG 2.1.1.
+    //
+    // Tomar la barra hace ademas innecesario meter el boton a mano: ya esta
+    // dentro, y en su sitio del orden del documento en vez de forzado al primero.
+    const raiz = this.barra()?.nativeElement;
     if (raiz === undefined) {
       return [];
     }
 
-    // El boton entra en el ciclo aunque este fuera del panel: es el que cierra, y
-    // dejarlo fuera obliga a usar Escape para salir.
-    const boton = this.boton()?.nativeElement;
-    const delPanel = [
-      // input, textarea, summary y contenteditable entran aunque hoy el panel no
+    return [
+      // input, textarea, summary y contenteditable entran aunque hoy la barra no
       // los use: lo que se proyecta ahi es contenido de sesion, y el dia que
       // traiga un campo el ciclo del tabulador tiene que incluirlo.
       ...raiz.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), summary, [contenteditable="true"], [tabindex]',
       ),
     ].filter((elemento) => elemento.tabIndex !== -1);
-
-    return boton === undefined ? delPanel : [boton, ...delPanel];
   }
 
   protected rutaDe(pagina: (typeof PAGINAS_DE_CONTENIDO)[number]): string {

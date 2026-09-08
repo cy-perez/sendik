@@ -126,15 +126,21 @@ Es requisito de aceptación, no un extra. Cada componente entra con:
 - Todo formulario con `label` asociado; los errores con `aria-describedby` y
   `aria-invalid`.
 - Toda imagen con `alt` real, o `alt=""` si es decorativa.
-- Navegación completa por teclado, incluido el menú móvil y el visor 360.
-- Respeto a `prefers-reduced-motion`, ya contemplado en los tokens.
+- Navegación completa por teclado, incluido el menú móvil y el visor 360. En la
+  cabecera, la región que atrapa el foco con el menú abierto es **la barra entera
+  y no el panel**: el idioma, el tema y la sesión viven fuera de
+  `#menu-principal` y en móvil se ven (ADR-0033).
+- Respeto a `prefers-reduced-motion`, ya contemplado en los tokens y comprobado
+  por `e2e/movimiento-reducido.spec.ts`.
 - Contraste mínimo 4.5:1 en texto normal y 3:1 en texto grande, iconos y bordes
   de control. El informe está en `../docs/ui/contraste.md` y lo regenera
-  `verificar.py` en los dos modos.
+  `verificar.py` en los dos modos, **pero ese script hay que lanzarlo a mano**: el
+  que impide fusionar es `e2e/contraste.spec.ts`, que mide lo que el navegador
+  resuelve. Los tres pasos están en `../docs/ui/accesibilidad.md`.
 - **Si un componente nuevo usa una combinación de colores que no existía**, se
-  agrega ese par a la lista `PARES` de `../docs/ui/generador/verificar.py`. Un
-  par que no está en la lista no se está comprobando, y por ahí se cuela un texto
-  ilegible.
+  agrega ese par a la lista `PARES` de **los dos sitios**:
+  `../docs/ui/generador/verificar.py` y `e2e/contraste.spec.ts`. Un par que no está
+  en la lista no se está comprobando, y por ahí se cuela un texto ilegible.
 - Dentro de la franja del hero y del pie se usa la clase `.franja-tinta`, que
   redefine dentro del bloque el anillo de foco, el acento y el botón primario.
   Sin ella el foco de la acción principal es invisible —tinta sobre tinta—, el
