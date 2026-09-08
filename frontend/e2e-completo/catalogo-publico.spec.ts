@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  MESES_DE_GARANTIA,
   RUTA_MIS_PUBLICACIONES,
   dejarUnaVendedoraVerificada,
   ingresar,
@@ -123,6 +124,64 @@ test.describe('catálogo público', () => {
     // El canónico apunta a esta ficha y a ninguna otra.
     const canonico = /<link[^>]+rel="canonical"[^>]*>/.exec(html)?.[0] ?? '';
     expect(canonico).toContain(direccion);
+  });
+
+  /**
+   * RN-067: la garantía del fabricante, sobre un dispositivo de verdad.
+   *
+   * <p><strong>Este es el hueco que ninguna otra prueba podía ver.</strong> Las de unidad
+   * montan la ficha con una respuesta escrita a mano, así que demuestran que la pantalla
+   * pinta lo que le den; lo que no demuestran es que `warrantyMonths` sobreviva el viaje —
+   * el formulario que lo declara, la columna que lo guarda, el mapeador de la respuesta
+   * pública, el catálogo—. Cualquiera de esos eslabones podría dejarlo caer y las 843
+   * pruebas seguirían verdes con la ficha vacía.
+   *
+   * <p>Se afirma sobre el HTML servido y no sobre la pantalla hidratada por la misma razón
+   * que el título: la ficha es lo que se comparte por enlace, y la frase que reparte la
+   * responsabilidad no puede aparecer solo cuando corre JavaScript.
+   */
+  test('la ficha de un dispositivo dice la garantia y quien responde por ella', async ({
+    page,
+    request,
+  }) => {
+    const titulo = `Telefono con garantia ${Date.now()}`;
+
+    await publicarYAprobar(page, titulo, 'garantia', 'galeria', 'tecnologia');
+
+    await page.goto(RUTA_CATALOGO);
+    await page.getByRole('link').filter({ hasText: titulo }).first().click();
+    await expect(page.getByRole('heading', { name: titulo })).toBeVisible();
+
+    // Los meses, la frase y el enlace. Los tres o ninguno: una ficha que anuncia doce
+    // meses sin decir de quién son deja al lector suponiendo que responde Sendik, que es
+    // exactamente lo que RN-067 prohíbe.
+    await expect(page.getByText('Garantía del fabricante')).toBeVisible();
+    await expect(
+      page.getByText(`${MESES_DE_GARANTIA} meses, declarados por el vendedor`),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Quien responde por esta garantía es el vendedor, no Sendik.'),
+    ).toBeVisible();
+
+    // El enlace lleva al documento que tiene la cláusula (RN-057). Acotado a la ficha:
+    // el pie del sitio enlaza a los términos en todas las páginas.
+    await expect(
+      page
+        .locator('.ficha__garantia')
+        .getByRole('link', { name: 'Leer los términos y condiciones' }),
+    ).toHaveAttribute('href', '/terminos');
+
+    // Y en el HTML que sale del servidor, sin ejecutar nada.
+    const html = await (await request.get(new URL(page.url()).pathname)).text();
+    expect(html).toContain('Garantía del fabricante');
+    expect(html).toContain(`${MESES_DE_GARANTIA} meses, declarados por el vendedor`);
+    expect(html).toContain('Quien responde por esta garantía es el vendedor, no Sendik.');
+
+    // La palabra que no puede estar cerca (glosario, RN-067). **Acotada a la ficha, no al
+    // HTML entero:** el paquete de traducciones viaja incrustado en la página y ahí
+    // «Respaldo» está a propósito —es la promesa central del producto y la nombra medio
+    // sitio—. Afirmarlo sobre todo el documento no probaría nada y fallaría siempre.
+    expect(await page.locator('.ficha').innerText()).not.toMatch(/respaldo/i);
   });
 
   /**
