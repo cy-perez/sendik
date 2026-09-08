@@ -347,6 +347,9 @@ gh variable set LEGAL_TERMS_VERSION   --env dev --body 2026-09-08b
 gh variable set LEGAL_PRIVACY_VERSION --env dev --body 2026-09-08b
 ```
 
-Comprobado el 8 de septiembre de 2026: `dev` sirve todavía `2026-09-08` en las dos. Hasta
-que esas dos variables cambien, **esta versión no está publicada** y lo que el sitio
-entrega es la anterior.
+**Dado el 8 de septiembre de 2026.** Los dos comandos se ejecutaron y `gh variable list
+--env dev` devuelve `2026-09-08b` en las dos, así que esta versión sí está publicada. No
+hizo falta desplegar código.
+
+`LEGAL_COOKIES_VERSION` se queda en `2026-09-06` a propósito: su variable es independiente
+y esta tanda no toca la política de cookies.
