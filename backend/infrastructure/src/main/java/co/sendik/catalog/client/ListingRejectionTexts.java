@@ -23,24 +23,24 @@ final class ListingRejectionTexts {
         return switch (motivo) {
             case PHOTOS_UNUSABLE ->
                 espanol
-                        ? "las fotos no se pueden usar: estan borrosas, muy oscuras o no cumplen el minimo"
+                        ? "las fotos no se pueden usar: están borrosas, muy oscuras o no cumplen el mínimo"
                         : "the photos are unusable: blurry, too dark or below the minimum size";
             case PHOTOS_MISMATCH ->
                 espanol
-                        ? "las fotos no corresponden con lo que describe la publicacion"
+                        ? "las fotos no corresponden con lo que describe la publicación"
                         : "the photos do not match what the listing describes";
             case MEASUREMENTS_UNRELIABLE ->
-                espanol ? "las medidas faltan o no son creibles" : "the measurements are missing or not believable";
+                espanol ? "las medidas faltan o no son creíbles" : "the measurements are missing or not believable";
             case CONDITION_MISDECLARED ->
                 espanol
-                        ? "la condicion declarada no es la que se ve en las fotos"
+                        ? "la condición declarada no es la que se ve en las fotos"
                         : "the declared condition is not what the photos show";
             case PROHIBITED_ITEM ->
                 espanol ? "el producto no se puede vender en Sendik" : "this product cannot be sold on Sendik";
             case SUSPECTED_COUNTERFEIT -> espanol ? "sospechamos que no es original" : "we suspect it is not authentic";
             case PRICE_OUT_OF_RANGE ->
                 espanol
-                        ? "el precio esta fuera del rango razonable para esa categoria"
+                        ? "el precio está fuera del rango razonable para esa categoría"
                         : "the price is outside the reasonable range for that category";
         };
     }

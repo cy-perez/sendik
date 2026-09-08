@@ -89,11 +89,11 @@ public class ResendMailSender implements MailSender {
 
         transporte.enviar(
                 titular.email().value(),
-                espanol ? "Alguien intento registrarse con tu correo" : "Someone tried to register with your email",
+                espanol ? "Alguien intentó registrarse con tu correo" : "Someone tried to register with your email",
                 espanol
-                        ? "<p>Alguien intento crear una cuenta en Sendik con tu correo. "
-                                + "No se creo ninguna cuenta nueva y tu sesion no cambio. "
-                                + "Si fuiste tu, ya tienes cuenta: entra con tu contrasena.</p>"
+                        ? "<p>Alguien intentó crear una cuenta en Sendik con tu correo. "
+                                + "No se creó ninguna cuenta nueva y tu sesión no cambió. "
+                                + "Si fuiste tú, ya tienes cuenta: entra con tu contraseña.</p>"
                         : "<p>Someone tried to create a Sendik account with your email. "
                                 + "No new account was created and your session did not change. "
                                 + "If it was you, you already have an account: sign in instead.</p>");
@@ -108,10 +108,10 @@ public class ResendMailSender implements MailSender {
                 titular.email().value(),
                 espanol ? "Bloqueamos el acceso a tu cuenta" : "We locked access to your account",
                 espanol
-                        ? "<p>Hubo varios intentos fallidos de entrar a tu cuenta, asi que bloqueamos "
+                        ? "<p>Hubo varios intentos fallidos de entrar a tu cuenta, así que bloqueamos "
                                 + "el acceso por seguridad. Puedes volver a intentarlo a partir de las " + hora
-                                + ".</p><p>Si no fuiste tu, tu contrasena sigue siendo la misma y nadie entro. "
-                                + "Cuando puedas, cambiala.</p>"
+                                + ".</p><p>Si no fuiste tú, tu contraseña sigue siendo la misma y nadie entró. "
+                                + "Cuando puedas, cámbiala.</p>"
                         : "<p>There were several failed attempts to sign in to your account, so we locked "
                                 + "access for safety. You can try again after " + hora
                                 + ".</p><p>If this was not you, your password has not changed and nobody got in. "
@@ -126,9 +126,9 @@ public class ResendMailSender implements MailSender {
                 titular.email().value(),
                 espanol ? "Cerramos tus sesiones por seguridad" : "We closed your sessions for safety",
                 espanol
-                        ? "<p>Detectamos que se reutilizo una credencial de sesion antigua, que es senal "
-                                + "de que alguien pudo haberla copiado. Cerramos esa sesion completa.</p>"
-                                + "<p>Entra de nuevo con tu contrasena. Si no reconoces esto, cambiala.</p>"
+                        ? "<p>Detectamos que se reutilizó una credencial de sesión antigua, que es señal "
+                                + "de que alguien pudo haberla copiado. Cerramos esa sesión completa.</p>"
+                                + "<p>Entra de nuevo con tu contraseña. Si no reconoces esto, cámbiala.</p>"
                         : "<p>We detected an old session credential being reused, which can mean someone "
                                 + "copied it. We closed that whole session.</p>"
                                 + "<p>Sign in again with your password. If this looks wrong, change it.</p>");
@@ -142,14 +142,14 @@ public class ResendMailSender implements MailSender {
 
         transporte.enviar(
                 destinatario.email().value(),
-                espanol ? "Restablece tu contrasena en Sendik" : "Reset your Sendik password",
+                espanol ? "Restablece tu contraseña en Sendik" : "Reset your Sendik password",
                 espanol
                         ? cuerpo(
-                                "Restablece tu contrasena",
-                                "Pediste cambiar tu contrasena. El enlace sirve una sola vez y vence en 30 "
-                                        + "minutos. Si no fuiste tu, ignora este mensaje: tu contrasena no cambia.",
+                                "Restablece tu contraseña",
+                                "Pediste cambiar tu contraseña. El enlace sirve una sola vez y vence en 30 "
+                                        + "minutos. Si no fuiste tú, ignora este mensaje: tu contraseña no cambia.",
                                 enlace,
-                                "Poner una contrasena nueva")
+                                "Poner una contraseña nueva")
                         : cuerpo(
                                 "Reset your password",
                                 "You asked to change your password. The link works once and expires in 30 "
@@ -170,12 +170,12 @@ public class ResendMailSender implements MailSender {
 
         transporte.enviar(
                 titular.email().value(),
-                espanol ? "Tu contrasena cambio" : "Your password changed",
+                espanol ? "Tu contraseña cambió" : "Your password changed",
                 espanol
-                        ? "<p>Tu contrasena de Sendik acaba de cambiar y cerramos todas las sesiones "
-                                + "abiertas. Entra de nuevo con la contrasena nueva.</p>"
-                                + "<p>Si no fuiste tu, alguien tiene acceso a este correo. Escribenos de "
-                                + "inmediato desde la pagina de contacto.</p>"
+                        ? "<p>Tu contraseña de Sendik acaba de cambiar y cerramos todas las sesiones "
+                                + "abiertas. Entra de nuevo con la contraseña nueva.</p>"
+                                + "<p>Si no fuiste tú, alguien tiene acceso a este correo. Escríbenos de "
+                                + "inmediato desde la página de contacto.</p>"
                         : "<p>Your Sendik password has just changed and we closed every open session. "
                                 + "Sign in again with the new password.</p>"
                                 + "<p>If this was not you, someone has access to this mailbox. Contact us "
@@ -189,12 +189,12 @@ public class ResendMailSender implements MailSender {
 
         transporte.enviar(
                 titular.email().value(),
-                espanol ? "Tu cuenta de Sendik quedo cerrada" : "Your Sendik account is closed",
+                espanol ? "Tu cuenta de Sendik quedó cerrada" : "Your Sendik account is closed",
                 espanol
                         ? "<p>Cerramos tu cuenta y borramos los datos que te identificaban. "
-                                + "Este es el ultimo mensaje que te enviamos.</p>"
+                                + "Este es el último mensaje que te enviamos.</p>"
                                 + "<p>Si quieres volver, puedes registrarte de nuevo con este mismo correo.</p>"
-                                + "<p>Si no fuiste tu quien lo pidio, escribenos de inmediato.</p>"
+                                + "<p>Si no fuiste tú quien lo pidió, escríbenos de inmediato.</p>"
                         : "<p>We closed your account and deleted the data that identified you. "
                                 + "This is the last message we will send you.</p>"
                                 + "<p>If you want to come back, you can register again with this same address.</p>"
@@ -248,7 +248,7 @@ public class ResendMailSender implements MailSender {
                 espanol
                         ? cuerpo(
                                 "Confirma tu correo nuevo",
-                                "Pediste usar esta direccion en tu cuenta de Sendik. Hasta que abras el "
+                                "Pediste usar esta dirección en tu cuenta de Sendik. Hasta que abras el "
                                         + "enlace, tu cuenta conserva la anterior.",
                                 enlace,
                                 "Confirmar este correo")
@@ -267,11 +267,11 @@ public class ResendMailSender implements MailSender {
 
         transporte.enviar(
                 titular.email().value(),
-                espanol ? "Alguien intento usar tu correo" : "Someone tried to use your email",
+                espanol ? "Alguien intentó usar tu correo" : "Someone tried to use your email",
                 espanol
-                        ? "<p>Alguien intento cambiar el correo de otra cuenta de Sendik a esta direccion. "
+                        ? "<p>Alguien intentó cambiar el correo de otra cuenta de Sendik a esta dirección. "
                                 + "No cambiamos nada y tu cuenta sigue igual.</p>"
-                                + "<p>Si fuiste tu desde otra cuenta, recuerda que un correo solo puede "
+                                + "<p>Si fuiste tú desde otra cuenta, recuerda que un correo solo puede "
                                 + "tener una cuenta.</p>"
                         : "<p>Someone tried to move another Sendik account to this address. We changed "
                                 + "nothing and your account is untouched.</p>"
@@ -286,12 +286,12 @@ public class ResendMailSender implements MailSender {
 
         transporte.enviar(
                 anterior.value(),
-                espanol ? "El correo de tu cuenta cambio" : "Your account email changed",
+                espanol ? "El correo de tu cuenta cambió" : "Your account email changed",
                 espanol
-                        ? "<p>La cuenta de Sendik que usaba esta direccion ahora usa otra. Este es el "
-                                + "ultimo mensaje que enviamos aqui.</p>"
-                                + "<p>Si no fuiste tu, alguien tiene acceso a tu cuenta. Escribenos de "
-                                + "inmediato desde la pagina de contacto.</p>"
+                        ? "<p>La cuenta de Sendik que usaba esta dirección ahora usa otra. Este es el "
+                                + "último mensaje que enviamos aquí.</p>"
+                                + "<p>Si no fuiste tú, alguien tiene acceso a tu cuenta. Escríbenos de "
+                                + "inmediato desde la página de contacto.</p>"
                         : "<p>The Sendik account that used this address now uses another one. This is the "
                                 + "last message we send here.</p>"
                                 + "<p>If this was not you, someone has access to your account. Contact us "

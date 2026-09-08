@@ -21,7 +21,7 @@ final class ListingMailTexts {
     private ListingMailTexts() {}
 
     static String asuntoDeAprobada(UserLocale idioma) {
-        return espanol(idioma) ? "Tu publicacion ya esta en Sendik" : "Your listing is live on Sendik";
+        return espanol(idioma) ? "Tu publicación ya está en Sendik" : "Your listing is live on Sendik";
     }
 
     /**
@@ -32,7 +32,7 @@ final class ListingMailTexts {
         String nombre = escapar(titulo);
 
         return espanol(idioma)
-                ? "<p>Revisamos <strong>" + nombre + "</strong> y ya esta publicada.</p>"
+                ? "<p>Revisamos <strong>" + nombre + "</strong> y ya está publicada.</p>"
                         + "<p>Desde ahora cualquiera puede verla en Sendik.</p>"
                 : "<p>We reviewed <strong>" + nombre + "</strong> and it is now published.</p>"
                         + "<p>From now on anyone can see it on Sendik.</p>";
@@ -62,7 +62,7 @@ final class ListingMailTexts {
     }
 
     static String asuntoDeRetirada(UserLocale idioma) {
-        return espanol(idioma) ? "Retiramos tu publicacion de Sendik" : "We removed your listing from Sendik";
+        return espanol(idioma) ? "Retiramos tu publicación de Sendik" : "We removed your listing from Sendik";
     }
 
     /**
@@ -80,7 +80,7 @@ final class ListingMailTexts {
                                 + "<p>Reason: " + porQue + "</p>")
                 + notaComoParrafo(idioma, nota)
                 + (espanol(idioma)
-                        ? "<p>Si crees que fue un error, escribenos desde la pagina de contacto.</p>"
+                        ? "<p>Si crees que fue un error, escríbenos desde la página de contacto.</p>"
                         : "<p>If you think this was a mistake, write to us from the contact page.</p>");
     }
 
