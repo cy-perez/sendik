@@ -38,6 +38,18 @@ export const TOMA = () => ({ name: 'toma.png', mimeType: 'image/png', buffer: pn
  */
 export type OrigenDeLasTomas = 'galeria' | 'camara';
 
+/**
+ * Los meses de garantía que declara el dispositivo de prueba (RN-067).
+ *
+ * <p>Se exporta porque la prueba que mira la ficha tiene que afirmar **este** número y no
+ * uno escrito a mano en los dos sitios: un valor duplicado que se cambia en uno solo deja
+ * la prueba comprobando otra cosa que la que se publicó.
+ *
+ * <p>Doce y no uno: el singular tiene su propia clave y su propia prueba de unidad; lo que
+ * este recorrido comprueba es el camino completo, y para eso el plural es el caso normal.
+ */
+export const MESES_DE_GARANTIA = 12;
+
 export const NOMBRE_MODERADORA = 'Quien Modera';
 
 export function correoNuevo(que: string): string {
@@ -319,7 +331,24 @@ export async function dejarUnaVendedoraVerificada(page: Page, quien: string): Pr
 }
 
 /**
- * Un borrador completo, con sus ocho tomas, enviado a revisión.
+ * Qué se publica. De la familia dependen la categoría, la condición admisible, las
+ * medidas que se piden y cuántas tomas exige el formulario (RN-064, RN-065).
+ *
+ * <p>Es un parámetro y no dos funciones porque lo que cambia entre las dos es **el
+ * formulario**, no el recorrido: crear el borrador, esperar el guardado automático del
+ * envío, subir las tomas y enviar a revisión es lo mismo, y esa espera —la del guardado—
+ * es la parte delicada de este archivo. Duplicarla para publicar un dispositivo sería
+ * duplicar justo lo que cuesta mantener.
+ */
+export type FamiliaDeLoQueSePublica = 'moda' | 'tecnologia';
+
+/**
+ * Un borrador completo, con sus tomas, enviado a revisión.
+ *
+ * <p>Con `tecnologia` publica un dispositivo **sellado**: condición nueva, que es la única
+ * que RN-064 admite en esa familia, y las cuatro tomas del empaque en vez de las ocho
+ * (RN-065). Declara además meses de garantía del fabricante, que es lo que RN-067 pide
+ * enunciar en la ficha.
  *
  * @returns el identificador de la publicación, que es lo que permite volver a ella sin
  *     tener que encontrarla en una lista compartida entre pruebas
@@ -328,13 +357,18 @@ export async function publicarYEnviarARevision(
   page: Page,
   titulo: string,
   tomas: OrigenDeLasTomas = 'galeria',
+  familia: FamiliaDeLoQueSePublica = 'moda',
 ): Promise<string> {
+  const esDispositivo = familia === 'tecnologia';
+
   await page.goto(RUTA_PUBLICAR);
 
   // La categoria se elige antes de crear el borrador, y no es un capricho de navegacion:
   // de ella dependen las condiciones admisibles, los sistemas de talla y que medidas se
   // piden. Hasta elegirla, «Empezar» esta deshabilitado.
-  await page.getByLabel('Categoría').selectOption({ label: 'Camisas y blusas' });
+  await page
+    .getByLabel('Categoría')
+    .selectOption({ label: esDispositivo ? 'Celulares y tabletas' : 'Camisas y blusas' });
   await page.getByRole('button', { name: 'Empezar' }).click();
 
   // Si la creacion falla, la pantalla lo dice en un `role="alert"`. Se mira primero para
@@ -352,30 +386,61 @@ export async function publicarYEnviarARevision(
   expect(id, `No se pudo leer el identificador de ${page.url()}`).not.toBe('');
 
   await page.getByLabel('Título').fill(titulo);
-  await page.getByLabel('Descripción').fill('Usada dos veces, sin manchas ni descosidos.');
-  await page.getByLabel('Marca').fill('Zara');
-  await page.getByRole('radio', { name: 'Como nuevo' }).check();
-  await page.getByLabel('Sistema de talla').selectOption({ label: 'Letra (XS a XXL)' });
-  await page.getByLabel('Valor de la talla').fill('M');
+  await page
+    .getByLabel('Descripción')
+    .fill(
+      esDispositivo
+        ? 'Sellado de fábrica, nunca abierto. Factura a nombre del vendedor.'
+        : 'Usada dos veces, sin manchas ni descosidos.',
+    );
+  await page.getByLabel('Marca').fill(esDispositivo ? 'Samsung' : 'Zara');
+
+  // La condición no es una preferencia: en tecnología solo se publica lo nuevo y el
+  // formulario no ofrece las otras tres (RN-064).
+  await page.getByRole('radio', { name: esDispositivo ? 'Nuevo' : 'Como nuevo' }).check();
+
+  await page
+    .getByLabel('Sistema de talla')
+    .selectOption({ label: esDispositivo ? 'Talla única' : 'Letra (XS a XXL)' });
+  // «U» y no «Única»: `SizeSystem.ONE_SIZE` admite ese único valor y el dominio rechaza
+  // cualquier otro, así que el guardado automático responde 400 y la publicación se queda
+  // sin envío. El rótulo que ve quien publica es «Talla única»; lo que se guarda es «U».
+  await page.getByLabel('Valor de la talla').fill(esDispositivo ? 'U' : 'M');
 
   // Las medidas del grupo que declara la categoría. Sin ellas el envío se rechaza con
   // CATALOG_MEASUREMENTS_INCOMPLETE (RN-021), y van acotadas a su grupo porque «Largo»
-  // es también una de las tres dimensiones de la caja.
+  // es también una de las tres dimensiones de la caja. En tecnología el grupo es `DEVICE`
+  // y pide otras tres: alto, ancho y fondo.
   const medidas = page.getByRole('group', { name: 'Medidas' });
   // Como tuplas y no como `string[][]`: sin el tipo, al desestructurar TypeScript da
   // `string | undefined` y `getByLabel` no lo acepta.
-  const declaradas: readonly (readonly [string, string])[] = [
-    ['Pecho', '52'],
-    ['Hombros', '41'],
-    ['Manga', '60'],
-    ['Largo', '70'],
-  ];
+  const declaradas: readonly (readonly [string, string])[] = esDispositivo
+    ? [
+        ['Alto', '16'],
+        ['Ancho', '8'],
+        ['Fondo', '1'],
+      ]
+    : [
+        ['Pecho', '52'],
+        ['Hombros', '41'],
+        ['Manga', '60'],
+        ['Largo', '70'],
+      ];
   for (const [medida, valor] of declaradas) {
     await medidas.getByLabel(medida).fill(valor);
   }
 
-  await page.getByLabel('Color').selectOption({ label: 'Beige' });
-  await page.getByLabel('Precio').fill('185000');
+  await page.getByLabel('Color').selectOption({ label: esDispositivo ? 'Negro' : 'Beige' });
+  await page.getByLabel('Precio').fill(esDispositivo ? '2400000' : '185000');
+
+  // Lo que solo existe en tecnología. **Antes del envío a propósito:** declarar el
+  // dispositivo sellado cambia las tomas que se exigen de ocho a cuatro (RN-065), y esa
+  // cuenta la manda el servidor en `requiredShots`. Puestas las tomas primero, se subirían
+  // ocho a un formulario que después pinta cuatro casillas.
+  if (esDispositivo) {
+    await page.getByLabel('Está sellado, sin abrir').check();
+    await page.getByLabel('Meses de garantía del fabricante').fill(String(MESES_DE_GARANTIA));
+  }
 
   // El envío entero: el peso y las tres dimensiones son un grupo y media caja no es una
   // caja. Faltaba, y era una de las dos razones por las que esto no llegaba a enviarse.
@@ -494,13 +559,19 @@ export async function publicarYEnviarARevision(
       'despues con CATALOG_LISTING_INCOMPLETE, tres pantallas mas alla.',
   ).toBeTruthy();
 
-  // Las ocho tomas. Por el campo de archivo salvo que se pida lo contrario: la cámara es
-  // de HU-003, y para las suites que prueban el ciclo de moderación o el catálogo es un
-  // rodeo de ocho capturas para llegar al mismo estado.
+  // Las tomas. Por el campo de archivo salvo que se pida lo contrario: la cámara es de
+  // HU-003, y para las suites que prueban el ciclo de moderación o el catálogo es un rodeo
+  // de ocho capturas para llegar al mismo estado.
+  //
+  // Un dispositivo sellado pide **cuatro** y no ocho, y no son las cuatro primeras: son las
+  // canónicas —0, 90, 180 y 270 grados—, que en posiciones son 0, 2, 4 y 6. El formulario
+  // solo pinta esas casillas, así que pedir `#toma-1` esperaría por algo que no existe.
+  const posiciones = esDispositivo ? [0, 2, 4, 6] : [0, 1, 2, 3, 4, 5, 6, 7];
+
   if (tomas === 'camara') {
     await capturarLasOchoTomas(page);
   } else {
-    for (let posicion = 0; posicion < 8; posicion++) {
+    for (const posicion of posiciones) {
       await page.locator(`#toma-${posicion}`).setInputFiles(TOMA());
       await expect(page.locator(`#toma-${posicion}`)).toHaveCount(0);
     }
@@ -554,9 +625,10 @@ export async function publicarYAprobar(
   titulo: string,
   quien: string,
   tomas: OrigenDeLasTomas = 'galeria',
+  familia: FamiliaDeLoQueSePublica = 'moda',
 ): Promise<string> {
   const correo = await dejarUnaVendedoraVerificada(page, quien);
-  const id = await publicarYEnviarARevision(page, titulo, tomas);
+  const id = await publicarYEnviarARevision(page, titulo, tomas, familia);
 
   await entrarComoModeradora(page);
 
