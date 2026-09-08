@@ -43,12 +43,10 @@ export function buildThemeCookie(theme: Theme): string {
 
 /**
  * La clase que lee la variante `dark` de Tailwind, declarada en
- * styles/tema.css. Convive con el atributo data-tema mientras dure la
- * migracion: el atributo es lo que sigue leyendo tokens.css, que es generado y
- * no se puede editar, y la clase es lo que leen las utilidades nuevas. Los dos
- * los escribe el servidor en la misma pasada, antes de pintar, que es lo que
- * evita el parpadeo. Cuando la Fase 3 retire tokens.css, se va el atributo y
- * queda la clase.
+ * styles/tema.css. Es la unica marca de tema del documento: el atributo
+ * data-tema que la acompanaba se fue con tokens.css en la ADR-0032, segun se
+ * explica arriba. La escribe el servidor antes de pintar, que es lo que evita
+ * el parpadeo.
  */
 export const THEME_DARK_CLASS = 'dark';
 

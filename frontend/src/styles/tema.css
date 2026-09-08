@@ -56,6 +56,17 @@
   --brand-camera-guide: #ffffff;
   --brand-camera-guide-outline: #14162b;
 
+  /* Grosor de la linea de encuadre, el mismo para las guias de la camara y para
+     las de verificacion de identidad. Se nombra porque estaba escrito a mano
+     como border-[3px] en dos features distintas —captura de producto y captura
+     de cedula y rostro—, y una medida copiada en dos sitios acaba divergiendo:
+     con dos grosores distintos, las dos camaras dejan de parecer la misma.
+
+     Coincide en numero con el anillo de foco, pero NO se ata a el, por lo mismo
+     que --brand-camera-guide no se ata a --brand-focus: son dos decisiones que
+     hoy dan 3px y no tienen por que seguir juntas. */
+  --brand-guide-stroke: 3px;
+
   /* La tinta no cambia con el modo: la franja oscura lo es en los dos. */
   --brand-ink: #14162b;
   --brand-on-ink: #ffffff;
@@ -324,6 +335,20 @@
       var(--brand-camera-guide) calc(200% / 3),
       transparent calc(200% / 3)
     );
+}
+
+/* El grosor de la linea de encuadre, como utilidad.
+
+   Existe porque Tailwind 4 no tiene espacio de nombres de tema para el grosor
+   de borde: la escala es estatica (border, border-2, border-4, border-8) y 3px
+   solo se alcanza con un valor arbitrario. Esto es lo que evita el border-[3px]
+   suelto sin inventar un segundo sistema de medidas.
+
+   Solo pone el grosor. El estilo y el color siguen siendo utilidades normales
+   —border-dashed, border-camera-guide, border-focus—, que es lo que permite que
+   las dos camaras compartan el trazo sin compartir el color. */
+@utility guide-stroke {
+  border-width: var(--brand-guide-stroke);
 }
 
 /* La rejilla de tarjetas del catalogo. El numero de columnas lo decide el ancho
