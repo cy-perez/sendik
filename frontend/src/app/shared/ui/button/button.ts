@@ -11,7 +11,7 @@ export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'ghost';
 
 const BASE =
   'inline-flex items-center justify-center gap-2 rounded-md border border-transparent ' +
-  'font-semibold cursor-pointer no-underline transition-colors ' +
+  'font-semibold cursor-pointer no-underline transition-colors-no-outline ' +
   'disabled:cursor-not-allowed disabled:bg-disabled disabled:text-surface ' +
   'disabled:border-transparent ' +
   // aria-disabled se pinta igual que disabled y no solo se anuncia. El obturador

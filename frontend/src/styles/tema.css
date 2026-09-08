@@ -337,6 +337,28 @@
     );
 }
 
+/* Transicion de color que NO arrastra el anillo de foco.
+
+   `transition-colors` de Tailwind incluye `outline-color` en su lista, y en un
+   control que dibuja el anillo con `outline` eso significa que el indicador de
+   foco se DESVANECE en vez de aparecer: durante los primeros milisegundos su
+   color es un interpolado entre el color del texto y el del anillo.
+
+   Medido en el boton principal sobre la franja de tinta, con los 150ms por
+   omision: el anillo arranca en rgb(28,30,50) —1.09:1 contra la franja, o sea
+   invisible—, pasa por gris a los 50ms y no llega al blanco hasta los 100ms. Un
+   indicador de foco que aparece desvaneciendose no esta ahi cuando el usuario
+   acaba de pulsar el tabulador, que es justo cuando tiene que estar.
+
+   Es la lista de `transition-colors` menos `outline-color`. El resto de la
+   declaracion se copia tal cual para que `duration-*` y `ease-*` sigan
+   funcionando encima. */
+@utility transition-colors-no-outline {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
+  transition-duration: var(--tw-duration, var(--default-transition-duration));
+}
+
 /* El grosor de la linea de encuadre, como utilidad.
 
    Existe porque Tailwind 4 no tiene espacio de nombres de tema para el grosor
