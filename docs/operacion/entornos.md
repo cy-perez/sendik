@@ -41,7 +41,8 @@ MX de entrada del dominio raíz y Sendik no recibe correo.
 aplicación, así que las dos mitades de HU-001 estaban probadas sin que saliera un solo
 correo de verdad ni una sola vez.
 
-**Abierto, y bloquea el lanzamiento: Cloud Run congela el envío.**
+**Resuelto en `dev` el 8 de septiembre de 2026, y sigue abierto en `prod`: Cloud Run
+congela el envío.**
 
 `AsyncMailSender` difiere el envío a un ejecutor de dos hilos, de modo que el correo
 sale **después** de que la petición haya respondido. El servicio corre con
@@ -106,6 +107,50 @@ arranque igual que una cola inexistente.
 **Encenderla sin la cola creada no arranca el servicio**, y es a propósito:
 `MailQueueProperties` exige lo que falta al construirse. Descubrir un fallo de
 configuración al mandar el primer correo es exactamente como se perdió el primero.
+
+### Comprobado con un correo de verdad el 8 de septiembre de 2026
+
+Que el servicio arrancara con la bandera encendida solo probaba que las cinco variables
+estaban; no probaba que saliera un correo. **Y entre el 6 y el 8 no salió ninguno**: la
+cola registró cero tareas y el endpoint no recibió una sola petición de Cloud Tasks —las
+únicas cuatro fueron `GET` de rastreadores de internet, rechazados con 401—. Nadie se
+había registrado contra `dev` desde que se encendió, que es la misma razón por la que el
+403 de Resend tardó dos semanas en verse.
+
+Se disparó un `POST /api/v1/auth/forgot-password` contra una cuenta existente: una
+petición aislada, que responde 202 y deja el correo pendiente. Es el caso que la ADR llama
+normal y el que antes se perdía siempre.
+
+| Hora (UTC) | Eslabón | Resultado |
+|---|---|---|
+| 13:39:10 | `forgot-password` | 202 en 1,95 s |
+| 13:39:12 | Cloud Tasks entrega la tarea | `POST /internal/mail/deliveries`, agente `Google-Cloud-Tasks`, 204 |
+| 13:39:13 | Resend entrega | correo recibido, de `no-responder@sendik.co` |
+
+Tres segundos, sin reintentos y sin una advertencia en el registro. **El 204 no bastaba
+como prueba** —el controlador lo devuelve tanto si el correo salió como si el proveedor lo
+rechazó en firme—: lo que lo desambigua es el correo recibido. Y que el token OIDC valida
+se ve en que respondió 204 y no el 401 de los rastreadores.
+
+### Lo que falta en `prod`
+
+El entorno `prod` de GitHub **no tiene ninguna de las cuatro variables** `MAIL_QUEUE_*`, y
+el flujo respalda la bandera con `|| 'false'`. Un despliegue a `prod` hoy no falla al
+arrancar: se va con la cola apagada y el correo se entrega en el hilo de la petición.
+Eso ya no reproduce el fallo original —lo causaba el `AsyncMailSender` que se retiró—,
+pero no es lo que decidió ADR-0031 y deja la petición de registro esperando al proveedor.
+
+Faltan las cuatro variables, con la dirección del manejador apuntando a `api.sendik.co`:
+
+```
+MAIL_QUEUE_ENABLED=true
+MAIL_QUEUE_NAME=correo-transaccional
+MAIL_QUEUE_HANDLER_URL=https://api.sendik.co/internal/mail/deliveries
+MAIL_QUEUE_SERVICE_ACCOUNT=sendik-cola@sendik-col.iam.gserviceaccount.com
+```
+
+La cola y la cuenta de servicio ya existen y sirven para los dos entornos: lo que separa a
+uno de otro es la dirección del manejador, que es la que Cloud Tasks llama.
 
 Lo que se descartó, y por qué, está entero en la ADR. En resumen:
 
