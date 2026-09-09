@@ -80,6 +80,15 @@ sin que nadie lo note, y un texto que diga «producto» donde la regla es solo d
 moda promete algo que no se cumple. La palabra elegida es la que decide a qué se
 aplica la frase.
 
+## Búsqueda
+
+| Español | Código | Definición |
+|---|---|---|
+| Búsqueda | `Search` | Encontrar productos escribiendo lo que se busca, sobre el título y la marca (RN-082). Es una forma de mirar el mismo catálogo, no una sección aparte: sin texto y sin filtros lo que se ve es el catálogo. |
+| Consulta | `SearchQuery` | Lo que se pregunta: el texto, los filtros aplicados y el orden pedido. Viaja entera y viaja en la dirección, para que un resultado se pueda compartir y recargar. |
+| Motor de búsqueda | `SearchEngine` | El puerto por el que la aplicación pregunta, definido en ADR-0008. Detrás está PostgreSQL desde HU-014 y Typesense cuando el catálogo lo justifique (ADR-0035). Quien usa el puerto no sabe cuál de los dos hay debajo, y esa es toda la razón de que exista. |
+| Filtro | `Filter` | Condición de lista cerrada que acota un listado: categoría, condición, talla, color y rango de precio. **La marca no lo es** y no lo puede ser mientras sea texto libre (RN-085). Se dice «filtro» y no «faceta»: una faceta lleva el conteo delante y eso todavía no existe. |
+
 ## Transacción
 
 | Español | Código | Definición |

@@ -374,6 +374,78 @@ o se venda, y si hay tope.
   de lo previsto, lo que se reabre no es el tope sino si se limpian las filas
   cuya publicación quedó `SOLD` o `ARCHIVED` hace mucho.
 
+## Búsqueda
+
+Las ocho nacen con HU-014, la primera historia de la Fase 3, y no existía ninguna
+antes: hasta el 8 de septiembre de 2026 el catálogo solo se navegaba.
+
+- **RN-081** En la búsqueda se ve **solo lo que está `PUBLISHED`**. Es RN-068
+  otra vez, y se escribe aparte porque la búsqueda es un **segundo camino hasta
+  el mismo dato**: una regla que solo viva en la consulta del catálogo no protege
+  a la consulta de la búsqueda. Tampoco para el propio dueño con la sesión
+  abierta.
+
+- **RN-082** El texto que alguien escribe se busca en el **título y en la
+  marca**, y **no en la descripción**.
+
+  La descripción es texto libre, largo y sin más control que la revisión del
+  moderador. Que decida quién aparece primero convierte rellenarla de palabras en
+  la forma más barata de salir en todas las búsquedas, y hoy no hay ni regla ni
+  control que lo frene. Sin poder calibrar la relevancia por campo —ADR-0035
+  explica por qué no se puede— un campo largo y libre domina el orden.
+
+  **La consecuencia se acepta y se dice:** quien busque una palabra que solo está
+  en la descripción no encuentra ese producto. La regla se cambia el día que
+  exista con qué frenar el abuso, no antes.
+
+- **RN-083** La búsqueda por texto es **sobre todo el catálogo**. Escribir en la
+  caja no hereda la categoría que se estaba navegando.
+
+  Es lo que evita el vacío engañoso: quien busca «tenis» sin darse cuenta de que
+  estaba dentro de Accesorios leería «no hay» donde sí hay. La categoría no
+  desaparece como idea, cambia de sitio: sigue disponible como filtro, visible y
+  quitable.
+
+- **RN-084** **Ningún resultado se adelanta por haberlo pagado.** El orden depende
+  solo de lo que se buscó y del orden que se pidió. No hay resultados
+  patrocinados, ni destacados, ni posición comprada.
+
+  Se escribe ahora y no cuando el problema exista, porque «suscripción o
+  destacados de pago» está en `alcance.md` como decisión sin tomar. El día que se
+  tome, hay que **cambiar esta regla a la vista de todos** en vez de añadir una
+  ordenación que nadie note.
+
+- **RN-085** **La marca no es un filtro: es texto buscable.** `brand` es opcional
+  y de texto libre, porque mucha prenda de segunda no tiene marca legible, y un
+  filtro sobre texto libre no filtra: «Nike», «nike» y «NIKE» serían tres marcas
+  distintas en el menú.
+
+  Es la misma razón por la que el color sí es lista cerrada. Para que la marca
+  llegue a ser filtro tendría que dejar de ser texto libre, y eso es otra
+  decisión, con su migración y su efecto sobre lo ya publicado.
+
+- **RN-086** Cuando una búsqueda no casa con nada, **se dice, y no se rellena**.
+  No se muestran resultados aproximados, ni «quizás te interese», ni productos
+  que no cumplen lo que se pidió.
+
+  Y se enseña qué filtros están puestos, con la salida para quitarlos: sin eso, un
+  filtro activo e invisible se lee como «Sendik no tiene nada».
+
+- **RN-087** La talla se filtra **dentro de su sistema de talla**. Una M por letra
+  y una 38 numérica no son comparables y no se mezclan en un mismo filtro.
+
+  El sistema se copia al producto cuando se crea, precisamente para que cambiar la
+  categoría después no reinterprete una talla ya declarada; filtrar ignorando el
+  sistema desharía esa garantía en la pantalla.
+
+- **RN-088** El orden por omisión es **relevancia cuando hay texto** y
+  **publicación más reciente cuando no lo hay**, que es el orden del catálogo.
+  Además se ofrecen precio de menor a mayor y de mayor a menor.
+
+  Son cuatro y no más. Ordenar por popularidad o por favoritos queda excluido por
+  RN-070: los favoritos son privados y no existe cifra pública derivada de ellos,
+  y un orden por favoritos es esa cifra por la puerta de atrás.
+
 ## Precio y comisión
 
 - **RN-026** La comisión es del **5% sobre el precio base del producto**, a cargo
