@@ -289,9 +289,7 @@ describe('CatalogPage', () => {
     // Por rol y no por clase ni por identificador: lo que la prueba afirma es que hay una
     // caja de búsqueda que se puede enviar, no cómo se llama su CSS. Con el selector de
     // clase, renombrar el bloque ponía esto en rojo sin que nada cambiara para quien busca.
-    const caja = fixture.nativeElement.querySelector(
-      'input[type="search"]',
-    ) as HTMLInputElement;
+    const caja = fixture.nativeElement.querySelector('input[type="search"]') as HTMLInputElement;
     caja.value = 'tenis';
     caja.dispatchEvent(new Event('input'));
     (fixture.nativeElement.querySelector('[role="search"]') as HTMLFormElement).dispatchEvent(
