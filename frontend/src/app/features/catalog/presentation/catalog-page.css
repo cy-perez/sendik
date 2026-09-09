@@ -82,3 +82,67 @@
   justify-content: center;
   margin-top: var(--esp-32);
 }
+
+/* ---------- La búsqueda y los filtros. HU-014 ---------- */
+
+/*
+  Una columna en móvil y dos en escritorio. El panel va después del listado en el flujo
+  visual de móvil, pero antes en el marcado: el orden del DOM es el del teclado, y llegar
+  a los filtros tras recorrer veinticuatro tarjetas no sirve de nada.
+*/
+.catalogo__cuerpo {
+  display: grid;
+  gap: var(--esp-24);
+}
+
+.catalogo__fichas-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-8);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--esp-16) 0;
+}
+
+/*
+  La ficha es un botón entero y no una etiqueta con un aspa: lo que se pulsa es «quitar
+  este filtro», y el destino táctil es la ficha completa.
+*/
+.catalogo__ficha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-8);
+  min-height: var(--destino-tactil);
+  padding: var(--esp-4) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-completo);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font-size: var(--texto-sm);
+  cursor: pointer;
+}
+
+.catalogo__ficha:hover {
+  background: var(--color-primario-suave);
+}
+
+.catalogo__ficha:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.catalogo__vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-16);
+  padding: var(--esp-32) 0;
+}
+
+@media (min-width: 1024px) {
+  .catalogo__cuerpo {
+    grid-template-columns: 260px 1fr;
+    align-items: start;
+  }
+}

@@ -4,6 +4,7 @@ import { injectInfiniteQuery, injectQuery } from '@tanstack/angular-query-experi
 import { SessionStore } from '../../../core/session/session.store';
 import type { Category } from '../../../shared/domain/listing';
 import type { CatalogPage, PublicListing } from '../domain/public-listing';
+import { aParametros, SIN_CRITERIOS, type SearchCriteria } from '../domain/search-criteria';
 import { CatalogApi } from '../infrastructure/catalog.api';
 import { queryKeys } from './query-keys';
 
@@ -55,6 +56,18 @@ export class CatalogStore {
    */
   private readonly categoria = signal<string | null | undefined>(undefined);
 
+  /**
+   * Qué se está buscando y con qué filtros. HU-014.
+   *
+   * <p>Señal aparte de la categoría, y no un solo objeto con las dos cosas, porque cambian
+   * por caminos distintos: la categoría la fija la ruta y los criterios la cadena de
+   * consulta. Juntarlas obligaría a que resolver la categoría reescribiera los filtros.
+   *
+   * <p>Sin nada puesto vale {@link SIN_CRITERIOS}, y entonces lo que se pide es el catálogo
+   * tal cual: buscar nada no es una pantalla distinta (criterio 8).
+   */
+  private readonly criterios = signal<SearchCriteria>(SIN_CRITERIOS);
+
   /** El árbol activo. Con frescura larga: lo cambia una migración, no el uso. */
   readonly categories = injectQuery(() => ({
     queryKey: queryKeys.categories,
@@ -64,9 +77,13 @@ export class CatalogStore {
   }));
 
   readonly listado = injectInfiniteQuery(() => ({
-    queryKey: queryKeys.list(this.categoria() ?? null),
+    queryKey: queryKeys.list(this.categoria() ?? null, this.criteriosEnClave()),
     queryFn: ({ pageParam }: { pageParam: string | null }) =>
-      this.api.listado({ cursor: pageParam, categoria: this.categoria() ?? null }),
+      this.api.listado({
+        cursor: pageParam,
+        categoria: this.categoria() ?? null,
+        criterios: this.criterios(),
+      }),
     // Sin esto sale un viaje de más en cada dirección de categoría: ver `categoria`.
     enabled: this.categoria() !== undefined,
     initialPageParam: null as string | null,
@@ -155,6 +172,37 @@ export class CatalogStore {
   /** La página fija cuál categoría se está viendo al resolver la ruta. */
   abrir(categoria: string | null): void {
     this.categoria.set(categoria);
+  }
+
+  /**
+   * La página fija qué se está buscando al leer la dirección.
+   *
+   * <p>No dispara la petición por su cuenta: cambia la clave de la consulta y TanStack pide
+   * sola, que es lo mismo que ya hace al navegar entre categorías.
+   */
+  buscar(criterios: SearchCriteria): void {
+    this.criterios.set(criterios);
+  }
+
+  /** Lo pedido ahora mismo, para que la pantalla pinte las fichas de lo que está puesto. */
+  loPedido(): SearchCriteria {
+    return this.criterios();
+  }
+
+  /**
+   * Los criterios como cadena estable, que es lo que entra en la clave de consulta.
+   *
+   * <p>Ordenada por nombre de parámetro a propósito: dos peticiones equivalentes escritas
+   * en distinto orden tienen que compartir entrada de caché, o pedir azul y verde daría una
+   * consulta distinta que pedir verde y azul.
+   */
+  private criteriosEnClave(): string {
+    const parametros = aParametros(this.criterios());
+
+    return Object.keys(parametros)
+      .sort()
+      .map((nombre) => `${nombre}=${[parametros[nombre]].flat().join(',')}`)
+      .join('&');
   }
 
   /**

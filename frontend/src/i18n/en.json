@@ -1343,6 +1343,47 @@
         "body": "Save what catches your eye and find it again here, all in one place. Only you can see this list.",
         "action": "Browse the catalog"
       }
+    },
+    "search": {
+      "label": "Search the catalogue",
+      "placeholder": "Linen shirt, sneakers, laptop…",
+      "submit": "Search",
+      "clear": "Clear what you typed",
+      "showing": "{{cuantas}} listings",
+      "showingOne": "1 listing",
+      "empty": "We found nothing for “{{texto}}”.",
+      "emptyWithFilters": "Nothing matches those filters.",
+      "region": "Catalogue search"
+    },
+    "filters": {
+      "title": "Filters",
+      "open": "Filter",
+      "applied": "Filters applied",
+      "remove": "Remove the {{filtro}} filter",
+      "clearAll": "Clear filters",
+      "condition": "Condition",
+      "color": "Colour",
+      "size": "Size",
+      "sizeSystem": "Size system",
+      "sizeValue": "Size",
+      "price": "Price",
+      "priceFrom": "From",
+      "priceTo": "To",
+      "sort": "Sort by",
+      "any": "Any",
+      "chips": {
+        "size": "Size {{talla}}",
+        "priceBetween": "From {{desde}} to {{hasta}}",
+        "priceFrom": "From {{desde}}",
+        "priceTo": "Up to {{hasta}}"
+      }
+    },
+    "sort": {
+      "default": "Best match",
+      "relevance": "Closest match",
+      "publishedAt,desc": "Most recent",
+      "price,asc": "Price: low to high",
+      "price,desc": "Price: high to low"
     }
   },
   "moderation": {

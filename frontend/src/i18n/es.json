@@ -1343,6 +1343,47 @@
         "body": "Guarda lo que te interese y vuelve a encontrarlo aquí, en un solo sitio. Solo tú ves esta lista.",
         "action": "Ver el catálogo"
       }
+    },
+    "search": {
+      "label": "Buscar en el catálogo",
+      "placeholder": "Camisa de lino, tenis, portátil…",
+      "submit": "Buscar",
+      "clear": "Borrar lo escrito",
+      "showing": "{{cuantas}} publicaciones",
+      "showingOne": "1 publicación",
+      "empty": "No encontramos nada para «{{texto}}».",
+      "emptyWithFilters": "No hay nada con esos filtros.",
+      "region": "Búsqueda del catálogo"
+    },
+    "filters": {
+      "title": "Filtros",
+      "open": "Filtrar",
+      "applied": "Filtros puestos",
+      "remove": "Quitar el filtro {{filtro}}",
+      "clearAll": "Quitar los filtros",
+      "condition": "Condición",
+      "color": "Color",
+      "size": "Talla",
+      "sizeSystem": "Sistema de talla",
+      "sizeValue": "Talla",
+      "price": "Precio",
+      "priceFrom": "Desde",
+      "priceTo": "Hasta",
+      "sort": "Ordenar por",
+      "any": "Cualquiera",
+      "chips": {
+        "size": "Talla {{talla}}",
+        "priceBetween": "De {{desde}} a {{hasta}}",
+        "priceFrom": "Desde {{desde}}",
+        "priceTo": "Hasta {{hasta}}"
+      }
+    },
+    "sort": {
+      "default": "Lo que mejor encaje",
+      "relevance": "Lo más parecido",
+      "publishedAt,desc": "Lo más reciente",
+      "price,asc": "Precio: de menor a mayor",
+      "price,desc": "Precio: de mayor a menor"
     }
   },
   "moderation": {

@@ -1,0 +1,66 @@
+.buscador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-8);
+  margin: var(--esp-24) 0;
+}
+
+/* La etiqueta se ve: una caja de búsqueda con solo un texto de sugerencia deja sin
+   nombre al campo en cuanto alguien escribe, y el marcador de posición no es etiqueta. */
+.buscador__etiqueta {
+  flex-basis: 100%;
+  font-weight: var(--peso-medio);
+}
+
+.buscador__campo {
+  position: relative;
+  flex: 1 1 260px;
+}
+
+.buscador__entrada {
+  width: 100%;
+  min-height: var(--destino-tactil);
+  /* Sitio a la derecha para el botón de limpiar, que va encima. */
+  padding: var(--esp-8) var(--esp-48) var(--esp-8) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+.buscador__entrada:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+/* El aspa de vaciar. Destino táctil completo aunque el icono sea de 20. */
+.buscador__limpiar {
+  position: absolute;
+  top: 50%;
+  right: var(--esp-4);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--destino-tactil);
+  min-height: var(--destino-tactil);
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+}
+
+.buscador__limpiar:hover {
+  color: var(--color-texto);
+}
+
+.buscador__limpiar:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.buscador__enviar {
+  flex: 0 0 auto;
+}

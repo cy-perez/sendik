@@ -1,0 +1,131 @@
+<!--
+  El botón solo existe en móvil: en escritorio el panel se ve siempre y el CSS lo oculta.
+  Lleva `aria-expanded` y `aria-controls` porque abre y cierra una región de esta misma
+  página, no navega a otra.
+-->
+<button
+  type="button"
+  class="btn btn-secundario filtros__abrir"
+  aria-controls="panel-de-filtros"
+  [attr.aria-expanded]="abierto()"
+  (click)="alternarPanel()"
+>
+  {{ 'catalog.filters.open' | transloco }}
+  @if (puestos() > 0) {
+    <span class="chip">{{ puestos() }}</span>
+  }
+</button>
+
+<div id="panel-de-filtros" class="filtros__panel" [class.filtros__panel--abierto]="abierto()">
+  <!--
+    Cada grupo es un `fieldset` con su `legend`: es lo que hace que un lector de pantalla
+    diga «Condición, casilla, Nueva» en vez de solo «casilla, Nueva».
+  -->
+  <fieldset class="filtros__grupo">
+    <legend class="filtros__titulo">{{ 'catalog.filters.condition' | transloco }}</legend>
+    @for (condicion of condiciones; track condicion) {
+      <label class="filtros__opcion">
+        <input
+          type="checkbox"
+          [checked]="tieneCondicion(condicion)"
+          (change)="alternarCondicion(condicion, $any($event.target).checked)"
+        />
+        {{ 'listing.condition.' + condicion | transloco }}
+      </label>
+    }
+  </fieldset>
+
+  <fieldset class="filtros__grupo">
+    <legend class="filtros__titulo">{{ 'catalog.filters.color' | transloco }}</legend>
+    @for (color of colores; track color) {
+      <label class="filtros__opcion">
+        <input
+          type="checkbox"
+          [checked]="tieneColor(color)"
+          (change)="alternarColor(color, $any($event.target).checked)"
+        />
+        {{ 'listing.color.' + color | transloco }}
+      </label>
+    }
+  </fieldset>
+
+  <fieldset class="filtros__grupo">
+    <legend class="filtros__titulo">{{ 'catalog.filters.size' | transloco }}</legend>
+
+    <label class="filtros__campo">
+      {{ 'catalog.filters.sizeSystem' | transloco }}
+      <select
+        class="filtros__control"
+        [value]="criterios().sizeSystem ?? ''"
+        (change)="elegirSistema($any($event.target).value)"
+      >
+        <option value="">{{ 'catalog.filters.any' | transloco }}</option>
+        @for (sistema of sistemas; track sistema) {
+          <option [value]="sistema">{{ 'listing.sizeSystem.' + sistema | transloco }}</option>
+        }
+      </select>
+    </label>
+
+    <!--
+      Deshabilitado sin sistema, y no es cosmética: una talla sin su escala no se puede
+      comparar con nada (RN-087), así que ofrecerla sería ofrecer un filtro que no filtra.
+    -->
+    <label class="filtros__campo">
+      {{ 'catalog.filters.sizeValue' | transloco }}
+      <input
+        class="filtros__control"
+        type="text"
+        autocomplete="off"
+        [disabled]="criterios().sizeSystem === null"
+        [value]="criterios().size ?? ''"
+        (change)="escribirTalla($any($event.target).value)"
+      />
+    </label>
+  </fieldset>
+
+  <fieldset class="filtros__grupo">
+    <legend class="filtros__titulo">{{ 'catalog.filters.price' | transloco }}</legend>
+
+    <label class="filtros__campo">
+      {{ 'catalog.filters.priceFrom' | transloco }}
+      <input
+        class="filtros__control precio"
+        type="number"
+        inputmode="numeric"
+        min="0"
+        step="1"
+        [value]="minimo()"
+        (input)="escribirMinimo($any($event.target).value)"
+        (blur)="aplicarPrecio()"
+      />
+    </label>
+
+    <label class="filtros__campo">
+      {{ 'catalog.filters.priceTo' | transloco }}
+      <input
+        class="filtros__control precio"
+        type="number"
+        inputmode="numeric"
+        min="0"
+        step="1"
+        [value]="maximo()"
+        (input)="escribirMaximo($any($event.target).value)"
+        (blur)="aplicarPrecio()"
+      />
+    </label>
+  </fieldset>
+
+  <label class="filtros__campo filtros__grupo">
+    <span class="filtros__titulo">{{ 'catalog.filters.sort' | transloco }}</span>
+    <select
+      class="filtros__control"
+      [value]="ordenActual()"
+      (change)="elegirOrden($any($event.target).value)"
+    >
+      <option value="">{{ 'catalog.sort.default' | transloco }}</option>
+      @for (orden of ordenes; track orden) {
+        <option [value]="orden">{{ 'catalog.sort.' + orden | transloco }}</option>
+      }
+    </select>
+  </label>
+</div>

@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 import type { Category } from '../../../shared/domain/listing';
 import type { CatalogPage, PublicListing, SellerProfile } from '../domain/public-listing';
+import { aParametros, SIN_CRITERIOS, type SearchCriteria } from '../domain/search-criteria';
 
 /**
  * Adaptador HTTP del catálogo público. HU-009.
@@ -24,14 +25,21 @@ export class CatalogApi {
   private readonly http = inject(HttpClient);
 
   /**
-   * Un tramo del catálogo.
+   * Un tramo del catálogo, o de lo que casa con lo que se pidió. HU-014.
+   *
+   * <p><strong>La misma ruta para las dos cosas</strong>, porque buscar es listar este
+   * mismo recurso con más condiciones: sin criterios, lo que responde es el catálogo tal
+   * cual (criterio 8). Un `/search` aparte habría duplicado aquí la paginación y la forma
+   * de la respuesta.
    *
    * @param categoria identificador de una categoría o de una familia; el servidor
    *   resuelve las hojas que cuelgan de ella
+   * @param criterios el texto, los filtros y el orden. Los que estén vacíos no viajan
    */
   async listado(opciones: {
     readonly cursor?: string | null;
     readonly categoria?: string | null;
+    readonly criterios?: SearchCriteria;
     readonly limite?: number;
   }): Promise<CatalogPage> {
     let parametros = new HttpParams().set('limit', String(opciones.limite ?? 24));
@@ -41,6 +49,16 @@ export class CatalogApi {
     }
     if (opciones.categoria) {
       parametros = parametros.set('category', opciones.categoria);
+    }
+
+    // `condition` y `color` se repiten en la dirección para pedir varios valores, que es
+    // lo que `append` hace y `set` no: con `set`, pedir azul y verde pediría solo verde.
+    for (const [nombre, valor] of Object.entries(
+      aParametros(opciones.criterios ?? SIN_CRITERIOS),
+    )) {
+      for (const uno of Array.isArray(valor) ? valor : [valor]) {
+        parametros = parametros.append(nombre, uno);
+      }
     }
 
     return firstValueFrom(this.http.get<CatalogPage>('listings', { params: parametros }));

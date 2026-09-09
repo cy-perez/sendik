@@ -1,0 +1,82 @@
+.filtros__abrir {
+  width: 100%;
+  margin-bottom: var(--esp-16);
+}
+
+/* En móvil el panel es una hoja: ocupa el ancho y solo se ve cuando se abre. */
+.filtros__panel {
+  display: none;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  padding: var(--esp-16);
+}
+
+.filtros__panel--abierto {
+  display: block;
+}
+
+.filtros__grupo {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--esp-24) 0;
+}
+
+.filtros__titulo {
+  display: block;
+  padding: 0;
+  margin-bottom: var(--esp-8);
+  font-weight: var(--peso-medio);
+}
+
+/* Fila entera pulsable: el destino táctil de 44px lo da el alto mínimo, no el cuadro. */
+.filtros__opcion {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-8);
+  min-height: var(--destino-tactil);
+  cursor: pointer;
+}
+
+.filtros__opcion input:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.filtros__campo {
+  display: block;
+  margin-bottom: var(--esp-12);
+}
+
+.filtros__control {
+  display: block;
+  width: 100%;
+  min-height: var(--destino-tactil);
+  margin-top: var(--esp-4);
+  padding: var(--esp-8) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+.filtros__control:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.filtros__control:disabled {
+  background-color: var(--color-fondo);
+  color: var(--color-texto-suave);
+}
+
+/* En escritorio el panel es la columna lateral y se ve siempre: el botón sobra. */
+@media (min-width: 1024px) {
+  .filtros__abrir {
+    display: none;
+  }
+
+  .filtros__panel {
+    display: block;
+  }
+}
