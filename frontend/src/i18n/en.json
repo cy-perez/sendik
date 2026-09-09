@@ -274,12 +274,13 @@
     },
     "notice": {
       "title": "How we handle your data",
-      "controller": "Controller: {{responsable}}, NIT {{identificacion}}, Medellín, Colombia.",
+      "controller": "Controller: {{responsable}}, NIT {{identificacion}}.",
+      "controllerAddress": "Address: {{direccion}}.",
       "purpose": {
         "account": "We use this data to create and manage your account, confirm your email, keep your session secure and help you when you write to us. We do not sell it or pass it on for advertising.",
         "verification": "We use your identity document, the photograph of your face and your bank account for one thing only: to confirm you are who you say you are before letting you list, and to be able to pay you for what you sell. They are not shown to anyone else and are not used for anything else."
       },
-      "sensitive": "You are not required to provide this data. You can hold an account, browse and buy without it; it is only needed if you decide to sell, because without knowing who is selling, the guarantee would mean nothing.",
+      "sensitive": "You are not required to provide this data. You can hold an account, browse and buy without it; it is only needed if you decide to sell, because without knowing who is selling, Sendik's backing would mean nothing.",
       "rights": "You can access, update, correct and delete your data, and withdraw this authorisation, by writing to {{correo}}.",
       "readPolicy": "Read the full data processing policy"
     }

@@ -26,8 +26,11 @@ donde corresponde:
   ser `borrador-local` desaparece el aviso de «sin valor legal», así que el texto se
   presenta como vigente. Lo que sigue abierto —cinco puntos de criterio profesional,
   las excepciones al retracto sin transcribir, y los campos sin dato— está en
-  `docs/operacion/entrega-textos-legales-2026-09-05.md`. Falta además el aviso de
-  privacidad y el texto de las casillas de autorización.
+  `docs/operacion/entrega-textos-legales-2026-09-05.md`. ~~Falta además el aviso de
+  privacidad y el texto de las casillas de autorización.~~ **Los dos se hicieron ese
+  mismo 5 de septiembre** —el aviso como componente, no como página— y esta línea se
+  quedó atrás tres días. Auditados el 8 de septiembre contra el Decreto 1377 de 2013:
+  `docs/operacion/entrega-aviso-de-privacidad-2026-09-08.md`.
 
 **Plataforma**
 - Monorepo con backend y frontend, Gradle multi-módulo y Angular con SSR.

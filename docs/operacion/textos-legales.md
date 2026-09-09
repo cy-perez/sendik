@@ -93,8 +93,13 @@ cédula), la figura jurídica (persona natural, lo que además cierra la duda de
 Registro Nacional de Bases de Datos: no obliga) y el desfase entre la ventana del
 Respaldo y el retracto, que fijó RN-075.
 
-Falta todavía el **aviso de privacidad** y el **texto de las casillas de
-autorización**, que son documentos aparte y no se han escrito.
+El **aviso de privacidad** y el **texto de las casillas de autorización** existen desde
+el 5 de septiembre de 2026 y esta línea decía lo contrario hasta el 8. No son documentos
+con versión propia: el aviso es el componente `sendik-privacy-notice`, que se entrega
+donde se pide el dato, y las casillas son dos frases del formulario de registro. Los dos
+se auditaron contra el Decreto 1377 de 2013 el 8 de septiembre —`entrega-aviso-de-privacidad-2026-09-08.md`—
+y lo que quedó abierto de ahí es el consentimiento expreso de los datos sensibles, que es
+código y no redacción.
 
 ## Formato
 

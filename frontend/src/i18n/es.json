@@ -274,7 +274,8 @@
     },
     "notice": {
       "title": "Cómo tratamos tus datos",
-      "controller": "Responsable: {{responsable}}, NIT {{identificacion}}, Medellín, Colombia.",
+      "controller": "Responsable: {{responsable}}, NIT {{identificacion}}.",
+      "controllerAddress": "Dirección: {{direccion}}.",
       "purpose": {
         "account": "Usamos estos datos para crear y administrar tu cuenta, confirmar tu correo, mantener tu sesión segura y atenderte cuando escribas. No los vendemos ni los cedemos con fines publicitarios.",
         "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más."
