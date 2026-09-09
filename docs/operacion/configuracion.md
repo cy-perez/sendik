@@ -516,7 +516,7 @@ Se manejan como configuración, no como ramas de Git de larga vida:
 | `FEATURE_PUBLISHING` | Habilita publicar prendas |
 | `FEATURE_CATALOG` | Habilita el catálogo público: listado, categorías, ficha y perfil del vendedor |
 | `FEATURE_CHECKOUT` | Habilita el proceso de compra |
-| `FEATURE_SEARCH` | Habilita la búsqueda con Typesense |
+| `FEATURE_SEARCH` | Habilita la búsqueda y los filtros del catálogo (HU-014). Contra PostgreSQL, no Typesense (ADR-0035) |
 | `FEATURE_SPIN_VIEWER` | Habilita el visor 360 |
 
 Se enciende cada una cuando su funcionalidad exista y no cuando empiece la fase

@@ -6,9 +6,12 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import co.sendik.catalog.dto.CatalogCursor;
 import co.sendik.catalog.dto.CategoryView;
+import co.sendik.catalog.dto.SearchCriteria;
+import co.sendik.catalog.dto.SearchHit;
 import co.sendik.catalog.exception.ListingConcurrentlyModifiedException;
 import co.sendik.catalog.model.AttentionReason;
 import co.sendik.catalog.model.Brand;
+import co.sendik.catalog.model.CatalogSort;
 import co.sendik.catalog.model.Category;
 import co.sendik.catalog.model.CategoryId;
 import co.sendik.catalog.model.Color;
@@ -25,18 +28,22 @@ import co.sendik.catalog.model.Measurements;
 import co.sendik.catalog.model.ModerationAction;
 import co.sendik.catalog.model.ModerationEvent;
 import co.sendik.catalog.model.ModeratorId;
+import co.sendik.catalog.model.PriceRange;
 import co.sendik.catalog.model.Product;
 import co.sendik.catalog.model.ProductId;
 import co.sendik.catalog.model.ProductImage;
 import co.sendik.catalog.model.ProductImageId;
+import co.sendik.catalog.model.SearchText;
 import co.sendik.catalog.model.SellerId;
 import co.sendik.catalog.model.ShippingDimensions;
 import co.sendik.catalog.model.Size;
 import co.sendik.catalog.model.SizeSystem;
 import co.sendik.catalog.model.Title;
+import co.sendik.catalog.persistence.PostgresSearchEngine;
 import co.sendik.catalog.port.out.Categories;
 import co.sendik.catalog.port.out.ListingRepository;
 import co.sendik.catalog.port.out.ModerationLog;
+import co.sendik.catalog.port.out.SearchEngine;
 import co.sendik.shared.file.FileKey;
 import co.sendik.shared.file.ImageContentType;
 import co.sendik.shared.file.ImageDimensions;
@@ -49,13 +56,16 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Los adaptadores de persistencia del catalogo, contra PostgreSQL 17 real. HU-007.
@@ -73,13 +83,19 @@ class CatalogPersistenceTest {
     private static final Instant AHORA = Instant.parse("2026-08-24T15:00:00Z");
 
     private final ListingRepository publicaciones;
+    private final SearchEngine motor;
     private final Categories categorias;
     private final ModerationLog bitacora;
     private final JdbcClient jdbc;
 
     CatalogPersistenceTest(
-            ListingRepository publicaciones, Categories categorias, ModerationLog bitacora, JdbcClient jdbc) {
+            ListingRepository publicaciones,
+            SearchEngine motor,
+            Categories categorias,
+            ModerationLog bitacora,
+            JdbcClient jdbc) {
         this.publicaciones = publicaciones;
+        this.motor = motor;
         this.categorias = categorias;
         this.bitacora = bitacora;
         this.jdbc = jdbc;
@@ -735,9 +751,7 @@ class CatalogPersistenceTest {
         Listing enRevision = publicaciones.guardar(borradorConTomas().enviarARevision(AHORA));
         Listing pausada = publicaciones.guardar(publicada().pausar(AHORA));
 
-        List<ListingId> catalogo = publicaciones.publicadas(List.of(), null, 50).stream()
-                .map(Listing::id)
-                .toList();
+        List<ListingId> catalogo = catalogo(50).stream().map(Listing::id).toList();
 
         // Por contencion y no por igualdad: esta clase comparte la base entre pruebas y
         // varias dejan publicaciones vivas. Lo que se afirma es lo que esta prueba
@@ -752,7 +766,7 @@ class CatalogPersistenceTest {
         Listing vieja = publicadaEn(AHORA.minus(Duration.ofHours(2)));
         Listing nueva = publicadaEn(AHORA);
 
-        List<ListingId> mias = publicaciones.publicadas(List.of(), null, 50).stream()
+        List<ListingId> mias = catalogo(50).stream()
                 .map(Listing::id)
                 .filter(id -> id.equals(nueva.id()) || id.equals(vieja.id()))
                 .toList();
@@ -781,7 +795,7 @@ class CatalogPersistenceTest {
         publicadaDe(vendedor, AHORA);
 
         List<Listing> primera = publicaciones.publicadasDelVendedor(vendedor, null, 2);
-        CatalogCursor desde = new CatalogCursor(
+        CatalogCursor desde = CatalogCursor.porFecha(
                 Objects.requireNonNull(primera.getLast().publishedAt()),
                 primera.getLast().id());
         List<Listing> segunda = publicaciones.publicadasDelVendedor(vendedor, desde, 2);
@@ -800,7 +814,7 @@ class CatalogPersistenceTest {
         Category jeans = categoriaPorSlug("jeans");
 
         List<Listing> soloCamisas =
-                publicaciones.publicadas(List.of(camisa.product().categoryId()), null, 50);
+                buscar(criterios().categorias(camisa.product().categoryId()).limite(50));
 
         assertThat(soloCamisas).extracting(Listing::id).contains(camisa.id());
         assertThat(soloCamisas)
@@ -809,7 +823,7 @@ class CatalogPersistenceTest {
 
         // Ninguna prueba de esta clase publica en jeans, asi que el filtro se puede
         // afirmar por el lado vacio tambien.
-        assertThat(publicaciones.publicadas(List.of(jeans.id()), null, 24)).isEmpty();
+        assertThat(buscar(criterios().categorias(jeans.id()))).isEmpty();
     }
 
     /** El escaparate de un vendedor: lo suyo y publicado, no sus borradores. */
@@ -994,6 +1008,375 @@ class CatalogPersistenceTest {
                         VALUES (:id, :correo, 'Vendedor de prueba', DATE '1990-01-01', 'ACTIVE')
                         """).param("id", id).param("correo", id + "@ejemplo.co").update();
         return id;
+    }
+
+    // ------------------------------------------------------------ la busqueda
+    //
+    // HU-014. Lo que se prueba aqui y no se puede probar en otro sitio: que el texto
+    // encuentra lo mismo con tildes y sin ellas, que el diccionario lematiza, que los
+    // filtros y los cuatro ordenes se traducen a SQL que hace lo que dice, y que la
+    // consulta del texto puede usar el indice de V18. El doble en memoria de
+    // `application` filtra igual pero no lematiza ni puntua como `ts_rank`.
+    //
+    // Las publicaciones de estas pruebas llevan una palabra inventada en el titulo. La
+    // clase comparte la base entre pruebas y varias dejan «Camisa de lino color hueso»
+    // viva: buscar «camisa» traeria las de todas.
+    //
+    // Y cada prueba usa una **raiz** distinta, no solo una palabra distinta. El
+    // diccionario `spanish` lematiza tambien lo inventado: «zurdaco», «zurdaca» y
+    // «zurdaku» eran la misma palabra para el motor -las tres dan `zurdac`- y las
+    // pruebas se veian entre si. Es la misma lematizacion que celebra la prueba del
+    // plural, vista desde el otro lado.
+
+    /**
+     * Criterio 5. La razon de ser de `unaccent` y del envoltorio inmutable de V18.
+     *
+     * <p>Va en las dos direcciones a proposito: quien escribe con tilde tiene que encontrar
+     * lo que se publico sin ella, y al reves. En un teclado de celular la mitad de la gente
+     * escribe de una forma y la otra mitad de la otra.
+     */
+    @Test
+    void deberia_encontrar_lo_mismo_con_tildes_y_sin_ellas_criterio_5() {
+        Listing publicada = publicadaCon("Camisón quiltafo de seda", null);
+
+        assertThat(buscar(criterios().texto("camison quiltafo")))
+                .extracting(Listing::id)
+                .containsExactly(publicada.id());
+        assertThat(buscar(criterios().texto("camisón quiltafo")))
+                .extracting(Listing::id)
+                .containsExactly(publicada.id());
+    }
+
+    /** Criterio 6: mayusculas, minusculas o mezcla dan lo mismo. */
+    @Test
+    void deberia_encontrar_lo_mismo_en_mayusculas_y_en_minusculas_criterio_6() {
+        Listing publicada = publicadaCon("Camisa brilquen de lino", null);
+
+        assertThat(buscar(criterios().texto("BRILQUEN")))
+                .extracting(Listing::id)
+                .containsExactly(publicada.id());
+        assertThat(buscar(criterios().texto("BrIlQuEn")))
+                .extracting(Listing::id)
+                .containsExactly(publicada.id());
+    }
+
+    /**
+     * El diccionario `spanish` lematiza, y eso solo se puede comprobar contra PostgreSQL.
+     *
+     * <p>No esta en ningun criterio: es lo que el motor da de regalo, y se fija aqui para
+     * que el dia que alguien cambie el diccionario a `simple` la prueba lo diga.
+     */
+    @Test
+    void deberia_encontrar_el_singular_buscando_el_plural() {
+        Listing publicada = publicadaCon("Camisa vasquen de lino", null);
+
+        assertThat(buscar(criterios().texto("camisas vasquen")))
+                .extracting(Listing::id)
+                .containsExactly(publicada.id());
+    }
+
+    @Test
+    void deberia_cumplir_RN_082_buscando_en_el_titulo_y_en_la_marca_pero_no_en_la_descripcion() {
+        Listing porTitulo = publicadaCon("Camisa tulqueno de lino", null);
+        Listing porMarca = publicadaCon("Jean recto azul oscuro", "Palquiro");
+
+        assertThat(buscar(criterios().texto("tulqueno")))
+                .extracting(Listing::id)
+                .containsExactly(porTitulo.id());
+        assertThat(buscar(criterios().texto("palquiro")))
+                .extracting(Listing::id)
+                .containsExactly(porMarca.id());
+        // «Usada dos veces» es la descripcion de todas las publicaciones de esta clase.
+        assertThat(buscar(criterios().texto("usada"))).isEmpty();
+    }
+
+    /** RN-081: por este segundo camino tampoco sale lo que no esta publicado. */
+    @Test
+    void deberia_cumplir_RN_081_no_encontrando_lo_que_no_esta_publicado() {
+        Listing publicada = publicadaCon("Camisa grimalto de lino", null);
+        publicaciones.guardar(publicada.pausar(AHORA));
+
+        assertThat(buscar(criterios().texto("grimalto"))).isEmpty();
+    }
+
+    /** Criterio 14: los filtros se exigen todos y se traducen a un solo SQL. */
+    @Test
+    void deberia_exigir_todos_los_filtros_a_la_vez_criterio_14() {
+        Listing azulEmeM = publicadaCon(
+                "Camisa nubrafo azul", null, Condition.NEW, new Size(SizeSystem.ALPHA, "M"), Color.BLUE, 90_000);
+        publicadaCon("Camisa nubrafo roja", null, Condition.NEW, new Size(SizeSystem.ALPHA, "M"), Color.RED, 90_000);
+        publicadaCon("Camisa nubrafo azul L", null, Condition.NEW, new Size(SizeSystem.ALPHA, "L"), Color.BLUE, 90_000);
+
+        List<Listing> resultado = buscar(criterios()
+                .texto("nubrafo")
+                .colores(Color.BLUE)
+                .talla(new Size(SizeSystem.ALPHA, "M"))
+                .condiciones(Condition.NEW));
+
+        assertThat(resultado).extracting(Listing::id).containsExactly(azulEmeM.id());
+    }
+
+    /** RN-087: la talla se compara con su sistema, nunca el valor suelto. */
+    @Test
+    void deberia_cumplir_RN_087_no_mezclando_sistemas_de_talla() {
+        Listing porLetra = publicadaCon(
+                "Camisa delvicho por letra",
+                null,
+                Condition.LIKE_NEW,
+                new Size(SizeSystem.ALPHA, "M"),
+                Color.BEIGE,
+                90_000);
+        publicadaCon(
+                "Camisa delvicho numerica",
+                null,
+                Condition.LIKE_NEW,
+                new Size(SizeSystem.NUMERIC_CO, "10"),
+                Color.BEIGE,
+                90_000);
+
+        assertThat(buscar(criterios().texto("delvicho").talla(new Size(SizeSystem.ALPHA, "M"))))
+                .extracting(Listing::id)
+                .containsExactly(porLetra.id());
+    }
+
+    /** Criterio 13: los dos extremos entran, y lo decide un BETWEEN de verdad. */
+    @Test
+    void deberia_incluir_los_dos_extremos_del_rango_de_precio_criterio_13() {
+        Listing enElMinimo = publicadaConPrecio("Camisa yerpanto barata", 50_000);
+        Listing enElMaximo = publicadaConPrecio("Camisa yerpanto cara", 100_000);
+        publicadaConPrecio("Camisa yerpanto carisima", 100_001);
+
+        List<Listing> resultado =
+                buscar(criterios().texto("yerpanto").precio(50_000, 100_000).orden(CatalogSort.PRICE_ASC));
+
+        assertThat(resultado).extracting(Listing::id).containsExactly(enElMinimo.id(), enElMaximo.id());
+    }
+
+    /**
+     * Criterio 18 y 21. El cursor de precio, con dos precios iguales.
+     *
+     * <p>El empate de precio no es raro: es lo normal en un catalogo donde la gente pone
+     * cifras redondas. Sin el desempate por identificador, el segundo tramo se salta una de
+     * las dos o repite las dos para siempre.
+     */
+    @Test
+    void deberia_recorrer_por_precio_sin_repetir_ni_perder_las_que_valen_igual_criterio_21() {
+        publicadaConPrecio("Camisa cambrilo una", 70_000);
+        publicadaConPrecio("Camisa cambrilo otra", 70_000);
+        publicadaConPrecio("Camisa cambrilo tercera", 90_000);
+
+        List<Listing> primera = buscar(
+                criterios().texto("cambrilo").orden(CatalogSort.PRICE_ASC).limite(2));
+        CatalogCursor desde = CatalogCursor.porPrecio(
+                CatalogSort.PRICE_ASC,
+                Objects.requireNonNull(primera.getLast().product().price()),
+                primera.getLast().id());
+        List<Listing> segunda = buscar(criterios()
+                .texto("cambrilo")
+                .orden(CatalogSort.PRICE_ASC)
+                .desde(desde)
+                .limite(2));
+
+        assertThat(primera).hasSize(2);
+        assertThat(segunda).hasSize(1);
+        assertThat(primera)
+                .extracting(Listing::id)
+                .doesNotContainAnyElementsOf(segunda.stream().map(Listing::id).toList());
+    }
+
+    /**
+     * El cursor de relevancia, que es el que mas empata.
+     *
+     * <p>{@code ts_rank} devuelve `real` y el cursor viaja como `float8`. Si la comparacion
+     * mezclara las dos precisiones, el empate exacto dejaria de serlo y el desempate por
+     * identificador no llegaria a aplicarse: la fila del borde se repetiria o se perderia.
+     * Esta prueba es la razon del casteo explicito en la condicion del cursor.
+     */
+    @Test
+    void deberia_recorrer_por_relevancia_sin_repetir_ni_perder_las_que_puntuan_igual() {
+        publicadaCon("Camisa sextavio de lino", null);
+        publicadaCon("Camisa sextavio de lino", null);
+        publicadaCon("Camisa sextavio de lino", null);
+
+        List<SearchHit> primera =
+                motor.buscar(criterios().texto("sextavio").limite(2).arma());
+        SearchHit ultima = primera.getLast();
+        CatalogCursor desde = CatalogCursor.porRelevancia(
+                ultima.exigirRelevancia(), ultima.publicacion().id());
+
+        List<SearchHit> segunda = motor.buscar(
+                criterios().texto("sextavio").desde(desde).limite(2).arma());
+
+        assertThat(primera).hasSize(2);
+        assertThat(segunda).hasSize(1);
+        assertThat(primera.stream().map(r -> r.publicacion().id()).toList())
+                .doesNotContainAnyElementsOf(
+                        segunda.stream().map(r -> r.publicacion().id()).toList());
+    }
+
+    /** El orden por relevancia trae la puntuacion, y los demas no la calculan. */
+    @Test
+    void deberia_puntuar_solo_cuando_se_ordena_por_relevancia() {
+        publicadaCon("Camisa olvarico de lino", null);
+
+        assertThat(motor.buscar(criterios().texto("olvarico").arma()))
+                .allSatisfy(resultado -> assertThat(resultado.relevancia()).isNotNull());
+        assertThat(motor.buscar(criterios()
+                        .texto("olvarico")
+                        .orden(CatalogSort.PRICE_ASC)
+                        .arma()))
+                .allSatisfy(resultado -> assertThat(resultado.relevancia()).isNull());
+    }
+
+    /**
+     * Que la consulta del texto <strong>pueda</strong> usar el indice de V18.
+     *
+     * <p>Es la prueba que ninguna otra puede dar: una busqueda que pasa por el indice
+     * equivocado devuelve exactamente lo mismo, solo que recorriendo la tabla, y no se nota
+     * en ningun resultado. Lo que se comprueba es que la expresion del indice y la de la
+     * consulta coinciden; si alguien cambia una y no la otra, esto se pone rojo.
+     *
+     * <p>Con el planificador libre y tres filas de prueba, recorrer la tabla siempre gana:
+     * por eso se le quita esa opcion dentro de la transaccion. No se le fuerza a usar el
+     * indice —eso no se puede—, se le quita la alternativa barata y se mira si sabe llegar.
+     */
+    @Test
+    @Transactional
+    void deberia_poder_resolver_la_busqueda_de_texto_por_el_indice_de_V18() {
+        jdbc.sql("SET LOCAL enable_seqscan = off").update();
+
+        String plan = String.join(
+                "\n",
+                jdbc.sql("EXPLAIN SELECT l.id FROM listings l JOIN products p ON p.id = l.product_id WHERE "
+                                + PostgresSearchEngine.CONDICION_DE_TEXTO)
+                        .param("texto", "camisa de lino")
+                        .query(String.class)
+                        .list());
+
+        assertThat(plan).contains("idx_products_search");
+    }
+
+    // --- apoyo de la busqueda ------------------------------------------------
+
+    /** El catalogo entero por el motor, que es como lo pide el caso de uso. */
+    private List<Listing> catalogo(int limite) {
+        return buscar(criterios().limite(limite));
+    }
+
+    private List<Listing> buscar(Criterios criterios) {
+        return motor.buscar(criterios.arma()).stream()
+                .map(SearchHit::publicacion)
+                .toList();
+    }
+
+    private static Criterios criterios() {
+        return new Criterios();
+    }
+
+    /** Unos criterios con lo minimo puesto, para que cada prueba diga solo lo que le importa. */
+    private static final class Criterios {
+
+        private @Nullable SearchText texto;
+        private List<CategoryId> categorias = List.of();
+        private Set<Condition> condiciones = Set.of();
+        private @Nullable Size talla;
+        private Set<Color> colores = Set.of();
+        private PriceRange precio = PriceRange.SIN_LIMITE;
+        private @Nullable CatalogSort orden;
+        private @Nullable CatalogCursor desde;
+        private int limite = 24;
+
+        Criterios texto(String texto) {
+            this.texto = SearchText.de(texto);
+            return this;
+        }
+
+        Criterios categorias(CategoryId... categorias) {
+            this.categorias = List.of(categorias);
+            return this;
+        }
+
+        Criterios condiciones(Condition... condiciones) {
+            this.condiciones = Set.of(condiciones);
+            return this;
+        }
+
+        Criterios colores(Color... colores) {
+            this.colores = Set.of(colores);
+            return this;
+        }
+
+        Criterios talla(Size talla) {
+            this.talla = talla;
+            return this;
+        }
+
+        Criterios precio(long minimo, long maximo) {
+            this.precio = new PriceRange(Money.dePesos(minimo), Money.dePesos(maximo));
+            return this;
+        }
+
+        Criterios orden(CatalogSort orden) {
+            this.orden = orden;
+            return this;
+        }
+
+        Criterios desde(CatalogCursor desde) {
+            this.desde = desde;
+            return this;
+        }
+
+        Criterios limite(int limite) {
+            this.limite = limite;
+            return this;
+        }
+
+        SearchCriteria arma() {
+            return new SearchCriteria(
+                    texto,
+                    categorias,
+                    condiciones,
+                    talla,
+                    colores,
+                    precio,
+                    CatalogSort.efectivo(orden, texto != null),
+                    desde,
+                    limite);
+        }
+    }
+
+    private Listing publicadaCon(String titulo, @Nullable String marca) {
+        return publicadaCon(titulo, marca, Condition.LIKE_NEW, new Size(SizeSystem.ALPHA, "M"), Color.BEIGE, 185_000);
+    }
+
+    private Listing publicadaConPrecio(String titulo, long precio) {
+        return publicadaCon(titulo, null, Condition.LIKE_NEW, new Size(SizeSystem.ALPHA, "M"), Color.BEIGE, precio);
+    }
+
+    /** Una publicacion viva con los campos por los que HU-014 busca y filtra. */
+    private Listing publicadaCon(
+            String titulo, @Nullable String marca, Condition condicion, Size talla, Color color, long precio) {
+
+        Product producto = Product.crear(
+                ProductId.nuevo(),
+                new SellerId(nuevoUsuario()),
+                categoriaPorSlug("camisas-y-blusas"),
+                new Title(titulo),
+                new Description("Usada dos veces."),
+                marca == null ? null : new Brand(marca),
+                condicion,
+                talla,
+                medidasDe(MeasurementGroup.TOP),
+                color,
+                Money.dePesos(precio),
+                envio(),
+                null,
+                null);
+
+        Listing borrador = conTomas(Listing.crearBorrador(ListingId.nuevo(), producto, AHORA), 8);
+        Listing enRevision = publicaciones.guardar(borrador.enviarARevision(AHORA));
+
+        return publicaciones.guardar(enRevision.aprobar(new ModeratorId(nuevoUsuario()), AHORA));
     }
 
     private Listing borradorConTomas() {

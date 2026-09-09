@@ -155,43 +155,13 @@ public class JdbcListingRepository implements ListingRepository {
     }
 
     /**
-     * El catalogo publico. HU-009, criterios 1, 2, 3 y 8. Va contra el indice parcial de
-     * V14, que es esta consulta escrita como indice.
+     * El escaparate de un vendedor: lo suyo que esta publicado. RN-068.
      *
-     * <p><strong>La condicion de RN-068 se escribe aqui una sola vez</strong>, y por eso
-     * el escaparate del vendedor pasa por el mismo SQL con otro filtro: dos consultas
-     * separadas serian dos sitios donde olvidar el estado, y olvidarlo publica borradores.
-     *
-     * <p><strong>El cursor compara la pareja entera y no la fecha suelta.</strong>
-     * {@code (published_at, id) < (:fecha, :id)} es una comparacion de filas de
-     * PostgreSQL, no dos condiciones sueltas unidas por AND: con dos publicaciones
-     * aprobadas en el mismo instante —normal con un reloj fijo en pruebas, y posible en
-     * produccion— filtrar solo por fecha se salta la segunda del par, y filtrar por
-     * {@code <=} la repite para siempre.
+     * <p><strong>El cursor aqui es siempre el del catalogo</strong> —lo mas reciente
+     * primero— y por eso este metodo no recibe orden: el escaparate es el perfil publico de
+     * alguien y no una busqueda. Los cuatro ordenes de HU-014 viven en el motor, que es
+     * donde hay algo que ordenar.
      */
-    @Override
-    public List<Listing> publicadas(List<CategoryId> categorias, @Nullable CatalogCursor desde, int limite) {
-        String filtroDeCategoria = categorias.isEmpty() ? "" : " AND p.category_id IN (:categorias)";
-
-        var consulta = jdbc.sql(SELECT_BASE + """
-                         WHERE l.status = 'PUBLISHED'
-                        """ + filtroDeCategoria + condicionDelCursor(desde) + """
-                         ORDER BY l.published_at DESC, l.id DESC
-                         LIMIT :limite
-                        """)
-                .param("limite", limite);
-
-        if (!categorias.isEmpty()) {
-            consulta = consulta.param(
-                    "categorias", categorias.stream().map(CategoryId::value).toList());
-        }
-        consulta = conParametrosDelCursor(consulta, desde);
-
-        return conPortadas(
-                jdbc, consulta.query(JdbcListingRepository::filaAPublicacion).list());
-    }
-
-    /** Lo publicado de un vendedor. Mismo SQL y misma regla, otro filtro. */
     @Override
     public List<Listing> publicadasDelVendedor(SellerId vendedor, @Nullable CatalogCursor desde, int limite) {
         var consulta = jdbc.sql(SELECT_BASE + """
@@ -217,7 +187,7 @@ public class JdbcListingRepository implements ListingRepository {
         if (desde == null) {
             return consulta;
         }
-        return consulta.param("publicadaEn", Timestamp.from(desde.publicadaEn()))
+        return consulta.param("publicadaEn", Timestamp.from(desde.exigirPublicadaEn()))
                 .param("ultimaId", desde.id().value());
     }
 

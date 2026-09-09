@@ -4,8 +4,11 @@ import co.sendik.catalog.dto.CatalogCursor;
 import co.sendik.catalog.dto.CategoryView;
 import co.sendik.catalog.dto.FavoriteCursor;
 import co.sendik.catalog.dto.FavoritedListing;
+import co.sendik.catalog.dto.SearchCriteria;
+import co.sendik.catalog.dto.SearchHit;
 import co.sendik.catalog.dto.SellerProfileView;
 import co.sendik.catalog.model.BuyerId;
+import co.sendik.catalog.model.CatalogSort;
 import co.sendik.catalog.model.Category;
 import co.sendik.catalog.model.CategoryId;
 import co.sendik.catalog.model.Favorite;
@@ -17,6 +20,8 @@ import co.sendik.catalog.model.MeasurementGroup;
 import co.sendik.catalog.model.ModerationAction;
 import co.sendik.catalog.model.ModerationEvent;
 import co.sendik.catalog.model.ModeratorId;
+import co.sendik.catalog.model.Product;
+import co.sendik.catalog.model.SearchText;
 import co.sendik.catalog.model.SellerId;
 import co.sendik.catalog.model.SizeSystem;
 import co.sendik.catalog.port.out.BuyerAccounts;
@@ -25,13 +30,17 @@ import co.sendik.catalog.port.out.Favorites;
 import co.sendik.catalog.port.out.ListingNotifier;
 import co.sendik.catalog.port.out.ListingRepository;
 import co.sendik.catalog.port.out.ModerationLog;
+import co.sendik.catalog.port.out.SearchEngine;
 import co.sendik.catalog.port.out.SellerEligibility;
 import co.sendik.catalog.port.out.SellerProfiles;
 import co.sendik.shared.file.FileKey;
 import co.sendik.shared.file.NormalizedImage;
+import co.sendik.shared.money.Money;
 import co.sendik.shared.port.out.PublicFileStore;
+import java.text.Normalizer;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -39,10 +48,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -70,6 +81,11 @@ final class CatalogoEnMemoria {
         @Override
         public Optional<Listing> buscar(ListingId id) {
             return Optional.ofNullable(filas.get(id));
+        }
+
+        /** Todo lo guardado, para el motor de busqueda, que consulta la misma base. */
+        List<Listing> todas() {
+            return List.copyOf(filas.values());
         }
 
         @Override
@@ -129,22 +145,6 @@ final class CatalogoEnMemoria {
             return esperando > salto;
         }
 
-        /**
-         * El catalogo publico. Ordena y corta igual que el SQL: por fecha de publicacion
-         * descendente, desempatando por identificador, y aplicando el cursor sobre la
-         * pareja entera. Si esto ordenara solo por fecha, la prueba del cursor pasaria
-         * aqui y fallaria contra PostgreSQL.
-         */
-        @Override
-        public List<Listing> publicadas(List<CategoryId> categorias, @Nullable CatalogCursor desde, int limite) {
-            return tramo(
-                    filas.values().stream()
-                            .filter(publicacion -> categorias.isEmpty()
-                                    || categorias.contains(publicacion.product().categoryId())),
-                    desde,
-                    limite);
-        }
-
         @Override
         public List<Listing> publicadasDelVendedor(SellerId vendedor, @Nullable CatalogCursor desde, int limite) {
             return tramo(
@@ -154,8 +154,7 @@ final class CatalogoEnMemoria {
                     limite);
         }
 
-        private static List<Listing> tramo(
-                java.util.stream.Stream<Listing> candidatas, @Nullable CatalogCursor desde, int limite) {
+        private static List<Listing> tramo(Stream<Listing> candidatas, @Nullable CatalogCursor desde, int limite) {
 
             return candidatas
                     .filter(publicacion -> publicacion.status() == ListingStatus.PUBLISHED)
@@ -171,7 +170,7 @@ final class CatalogoEnMemoria {
         /** La misma comparacion de pareja que hace `(published_at, id) < (:fecha, :id)`. */
         private static boolean despuesDe(Listing publicacion, CatalogCursor cursor) {
             java.time.Instant cuando = Objects.requireNonNull(publicacion.publishedAt());
-            int porFecha = cuando.compareTo(cursor.publicadaEn());
+            int porFecha = cuando.compareTo(cursor.exigirPublicadaEn());
 
             return porFecha < 0
                     || (porFecha == 0
@@ -180,6 +179,210 @@ final class CatalogoEnMemoria {
 
         int cuantas() {
             return filas.size();
+        }
+    }
+
+    /**
+     * El motor de busqueda, en memoria. HU-014.
+     *
+     * <p><strong>Filtra, ordena y corta igual que el SQL, y eso es lo que le da valor.</strong>
+     * Un doble que devolviera lo guardado en cualquier orden dejaria pasar las pruebas del
+     * cursor y de los cuatro ordenes, que son justo las que tienen que fallar si el motor de
+     * verdad se escribe mal.
+     *
+     * <p>Consulta las mismas publicaciones que el repositorio y no una copia suya, porque asi
+     * es tambien contra PostgreSQL: con ADR-0035 no hay indice aparte que sincronizar, se
+     * pregunta a la base que ya es la fuente de verdad.
+     *
+     * <p><strong>Dos cosas no las reproduce, y conviene saber cuales.</strong> No lematiza
+     * -«camisas» no encuentra «camisa»- y no puntua como {@code ts_rank}. Lo primero es
+     * comportamiento del diccionario {@code spanish} y lo segundo es una formula del motor;
+     * las dos se prueban contra la base de verdad, que es donde se puede. Lo que si reproduce
+     * es lo que decide el caso de uso: que solo salga lo publicado, que los filtros se exijan
+     * todos, que el orden desempate por identificador y que el cursor compare la pareja
+     * entera.
+     */
+    static final class Motor implements SearchEngine {
+
+        private final Publicaciones publicaciones;
+
+        Motor(Publicaciones publicaciones) {
+            this.publicaciones = publicaciones;
+        }
+
+        @Override
+        public List<SearchHit> buscar(SearchCriteria criterios) {
+            List<SearchHit> casan = publicaciones.todas().stream()
+                    .filter(Motor::estaPublicada)
+                    .filter(publicacion -> casanLosFiltros(publicacion, criterios))
+                    .filter(publicacion -> casaElTexto(publicacion, criterios.texto()))
+                    .map(publicacion -> new SearchHit(
+                            publicacion,
+                            criterios.orden().necesitaTexto() ? relevancia(publicacion, criterios.texto()) : null))
+                    .sorted(comparador(criterios.orden()))
+                    .toList();
+
+            return casan.stream()
+                    .filter(resultado -> criterios.desde() == null || despuesDelCursor(resultado, criterios))
+                    .limit(criterios.limite())
+                    .toList();
+        }
+
+        /** RN-081: solo lo publicado, tambien para su dueno. */
+        private static boolean estaPublicada(Listing publicacion) {
+            return publicacion.status() == ListingStatus.PUBLISHED && publicacion.publishedAt() != null;
+        }
+
+        /**
+         * Criterio 14: se exigen todos los filtros, y dentro de cada uno basta con un valor.
+         *
+         * <p>Cada conjunto vacio significa «ese filtro no se puso» y no «ninguno vale». La
+         * comprobacion de nulo delante de cada {@code contains} no es defensiva: los campos del
+         * producto admiten nulo porque un borrador se guarda a medias, y un conjunto inmutable
+         * lanza al preguntarle por nulo.
+         */
+        private static boolean casanLosFiltros(Listing publicacion, SearchCriteria criterios) {
+            Product producto = publicacion.product();
+
+            boolean categoria =
+                    criterios.categorias().isEmpty() || criterios.categorias().contains(producto.categoryId());
+            boolean condicion = criterios.condiciones().isEmpty()
+                    || (producto.condition() != null && criterios.condiciones().contains(producto.condition()));
+            boolean color = criterios.colores().isEmpty()
+                    || (producto.color() != null && criterios.colores().contains(producto.color()));
+            // RN-087: la talla es sistema mas valor, asi que una M por letra nunca casa con una
+            // 38 numerica. Lo garantiza que Size compare los dos campos.
+            boolean talla = criterios.talla() == null || criterios.talla().equals(producto.size());
+            boolean precio = producto.price() != null && criterios.precio().contiene(producto.price());
+
+            return categoria && condicion && color && talla && precio;
+        }
+
+        /** RN-082: el texto va contra el titulo y la marca, y no contra la descripcion. */
+        private static boolean casaElTexto(Listing publicacion, @Nullable SearchText texto) {
+            if (texto == null) {
+                return true;
+            }
+
+            String donde = normalizar(textoBuscable(publicacion));
+            return palabras(texto).allMatch(donde::contains);
+        }
+
+        /**
+         * Cuantas de las palabras buscadas estan en el titulo.
+         *
+         * <p>No es {@code ts_rank} y no pretende serlo: es una puntuacion determinista que
+         * empata a menudo, que es justo lo que hace falta para que las pruebas ejerciten el
+         * desempate por identificador. Que la formula de verdad ordene bien se prueba contra
+         * PostgreSQL.
+         */
+        private static double relevancia(Listing publicacion, @Nullable SearchText texto) {
+            Product producto = publicacion.product();
+            String titulo =
+                    normalizar(producto.title() == null ? "" : producto.title().value());
+
+            return palabras(Objects.requireNonNull(texto, "Ordenar por relevancia sin texto que puntuar"))
+                    .filter(titulo::contains)
+                    .count();
+        }
+
+        private static Stream<String> palabras(SearchText texto) {
+            return Arrays.stream(normalizar(texto.value()).split(" ")).filter(palabra -> !palabra.isEmpty());
+        }
+
+        private static String textoBuscable(Listing publicacion) {
+            Product producto = publicacion.product();
+            String titulo = producto.title() == null ? "" : producto.title().value();
+            String marca = producto.brand() == null ? "" : producto.brand().value();
+
+            return titulo + " " + marca;
+        }
+
+        /** Sin tildes y en minusculas, que es lo que hacen `unaccent` y el diccionario. */
+        private static String normalizar(String texto) {
+            return Normalizer.normalize(texto, Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}", "")
+                    .toLowerCase(Locale.ROOT);
+        }
+
+        /** Los cuatro ordenes de RN-088, todos desempatando por identificador. */
+        private static Comparator<SearchHit> comparador(CatalogSort orden) {
+            Comparator<SearchHit> porId = Comparator.comparing(
+                    resultado -> resultado.publicacion().id().value());
+
+            return switch (orden) {
+                case NEWEST ->
+                    Comparator.comparing((SearchHit resultado) -> Objects.requireNonNull(
+                                    resultado.publicacion().publishedAt()))
+                            .thenComparing(porId)
+                            .reversed();
+                case PRICE_ASC ->
+                    Comparator.comparing(
+                                    (SearchHit resultado) -> precio(resultado).amount())
+                            .thenComparing(porId);
+                case PRICE_DESC ->
+                    Comparator.comparing(
+                                    (SearchHit resultado) -> precio(resultado).amount())
+                            .thenComparing(porId)
+                            .reversed();
+                case RELEVANCE ->
+                    Comparator.comparingDouble(SearchHit::exigirRelevancia)
+                            .thenComparing(porId)
+                            .reversed();
+            };
+        }
+
+        /**
+         * La misma comparacion de pareja que hace PostgreSQL con {@code (clave, id) < (:clave, :id)}.
+         *
+         * <p>De menor a mayor se avanza hacia arriba y en los otros tres hacia abajo, que es la
+         * direccion en la que cada uno recorre el catalogo.
+         */
+        private static boolean despuesDelCursor(SearchHit resultado, SearchCriteria criterios) {
+            CatalogCursor cursor = Objects.requireNonNull(criterios.desde());
+
+            return switch (criterios.orden()) {
+                case NEWEST ->
+                    haciaAbajo(
+                            Objects.requireNonNull(resultado.publicacion().publishedAt())
+                                    .compareTo(cursor.exigirPublicadaEn()),
+                            resultado,
+                            cursor);
+                case PRICE_ASC ->
+                    haciaArriba(
+                            precio(resultado)
+                                    .amount()
+                                    .compareTo(cursor.exigirPrecio().amount()),
+                            resultado,
+                            cursor);
+                case PRICE_DESC ->
+                    haciaAbajo(
+                            precio(resultado)
+                                    .amount()
+                                    .compareTo(cursor.exigirPrecio().amount()),
+                            resultado,
+                            cursor);
+                case RELEVANCE ->
+                    haciaAbajo(
+                            Double.compare(resultado.exigirRelevancia(), cursor.exigirRelevancia()), resultado, cursor);
+            };
+        }
+
+        private static boolean haciaAbajo(int porClave, SearchHit resultado, CatalogCursor cursor) {
+            return porClave < 0 || (porClave == 0 && comparaId(resultado, cursor) < 0);
+        }
+
+        private static boolean haciaArriba(int porClave, SearchHit resultado, CatalogCursor cursor) {
+            return porClave > 0 || (porClave == 0 && comparaId(resultado, cursor) > 0);
+        }
+
+        private static int comparaId(SearchHit resultado, CatalogCursor cursor) {
+            return resultado.publicacion().id().value().compareTo(cursor.id().value());
+        }
+
+        private static Money precio(SearchHit resultado) {
+            return Objects.requireNonNull(
+                    resultado.publicacion().product().price(), "Una publicacion del catalogo sin precio");
         }
     }
 
