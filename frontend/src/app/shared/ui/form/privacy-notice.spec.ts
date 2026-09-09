@@ -37,11 +37,47 @@ describe('PrivacyNotice', () => {
     return fixture;
   };
 
-  it('dice quien es el responsable y como identificarlo', async () => {
+  it('dice quien es el responsable, como identificarlo y donde esta', async () => {
     const fixture = await render();
 
     expect(fixture.nativeElement.textContent).toContain('Sendik S.A.S.');
     expect(fixture.nativeElement.textContent).toContain('000000000-0');
+    expect(fixture.nativeElement.textContent).toContain('Medellin, Colombia');
+  });
+
+  /**
+   * La direccion sale de `COMPANY_ADDRESS` y no del archivo de traduccion, que es
+   * donde estaba escrita a mano. Se comprueba con un valor distinto del de la
+   * configuracion de prueba: si la plantilla volviera a llevarla dentro, esta
+   * prueba seguiria viendo la ciudad vieja y no la nueva.
+   */
+  it('toma la direccion de la configuracion y no del texto', async () => {
+    conEmpresa({
+      name: 'Sendik S.A.S.',
+      taxId: '000000000-0',
+      address: 'Cra. 1 # 2-3. Cali, Colombia',
+      supportEmail: 'soporte@example.test',
+    });
+
+    const fixture = await render();
+
+    expect(fixture.nativeElement.textContent).toContain('Cra. 1 # 2-3. Cali, Colombia');
+    expect(fixture.nativeElement.textContent).not.toContain('Medellin');
+  });
+
+  /** Falta el dato, falta la frase: nunca una etiqueta con el hueco vacio detras. */
+  it('omite la direccion si no hay ninguna configurada', async () => {
+    conEmpresa({
+      name: 'Sendik S.A.S.',
+      taxId: '000000000-0',
+      address: null,
+      supportEmail: 'soporte@example.test',
+    });
+
+    const fixture = await render();
+
+    expect(fixture.nativeElement.textContent).toContain('Sendik S.A.S.');
+    expect(fixture.nativeElement.textContent).not.toContain('Direcci');
   });
 
   it('dice para que se usan los datos y por donde se ejercen los derechos', async () => {

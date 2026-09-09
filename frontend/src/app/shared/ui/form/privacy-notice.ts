@@ -27,10 +27,12 @@ import { RUTAS_LEGALES } from '../../../core/routes/legal-routes';
  * `docs/operacion/datos-personales.md` pide cuando dice que la finalidad de la
  * verificacion se explica en el momento de pedirla y no solo en la politica.
  *
- * <p>El responsable, su identificacion y el canal salen de la configuracion y nunca
- * del texto: son datos de negocio y no pueden quedar quemados en un archivo de
- * traduccion (`docs/operacion/configuracion.md`). Si faltan, el aviso se pinta sin
- * ellos en vez de mentir con un valor inventado.
+ * <p>El responsable, su identificacion, su direccion y el canal salen de la
+ * configuracion y nunca del texto: son datos de negocio y no pueden quedar quemados
+ * en un archivo de traduccion (`docs/operacion/configuracion.md`). Si faltan, el
+ * aviso se pinta sin ellos en vez de mentir con un valor inventado. La direccion no
+ * es adorno: el articulo 15 del Decreto 1377 de 2013 pide los **datos de contacto**
+ * del responsable, no solo su nombre.
  */
 @Component({
   selector: 'sendik-privacy-notice',
@@ -56,6 +58,7 @@ export class PrivacyNotice {
 
   protected readonly responsable = this.empresa.name;
   protected readonly identificacion = this.empresa.taxId;
+  protected readonly direccion = this.empresa.address;
   protected readonly correoDeSoporte = this.empresa.supportEmail;
 
   /** Sin responsable ni identificacion, la primera linea no dice nada y sobra. */

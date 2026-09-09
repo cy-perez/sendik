@@ -13,6 +13,11 @@
         'legal.notice.controller'
           | transloco: { responsable: responsable, identificacion: identificacion }
       }}
+      <!-- Frase aparte y no un trozo de la anterior: la direccion es configuracion y
+           puede faltar, y cosida dentro dejaria una coma colgando en un aviso legal. -->
+      @if (direccion) {
+        {{ 'legal.notice.controllerAddress' | transloco: { direccion: direccion } }}
+      }
     </p>
   }
 

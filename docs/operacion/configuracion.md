@@ -54,7 +54,7 @@ correo, ningún NIT, ningún porcentaje de comisión.
 | `MAIL_QUEUE_ENABLED` | `true` en Cloud Run | no, `false` por omisión |
 | `MAIL_QUEUE_LOCATION` | `us-east1` | sí, si la cola está encendida |
 | `MAIL_QUEUE_NAME` | `correo-transaccional` | sí, si la cola está encendida |
-| `MAIL_QUEUE_HANDLER_URL` | `https://api-dev.sendik.co/internal/mail/deliveries` | sí, si la cola está encendida |
+| `MAIL_QUEUE_HANDLER_URL` | `https://api-dev.sendik.co/internal/mail/deliveries` en `dev`; sobre `api.sendik.co` en `prod` | sí, si la cola está encendida |
 | `MAIL_QUEUE_SERVICE_ACCOUNT` | cuenta que firma el token OIDC | sí, si la cola está encendida |
 | `MAIL_QUEUE_AUDIENCE` | vacío | no, por omisión la propia `MAIL_QUEUE_HANDLER_URL` |
 | `MAIL_PROVIDER_API_KEY` | clave de Resend, ver ADR-0012 | sí |

@@ -79,9 +79,20 @@ verificacion en el momento de pedirla. La variante se elige a mano y no se deduc
 la ruta: quien anada una pantalla que pida datos tiene que decidir cual le toca, y
 equivocarse por omision daria el aviso mas flojo justo donde hace falta el otro.
 
-El responsable, su NIT y el canal salen de la configuracion, nunca del texto: son
-datos de negocio (`docs/operacion/configuracion.md`). Si faltan, la linea se omite en
-vez de escribir un valor inventado.
+El responsable, su NIT, **su direccion** y el canal salen de la configuracion, nunca
+del texto: son datos de negocio (`docs/operacion/configuracion.md`). Si faltan, la
+linea se omite en vez de escribir un valor inventado. La direccion se sumo el 8 de
+septiembre de 2026, cuando la auditoria vio que iba escrita a mano en el archivo de
+traduccion mientras `COMPANY_ADDRESS` existia sin usarse: el articulo 15 del Decreto
+1377 de 2013 pide los **datos de contacto** del responsable y no solo su nombre.
+
+**Lo que la auditoria dejo abierto y no se ha hecho:** el articulo 6, numeral 2, del
+mismo decreto exige **obtener el consentimiento expreso** para los datos sensibles, no
+solo informar de que no son obligatorios. Hoy la verificacion informa —el aviso lo hace
+bien— y despues ofrece un boton «Empezar», que no es una manifestacion de
+consentimiento; y `consents` solo admite `TERMS` y `PRIVACY`, asi que tampoco habria
+donde guardar la prueba que pide el articulo 8. Es trabajo de HU-002 y esta descrito en
+`entrega-aviso-de-privacidad-2026-09-08.md`.
 
 ## Consentimiento
 
@@ -99,13 +110,21 @@ vez de escribir un valor inventado.
   enseño.
 - Se guarda la evidencia: version del documento aceptado, fecha, hora y direccion
   IP.
-- **El texto de las casillas vive en Transloco y no se versiona.** Es una limitacion
-  conocida y conviene tenerla por escrito: la evidencia apunta a la version de la
-  politica, no a la frase exacta que se mostro junto a la casilla. Mientras esa frase
-  solo remita al documento, la cadena se sostiene; el dia que la casilla diga algo
-  que el documento no dice, deja de sostenerse. Si el texto de una casilla cambia de
-  fondo, se publica una version nueva del documento aunque el documento no cambie, y
-  asi la evidencia vuelve a apuntar a algo comprobable.
+- **El texto de las casillas y el del aviso viven en Transloco y no se versionan.** Es
+  una limitacion conocida y conviene tenerla por escrito: la evidencia apunta a la
+  version de la politica, no a la frase exacta que se mostro junto a la casilla ni al
+  aviso que la persona leyo encima. Mientras esas frases solo remitan al documento, la
+  cadena se sostiene; el dia que digan algo que el documento no dice, deja de
+  sostenerse. Si el texto de una casilla **o del aviso** cambia de fondo, se publica una
+  version nueva del documento aunque el documento no cambie, y asi la evidencia vuelve a
+  apuntar a algo comprobable.
+
+  **El aviso entra en esta regla por el articulo 16 del Decreto 1377 de 2013**, que
+  obliga a conservar el modelo del aviso «mientras se traten datos personales conforme
+  al mismo». El modelo se conserva —el repositorio guarda cada redaccion que existio—,
+  pero sin esta regla nada ata esa historia al consentimiento de una persona concreta.
+  Versionar el aviso como un documento propio seria mas fuerte y sigue sobre la mesa:
+  `entrega-aviso-de-privacidad-2026-09-08.md`.
 - **No hay tercera casilla de comunicaciones comerciales, y es a proposito.** Sin
   mecanismo de baja no puede enviarse publicidad (Ley 1581 y Ley 2300 de 2023), y una
   casilla que recoge un consentimiento que no se puede ejercer es peor que no

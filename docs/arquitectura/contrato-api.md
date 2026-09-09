@@ -2,6 +2,12 @@
 
 Base: `/api/v1`. JSON en UTF-8. Fechas en ISO 8601 con zona UTC.
 
+**Hay una sola superficie fuera de esa base y no es para clientes:**
+`POST /internal/mail/deliveries`, que es donde Cloud Tasks entrega cada correo pendiente
+(ADR-0031). No se versiona porque no la consume nadie de fuera, y responde 401 a quien no
+traiga el token OIDC de la cuenta de servicio de la cola. Nada de este documento aplica
+ahí.
+
 ## Rutas
 
 - Sustantivos en inglés, plural, minúsculas y con guion: `/product-images`.
@@ -284,7 +290,7 @@ original en lugar de ejecutar de nuevo.
 Respuesta **429 con cabecera `Retry-After`**, en segundos y nunca cero: un
 `Retry-After: 0` invita a reintentar de inmediato.
 
-No hay un límite general. Hay **tres grupos, y cada uno cuenta con una clave
+No hay un límite general. Hay **cuatro grupos, y cada uno cuenta con una clave
 distinta**, porque quien pide no se identifica igual en unos y otros:
 
 | Rutas | Se cuenta por | Qué son |
@@ -292,22 +298,32 @@ distinta**, porque quien pide no se identifica igual en unos y otros:
 | Credenciales de `/api/v1/auth`: ingreso, registro, verificación y recuperación | IP hasheada | Actos humanos y poco frecuentes |
 | El resto de `/api/v1/auth`: refresco y cierre | IP hasheada | Los dispara el navegador solo |
 | `/api/v1/users/**` | **Sujeto del token** | Lecturas y escrituras de una cuenta |
+| `/api/v1/listings/**` y `POST /api/v1/listings` | **Sujeto del token** | Escrituras y decisiones sobre publicaciones |
 
 En `auth` se cuenta por origen porque **en el registro todavía no hay cuenta** a
-la que atribuir la petición. En `users` sí la hay, y contar por IP ahí dejaría sin
-servicio a una oficina o a un operador móvil entero por lo que hiciera una sola
-persona; el sujeto viene de un token firmado y no se puede elegir.
+la que atribuir la petición. En `users` y en `listings` sí la hay, y contar por IP ahí
+dejaría sin servicio a una oficina o a un operador móvil entero por lo que hiciera una
+sola persona; el sujeto viene de un token firmado y no se puede elegir.
 
-**Dentro de cada grupo, cada ruta lleva su propia cuenta.** Agotar el límite
-entrando mal no puede dejar sin registrarse a quien comparte salida.
+**El cuarto grupo llegó el 5 de septiembre de 2026**, y hasta entonces este documento
+decía que cubrir las publicaciones era «una decisión pendiente». Ya no lo es. Entra
+también la colección `POST /api/v1/listings`, porque crear borradores sin cota es el
+mismo problema.
+
+**Dentro de cada grupo, cada ruta lleva su propia cuenta. Salvo en `listings`, que lleva
+una sola para todo el grupo**, y las dos decisiones tienen el mismo motivo detrás. Donde
+se cuenta por IP, agotar el límite entrando mal no puede dejar sin registrarse a quien
+comparte salida. En `listings` no se cuenta por IP sino por sujeto, y un sujeto es una
+persona: agotar su propio cupo no deja a nadie más fuera. Lo que ahí hay que acotar es el
+bucle enviar → retirar → enviar, que recorre dos URI distintas, así que una cuenta por
+ruta le daría el cupo entero a cada mitad del ciclo y no frenaría el ciclo.
+
+**La ficha pública no se cuenta**, aunque cuelgue del mismo prefijo: llega sin sujeto y
+sin sujeto no hay a quién contar. Que el token anónimo no cuente como sujeto es
+deliberado; si contara, todo el catálogo sin sesión compartiría un único cupo.
 
 **Todo lo demás no tiene tope.** Un cliente no debe esperar un 429 fuera de esas
-tres familias.
-
-Y conviene decir qué incluye ese «lo demás», porque no es solo lectura pública:
-`/api/v1/listings` tiene rutas **de escritura y con sesión** —crear, editar, subir
-tomas, decidir— que hoy quedan fuera del interceptor. Cubrirlas es una decisión
-pendiente, no una que ya se haya tomado en contra.
+cuatro familias.
 
 Los números son configuración y no contrato: viven en
 `docs/operacion/configuracion.md`, bajo `RATE_LIMIT_*`.

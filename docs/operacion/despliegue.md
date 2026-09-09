@@ -716,9 +716,12 @@ aparezcan tachadas en los registros cuando haga falta leerlas.
 | `CORS_ALLOWED_ORIGINS` | `https://dev.sendik.co` | `https://sendik.co` |
 | `SUPPORT_EMAIL` | `soporte@sendik.co` | ídem |
 | `MAIL_FROM` | `no-responder@sendik.co` | ídem |
+| `MAIL_QUEUE_ENABLED`, `MAIL_QUEUE_NAME`, `MAIL_QUEUE_SERVICE_ACCOUNT` | `true`, `correo-transaccional`, `sendik-cola@…` | ídem: la cola y la cuenta son las mismas |
+| `MAIL_QUEUE_HANDLER_URL` | `https://api-dev.sendik.co/internal/mail/deliveries` | `https://api.sendik.co/internal/mail/deliveries` |
 | `COMPANY_NAME`, `COMPANY_TAX_ID`, `COMPANY_ADDRESS` | los reales | ídem |
 | `COMMISSION_RATE` | `0.05` | `0.05` |
-| `LEGAL_TERMS_VERSION`, `LEGAL_PRIVACY_VERSION` | `borrador-local` hasta que existan los textos | la versión real |
+| `LEGAL_TERMS_VERSION`, `LEGAL_PRIVACY_VERSION` | `2026-09-08b` desde el 8 de septiembre de 2026 | `borrador-local` todavía: publicar en `prod` es otra decisión |
+| `LEGAL_COOKIES_VERSION` | `2026-09-06`, y su variable es independiente de las otras dos | ídem |
 | `STORAGE_PROVIDER` | `gcs` | `gcs` |
 | `STORAGE_PUBLIC_BUCKET` | `sendik-publico` | ídem |
 | `STORAGE_RESTRICTED_BUCKET` | `sendik-reservado` | ídem |
