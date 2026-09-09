@@ -16,7 +16,7 @@ Spring Boot 4.1  (Cloud Run)
    +--> PostgreSQL 17        datos transaccionales
    +--> Cloud Storage        imágenes de producto y verificación
    +--> Wompi                recaudo y división de pago
-   +--> Typesense            búsqueda (Fase 3)
+   +--> (la búsqueda va contra ese mismo PostgreSQL, no contra Typesense: ADR-0035)
    +--> Skydropx Colombia    cotización, guías y seguimiento (Fase 3)
    +--> Proveedor de correo  transaccionales
 ```
@@ -85,11 +85,24 @@ de cada contexto se repiten las cuatro capas.
 |---|---|---|
 | `identity` | Cuentas, credenciales, sesiones, verificación de vendedor | 1 y 2 |
 | `catalog` | Prendas, publicaciones, imágenes, moderación | 2 |
-| `search` | Indexación y consulta del catálogo | 3 |
+| ~~`search`~~ | **No existe.** La búsqueda vive dentro de `catalog` desde HU-014 | 3 |
 | `order` | Pedidos y su ciclo de vida | 3 |
 | `payment` | Intentos de pago, división, desembolsos | 3 |
 | `shipping` | Cotización, guías y seguimiento, contra un agregador (ADR-0034) | 3 |
 | `shared` | Objetos de valor comunes: dinero, identificadores, fechas | 1 |
+
+**Por qué la búsqueda no es un contexto propio.** Esta tabla la anunciaba como uno desde
+la Fase 1, y se escribió cuando la búsqueda iba a ser un índice externo con su propio
+modelo. ADR-0035 quitó el índice: se consulta la misma base, y lo que la búsqueda devuelve
+son agregados `Listing`, que son de `catalog`. Un `search/application` que importara
+`co.sendik.catalog.model.Listing` rompería la regla de abajo, y es lo que `ArchitectureTest`
+prohíbe. Así que el puerto `SearchEngine` que ADR-0008 definió vive en
+`catalog/port/out` y su implementación en `catalog/persistence`. El día que Typesense
+llegue con su índice y su modelo propio, el contexto vuelve a tener sentido; hoy sería un
+paquete vacío que obliga a romper la regla para llenarlo.
+
+`backend/CLAUDE.md` ya enumeraba los contextos sin `search`: los dos documentos se
+contradecían y esto lo resuelve.
 
 Un contexto no llama al repositorio de otro. Si necesita algo, es por un caso de
 uso público o por un evento de dominio. Esto mantiene abierta la puerta a

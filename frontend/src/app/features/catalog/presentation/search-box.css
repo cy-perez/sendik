@@ -1,0 +1,75 @@
+.buscador-catalogo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--esp-8);
+  margin: var(--esp-24) 0;
+}
+
+/* El bloque se llama `buscador-catalogo` y no `buscador` a propósito: `marca.css` ya
+   define `.buscador` para el buscador de la cabecera del kit, y esa hoja es global. Con
+   el nombre corto, el formulario heredaba su caja gris y su `:focus-within`, que dibujaba
+   el anillo de foco alrededor del formulario entero en vez de alrededor del control que
+   lo tenía. */
+
+/* La etiqueta se ve: una caja de búsqueda con solo un texto de sugerencia deja sin
+   nombre al campo en cuanto alguien escribe, y el marcador de posición no es etiqueta. */
+.buscador-catalogo__etiqueta {
+  flex-basis: 100%;
+  font-weight: var(--peso-medio);
+}
+
+.buscador-catalogo__campo {
+  position: relative;
+  flex: 1 1 var(--ancho-panel-filtros);
+}
+
+.buscador-catalogo__entrada {
+  width: 100%;
+  min-height: var(--destino-tactil);
+  /* Sin esto el control cae a la fuente del navegador —Arial 13.33px—, que rompe las dos
+     familias del sistema y, por debajo de 16px, hace que iOS amplíe al enfocar. */
+  font: inherit;
+  /* Sitio a la derecha para el botón de limpiar, que va encima. */
+  padding: var(--esp-8) var(--esp-48) var(--esp-8) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-texto);
+}
+
+.buscador-catalogo__entrada:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+/* El aspa de vaciar. Destino táctil completo aunque el icono sea de 20. */
+.buscador-catalogo__limpiar {
+  position: absolute;
+  top: 50%;
+  right: var(--esp-4);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--destino-tactil);
+  min-height: var(--destino-tactil);
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: transparent;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+}
+
+.buscador-catalogo__limpiar:hover {
+  color: var(--color-texto);
+}
+
+.buscador-catalogo__limpiar:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.buscador-catalogo__enviar {
+  flex: 0 0 auto;
+}

@@ -132,6 +132,11 @@ PARES = [
     # HU-008. La confirmacion y las marcas de la cola son cajas con borde de control que se
     # apoyan sobre el fondo de PAGINA, no dentro de una tarjeta.
     ("Borde de control sobre el fondo",       "--color-borde-control",  "--color-fondo",          AA_GRANDE),
+    # HU-014. La ficha de filtro puesto cambia de relleno al pasar el raton, y su borde deja
+    # de estar sobre el fondo de pagina. Con el borde de control encima daba 2.96:1, del
+    # mismo orden que el bronce cruzado que el manual prohibe, asi que la ficha cambia
+    # tambien de borde y el par que hay que vigilar es este.
+    ("Borde de ficha de filtro en hover",     "--color-primario",       "--color-primario-suave", AA_GRANDE),
     # Y el aviso de "esta publicacion es tuya", que lleva el borde del boton secundario.
     ("Borde de aviso propio sobre tarjeta",   "--color-primario",       "--color-superficie",     AA_GRANDE),
     # Las cajas de aviso y de error llevan fondo de tarjeta pero se apoyan sobre

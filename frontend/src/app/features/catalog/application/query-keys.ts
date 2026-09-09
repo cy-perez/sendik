@@ -14,7 +14,16 @@
  */
 export const queryKeys = {
   categories: ['catalog', 'categories'] as const,
-  list: (categoria: string | null) => ['catalog', 'public', 'list', categoria ?? 'todo'] as const,
+  /**
+   * Un listado, y **qué se le pidió**. HU-014.
+   *
+   * <p>Los criterios entran en la clave porque cada búsqueda es un listado distinto: con
+   * una clave común, escribir en la caja pintaría un instante los resultados de lo
+   * anterior, y volver atrás devolvería lo que ya no se está pidiendo. Van serializados
+   * como la dirección los lleva, así que dos peticiones equivalentes comparten entrada.
+   */
+  list: (categoria: string | null, criterios = '') =>
+    ['catalog', 'public', 'list', categoria ?? 'todo', criterios] as const,
   /**
    * Una publicación, y **desde qué perspectiva se pidió**.
    *

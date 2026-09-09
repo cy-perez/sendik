@@ -265,6 +265,45 @@ es del cliente.
 - Los parámetros no reconocidos se rechazan con 400 en vez de ignorarse en
   silencio: un filtro mal escrito que no filtra es peor que un error.
 
+### La búsqueda del catálogo
+
+**`GET /api/v1/listings` es la única ruta que busca**, y no nace un `/search`:
+buscar es listar el mismo recurso con más condiciones. Una ruta aparte obligaría
+a duplicar la paginación, la bandera y la forma de la respuesta. Sin ninguno de
+estos parámetros, lo que devuelve es el catálogo tal cual (HU-014, criterio 8).
+
+| Parámetro | Forma | Notas |
+|---|---|---|
+| `q` | texto, máximo 120 caracteres | Busca en **título y marca**, nunca en la descripción (RN-082). Por encima del tope es 400 y no se recorta |
+| `category` | identificador | Admite una hoja o una familia. Una que no está en el árbol es **404**, no un listado vacío |
+| `condition` | repetible: `?condition=NEW&condition=GOOD` | Las cuatro de RN-064 |
+| `sizeSystem` + `size` | los dos o ninguno | RN-087: la talla se filtra dentro de su sistema. Uno sin el otro es 400 |
+| `color` | repetible | Los quince de lista cerrada |
+| `minPrice`, `maxPrice` | entero de pesos | Los dos extremos **incluidos**. Mínimo mayor que máximo es 400, no un vacío |
+| `sort` | `relevance`, `publishedAt,desc`, `price,asc`, `price,desc` | Los cuatro de RN-088 y ninguno más. Sin él: relevancia con texto, lo más reciente sin él |
+
+Dentro de un mismo filtro con varios valores basta con que case uno; entre
+filtros distintos se exigen todos.
+
+**No hay filtro por marca**, y no es un olvido: `brand` es texto libre y
+opcional, así que un filtro sobre él no filtraría —«Nike», «nike» y «NIKE» serían
+tres— (RN-085). La marca entra en el texto buscable.
+
+**La respuesta no cambia de forma** —`items`, `nextCursor`, `hasMore`— y no lleva
+puntuación de relevancia ni ningún campo que pueda expresar posición comprada
+(RN-084).
+
+**El cursor lleva dentro el orden con el que nació.** Mandarlo pidiendo otro
+orden distinto responde **400** y no un listado incoherente: la condición de
+continuidad se compararía contra una columna que ya no ordena nada, y el
+resultado no sería una página incompleta sino una arbitraria. Sigue siendo opaco:
+se recibe y se devuelve, no se lee ni se fabrica.
+
+**Detrás de `FEATURE_SEARCH`.** Con la bandera apagada la ruta sigue sirviendo el
+catálogo, y cualquier parámetro de búsqueda responde 404 con `COMMON_NOT_FOUND`,
+igual que si no existiera. No es 403: un 403 confirmaría que la búsqueda está
+ahí, apagada.
+
 ## Autenticación
 
 - `Authorization: Bearer <token de acceso>` en toda ruta protegida.

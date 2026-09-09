@@ -1,6 +1,6 @@
 # HU-014 — Búsqueda y filtros del catálogo
 
-**Fase:** 3 | **Estado:** pendiente
+**Fase:** 3 | **Estado:** implementada el 9 de septiembre de 2026
 **Reglas que aplica:** RN-064, RN-068, RN-081, RN-082, RN-083, RN-084, RN-085,
 RN-086, RN-087, RN-088
 
@@ -225,12 +225,23 @@ No entra:
   con el que nació**, para poder rechazar con 400 el cursor que llega bajo otro orden
   (criterio 22). Sigue siendo opaco en el borde y tipado dentro.
 - **Migración nueva, `V18`:** índice para la búsqueda por texto sobre título y marca,
-  sin acentos y sin distinguir mayúsculas, y los índices que necesiten los filtros y
-  el orden por precio. Parcial sobre `status = 'PUBLISHED'`, por lo mismo que `V14`:
-  de los siete estados la búsqueda solo mira uno.
-- **Bandera `FEATURE_SEARCH`**, apagada por omisión, con el mismo patrón que las tres
-  que ya existen: con la bandera apagada el controlador no se crea y la ruta responde
-  404.
+  sin acentos y sin distinguir mayúsculas. ~~Parcial sobre `status = 'PUBLISHED'`, por lo
+  mismo que `V14`~~ — **no puede serlo, y se descubrió al escribirla**: el estado vive en
+  `listings` y el texto en `products`, y un índice no puede mirar otra tabla. El filtro por
+  `PUBLISHED` lo sigue resolviendo el índice parcial de `V14` al unir.
+  ~~y los índices que necesiten los filtros y el orden por precio~~ — **tampoco se
+  crearon, y también es una decisión**: condición, color y talla son de lista cerrada y poca
+  selectividad, y el orden por precio cruza dos tablas, así que ordena en memoria haya
+  índice o no. Con el catálogo que hay eso es gratis. Está escrito en la migración para que
+  nadie los agregue por reflejo.
+- **Bandera `FEATURE_SEARCH`**, apagada por omisión. ~~Con el mismo patrón que las tres que
+  ya existen: el controlador no se crea y la ruta responde 404.~~ **Ese patrón no sirve
+  aquí**, y se vio al implementarlo: `GET /api/v1/listings` es también el catálogo de
+  HU-009, que tiene su propia bandera y tiene que seguir respondiendo. Lo que desaparece no
+  es la ruta sino la capacidad de buscar en ella. La respuesta hacia afuera sí es la misma
+  —404 con `COMMON_NOT_FOUND`— y sale **antes de convertir ningún parámetro**: un 400 ahí
+  diría que el parámetro se entiende, que es tanto como confirmar que la búsqueda está
+  detrás, apagada.
 - **Frontend:** el texto y los filtros son parámetros de consulta sobre las rutas de
   catálogo que ya existen. Escribir texto desde una categoría navega a
   `/catalogo?q=…`, que es RN-083 hecha visible. La etiqueta `noindex` se enciende en
@@ -286,3 +297,23 @@ opcional—, así que se queda en el texto buscable.
 - **Cuatro entradas de glosario**: búsqueda, consulta, motor de búsqueda y filtro.
 - **Ninguna columna nueva en el modelo de datos.** Se busca y se filtra sobre lo que
   ya se declara. `V18` agrega índices, no campos.
+
+## Lo que quedó fuera al implementarla
+
+Tres cosas, y ninguna es un descuido: son decisiones que no me correspondía tomar solo.
+
+- **`GET /api/v1/listings` sigue sin límite de tasa para quien no tiene sesión**, que es lo
+  que `contrato-api.md` decidió a propósito cuando la ruta solo listaba. Ahora acepta
+  búsqueda de texto completo, y ordenar por relevancia obliga a puntuar fila a fila: el tope
+  de 50 acota lo que se devuelve, no el trabajo. Cambiar eso es cambiar una decisión escrita
+  del contrato.
+- **`q` viaja en la cadena de consulta**, así que queda en el registro de peticiones de
+  Cloud Run junto a la IP, en los dos servicios. Dentro de la aplicación no se registra —lo
+  comprueban los mensajes de error, que no devuelven lo que se escribió— pero eso reconstruye
+  de forma incidental el historial de búsquedas que esta historia decidió no tener. Se cierra
+  con un filtro de exclusión en Cloud Logging, que es configuración y no código.
+- **Un parámetro mal escrito se ignora en silencio.** `?brand=Nike` o `?colour=BLUE`
+  devuelven el catálogo entero con 200, y `contrato-api.md` dice que lo no reconocido se
+  rechaza con 400. No es de esta historia —pasa en toda la API— pero con siete filtros
+  nuevos «¿lo escribí bien?» pasa a ser una pregunta real. Es también por lo que RN-085 no
+  tiene prueba: hoy no hay nada que afirmar más que el silencio.

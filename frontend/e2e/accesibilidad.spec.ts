@@ -68,6 +68,14 @@ const RUTAS_PUBLICAS: readonly { readonly ruta: string; readonly nombre: string 
   // el encabezado y la invitacion a entrar del criterio 16. Es una pantalla que ve
   // cualquiera que escriba la direccion, y se quedo fuera de esta lista al escribirla.
   { ruta: '/mis-favoritos', nombre: 'mis favoritos' },
+  // HU-014. Sin backend, lo que axe recorre del catalogo es su estado de error, y sobre
+  // todo **la caja de busqueda y el panel de filtros**, que se pintan igual: se ven antes
+  // de que llegue nada y son la interfaz nueva de esta historia.
+  { ruta: '/catalogo', nombre: 'catalogo' },
+  // La misma pantalla con criterios en la direccion, que es lo que hace aparecer las
+  // fichas de filtro puesto. Cada una es un boton con su nombre accesible, y sin esta
+  // linea no las auditaria nadie: no existen hasta que la direccion las trae.
+  { ruta: '/catalogo?q=camisa&color=BLUE&condition=NEW', nombre: 'catalogo con busqueda' },
   // El comodin. Es una pagina como cualquier otra y se llega a ella por error,
   // que es justo cuando conviene que no este rota.
   { ruta: '/esta-ruta-no-existe', nombre: 'no encontrada' },

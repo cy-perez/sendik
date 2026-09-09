@@ -30,8 +30,14 @@ import org.springframework.web.context.WebApplicationContext;
  * <p>contrato-api.md es explicito sobre lo que debe pasar: «El tamano va acotado a 50 y por
  * encima se rechaza con 400, no se recorta en silencio». Esta es la prueba que lo sostiene
  * donde la aplicacion de verdad vive.
+ *
+ * <p><strong>Desde HU-014 enciende tambien {@code sendik.features.search}</strong>, y no es
+ * de adorno: es el unico sitio del proyecto donde el {@code @ConditionalOnProperty} de
+ * {@code SearchFeature} se evalua de verdad. Las pruebas del borde construyen el
+ * controlador a mano, asi que un nombre de propiedad mal escrito dejaria la busqueda
+ * respondiendo 404 en produccion con toda la suite de Java en verde.
  */
-@SpringBootTest(properties = "sendik.features.catalog=true")
+@SpringBootTest(properties = {"sendik.features.catalog=true", "sendik.features.search=true"})
 @ActiveProfiles("local")
 @Import(PostgresTestContainer.class)
 class CatalogLimitTest {
@@ -82,6 +88,32 @@ class CatalogLimitTest {
     void deberia_rechazar_con_400_un_limite_grande_en_el_escaparate_del_vendedor() throws Exception {
         mvc.perform(get("/api/v1/sellers/" + java.util.UUID.randomUUID() + "/listings")
                         .param("limit", "500"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON_VALIDATION_FAILED"));
+    }
+
+    /**
+     * Criterio 26 por el lado encendido: con la bandera puesta, buscar existe.
+     *
+     * <p>Es lo que ninguna prueba del borde puede decir. Alli el bean marcador se pasa a
+     * mano; aqui lo crea Spring o no lo crea, segun la propiedad, que es lo que de verdad
+     * decide en produccion.
+     */
+    @Test
+    void deberia_existir_la_busqueda_con_la_bandera_encendida() throws Exception {
+        mvc.perform(get("/api/v1/listings").param("q", "camisa"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isArray());
+    }
+
+    /**
+     * Y el tope del texto tambien se aplica con el contexto entero.
+     *
+     * <p>Va aqui por la misma razon que el del limite: es donde se ve lo que pasa de verdad.
+     */
+    @Test
+    void deberia_rechazar_un_texto_por_encima_del_tope_con_el_contexto_entero() throws Exception {
+        mvc.perform(get("/api/v1/listings").param("q", "a".repeat(121)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("COMMON_VALIDATION_FAILED"));
     }

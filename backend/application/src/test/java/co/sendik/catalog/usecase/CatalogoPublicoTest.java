@@ -3,10 +3,12 @@ package co.sendik.catalog.usecase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import co.sendik.catalog.dto.CatalogCursor;
 import co.sendik.catalog.dto.CatalogPage;
 import co.sendik.catalog.dto.ListCatalogQuery;
 import co.sendik.catalog.dto.ListSellerCatalogQuery;
 import co.sendik.catalog.exception.UnknownCategoryException;
+import co.sendik.catalog.model.CatalogSort;
 import co.sendik.catalog.model.Category;
 import co.sendik.catalog.model.CategoryId;
 import co.sendik.catalog.model.Color;
@@ -73,7 +75,7 @@ class CatalogoPublicoTest {
         arbol.agregar(hoja(CAMISAS, FAMILIA));
         arbol.agregar(hoja(JEANS, FAMILIA));
 
-        catalogo = new ListCatalogUseCase(publicaciones, arbol);
+        catalogo = new ListCatalogUseCase(new CatalogoEnMemoria.Motor(publicaciones), arbol);
         escaparate = new ListSellerCatalogUseCase(publicaciones);
     }
 
@@ -84,7 +86,7 @@ class CatalogoPublicoTest {
         guardar(borrador(CAMISAS));
         guardar(enRevision(CAMISAS));
 
-        CatalogPage tramo = catalogo.execute(new ListCatalogQuery(null, null, 24));
+        CatalogPage tramo = catalogo.execute(ListCatalogQuery.todo(null, null, 24));
 
         assertThat(tramo.items()).hasSize(1);
         assertThat(tramo.items().getFirst().status()).isEqualTo(ListingStatus.PUBLISHED);
@@ -114,7 +116,7 @@ class CatalogoPublicoTest {
         Listing vieja = publicar(CAMISAS, AHORA.minusSeconds(3600));
         Listing nueva = publicar(CAMISAS, AHORA);
 
-        CatalogPage tramo = catalogo.execute(new ListCatalogQuery(null, null, 24));
+        CatalogPage tramo = catalogo.execute(ListCatalogQuery.todo(null, null, 24));
 
         assertThat(tramo.items()).extracting(Listing::id).containsExactly(nueva.id(), vieja.id());
     }
@@ -131,7 +133,7 @@ class CatalogoPublicoTest {
         publicar(CAMISAS, AHORA);
         publicar(CAMISAS, AHORA.minusSeconds(1));
 
-        CatalogPage tramo = catalogo.execute(new ListCatalogQuery(null, null, 2));
+        CatalogPage tramo = catalogo.execute(ListCatalogQuery.todo(null, null, 2));
 
         assertThat(tramo.items()).hasSize(2);
         assertThat(tramo.hayMas()).isFalse();
@@ -146,11 +148,11 @@ class CatalogoPublicoTest {
             todas.add(publicar(CAMISAS, AHORA.minusSeconds(i)));
         }
 
-        CatalogPage primera = catalogo.execute(new ListCatalogQuery(null, null, 2));
+        CatalogPage primera = catalogo.execute(ListCatalogQuery.todo(null, null, 2));
         assertThat(primera.hayMas()).isTrue();
 
-        CatalogPage segunda = catalogo.execute(new ListCatalogQuery(null, primera.siguiente(), 2));
-        CatalogPage tercera = catalogo.execute(new ListCatalogQuery(null, segunda.siguiente(), 2));
+        CatalogPage segunda = catalogo.execute(ListCatalogQuery.todo(null, primera.siguiente(), 2));
+        CatalogPage tercera = catalogo.execute(ListCatalogQuery.todo(null, segunda.siguiente(), 2));
 
         List<ListingId> recorridas = new ArrayList<>();
         primera.items().forEach(p -> recorridas.add(p.id()));
@@ -172,8 +174,8 @@ class CatalogoPublicoTest {
         Listing una = publicar(CAMISAS, AHORA);
         Listing otra = publicar(CAMISAS, AHORA);
 
-        CatalogPage primera = catalogo.execute(new ListCatalogQuery(null, null, 1));
-        CatalogPage segunda = catalogo.execute(new ListCatalogQuery(null, primera.siguiente(), 1));
+        CatalogPage primera = catalogo.execute(ListCatalogQuery.todo(null, null, 1));
+        CatalogPage segunda = catalogo.execute(ListCatalogQuery.todo(null, primera.siguiente(), 1));
 
         assertThat(primera.items()).hasSize(1);
         assertThat(segunda.items()).hasSize(1);
@@ -189,7 +191,7 @@ class CatalogoPublicoTest {
         Listing camisa = publicar(CAMISAS, AHORA);
         publicar(JEANS, AHORA.minusSeconds(1));
 
-        CatalogPage tramo = catalogo.execute(new ListCatalogQuery(CAMISAS, null, 24));
+        CatalogPage tramo = catalogo.execute(ListCatalogQuery.todo(CAMISAS, null, 24));
 
         assertThat(tramo.items()).extracting(Listing::id).containsExactly(camisa.id());
     }
@@ -200,7 +202,7 @@ class CatalogoPublicoTest {
         Listing camisa = publicar(CAMISAS, AHORA);
         Listing jean = publicar(JEANS, AHORA.minusSeconds(1));
 
-        CatalogPage tramo = catalogo.execute(new ListCatalogQuery(FAMILIA, null, 24));
+        CatalogPage tramo = catalogo.execute(ListCatalogQuery.todo(FAMILIA, null, 24));
 
         assertThat(tramo.items()).extracting(Listing::id).containsExactly(camisa.id(), jean.id());
     }
@@ -215,14 +217,14 @@ class CatalogoPublicoTest {
     void deberia_negar_una_categoria_que_no_esta_en_el_arbol_criterio_9() {
         CategoryId inventada = new CategoryId(UUID.randomUUID());
 
-        assertThatThrownBy(() -> catalogo.execute(new ListCatalogQuery(inventada, null, 24)))
+        assertThatThrownBy(() -> catalogo.execute(ListCatalogQuery.todo(inventada, null, 24)))
                 .isInstanceOf(UnknownCategoryException.class);
     }
 
     /** Criterio 3: el tope no se recorta en silencio. */
     @Test
     void deberia_rechazar_un_limite_por_encima_del_tope() {
-        assertThatThrownBy(() -> new ListCatalogQuery(null, null, ListCatalogQuery.LIMITE_MAXIMO + 1))
+        assertThatThrownBy(() -> ListCatalogQuery.todo(null, null, ListCatalogQuery.LIMITE_MAXIMO + 1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -233,6 +235,62 @@ class CatalogoPublicoTest {
 
         assertThat(tramo.items()).isEmpty();
         assertThat(tramo.hayMas()).isFalse();
+    }
+
+    /**
+     * El cursor del catalogo no vale en el escaparate si nacio con otro orden.
+     *
+     * <p>Desde HU-014 el cursor lleva dentro su orden, y el escaparate solo tiene uno. Uno
+     * de precio -copiado de una busqueda y pegado en el perfil de alguien- llegaba a una
+     * consulta que ordena por fecha y le pedia una fecha que ese cursor no lleva: reventaba
+     * con un 500. El criterio 22 dice 400, y eso es lo que sale de rechazarlo aqui.
+     */
+    @Test
+    void deberia_rechazar_en_el_escaparate_un_cursor_nacido_con_otro_orden_criterio_22() {
+        CatalogCursor dePrecio =
+                CatalogCursor.porPrecio(CatalogSort.PRICE_ASC, Money.dePesos(90_000), ListingId.nuevo());
+
+        assertThatThrownBy(() -> new ListSellerCatalogQuery(new SellerId(UUID.randomUUID()), dePrecio, 24))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("PRICE_ASC");
+    }
+
+    /** Y el del propio escaparate si vale: es el mismo orden que el del catalogo. */
+    @Test
+    void deberia_admitir_en_el_escaparate_el_cursor_del_catalogo() {
+        CatalogCursor deFecha = CatalogCursor.porFecha(AHORA, ListingId.nuevo());
+
+        assertThat(new ListSellerCatalogQuery(new SellerId(UUID.randomUUID()), deFecha, 24).desde())
+                .isEqualTo(deFecha);
+    }
+
+    /**
+     * El escaparate paginado, que hasta HU-014 no probaba nadie.
+     *
+     * <p>Las dos llamadas que habia pasaban {@code desde = null}, asi que la rama que sella
+     * el cursor del escaparate no se ejercitaba en ningun punto de la pila. Y el formato del
+     * cursor acaba de cambiar debajo de ella.
+     */
+    @Test
+    void deberia_paginar_el_escaparate_con_su_propio_cursor() {
+        SellerId vendedor = new SellerId(UUID.randomUUID());
+        for (int i = 0; i < 3; i++) {
+            publicar(CAMISAS, AHORA.minusSeconds(i), vendedor);
+        }
+
+        CatalogPage primera = escaparate.execute(new ListSellerCatalogQuery(vendedor, null, 2));
+        assertThat(primera.hayMas()).isTrue();
+        assertThat(primera.siguiente()).isNotNull();
+        assertThat(primera.siguiente().orden()).isEqualTo(CatalogSort.NEWEST);
+
+        CatalogPage segunda = escaparate.execute(new ListSellerCatalogQuery(vendedor, primera.siguiente(), 2));
+
+        assertThat(segunda.items()).hasSize(1);
+        assertThat(segunda.hayMas()).isFalse();
+        assertThat(primera.items())
+                .extracting(Listing::id)
+                .doesNotContainAnyElementsOf(
+                        segunda.items().stream().map(Listing::id).toList());
     }
 
     // --- apoyo ---------------------------------------------------------------

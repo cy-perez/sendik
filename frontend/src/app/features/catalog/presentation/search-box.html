@@ -1,0 +1,44 @@
+<!--
+  `role="search"` sobre el formulario: es el punto de referencia que un lector de pantalla
+  ofrece para saltar directamente a buscar. El nombre accesible lo pone `aria-label`,
+  porque en la página hay una sola caja pero el rol admite varias.
+-->
+<form
+  class="buscador-catalogo"
+  role="search"
+  [attr.aria-label]="'catalog.search.region' | transloco"
+  (submit)="$event.preventDefault(); enviar()"
+>
+  <label class="buscador-catalogo__etiqueta" for="buscador-texto">
+    {{ 'catalog.search.label' | transloco }}
+  </label>
+
+  <div class="buscador-catalogo__campo">
+    <input
+      id="buscador-texto"
+      class="buscador-catalogo__entrada"
+      type="search"
+      autocomplete="off"
+      [attr.placeholder]="'catalog.search.placeholder' | transloco"
+      [value]="borrador()"
+      (input)="escribir($any($event.target).value)"
+    />
+
+    @if (hayTexto()) {
+      <button
+        type="button"
+        class="buscador-catalogo__limpiar"
+        [attr.aria-label]="'catalog.search.clear' | transloco"
+        (click)="limpiar()"
+      >
+        <svg class="icono" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" />
+        </svg>
+      </button>
+    }
+  </div>
+
+  <button type="submit" class="btn btn-primario buscador__enviar">
+    {{ 'catalog.search.submit' | transloco }}
+  </button>
+</form>

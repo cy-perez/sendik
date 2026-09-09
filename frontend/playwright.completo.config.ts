@@ -220,6 +220,11 @@ export default defineConfig({
         // tendria contra que correr.
         FEATURE_CATALOG: 'true',
 
+        // HU-014. Sin ella la ruta del catalogo sigue existiendo pero los parametros de
+        // busqueda responden 404, asi que el recorrido -publicar, aprobar y encontrarlo
+        // escribiendo- no tendria contra que correr.
+        FEATURE_SEARCH: 'true',
+
         COMPANY_NAME: 'Sendik S.A.S.',
         COMPANY_TAX_ID: '000000000-0',
         COMPANY_ADDRESS: 'Medellin, Colombia',

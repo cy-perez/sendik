@@ -272,5 +272,8 @@ sendik:
     # tiene cuenta, asi que encenderla es abrir el sitio, no solo una funcionalidad.
     catalog: ${FEATURE_CATALOG:false}
     checkout: ${FEATURE_CHECKOUT:false}
+    # La busqueda y los filtros (HU-014). Contra PostgreSQL y no contra Typesense,
+    # que queda aplazado detras del mismo puerto (ADR-0035). No enciende ninguna
+    # ruta nueva: enciende los parametros de busqueda de la que ya existe.
     search: ${FEATURE_SEARCH:false}
     spin-viewer: ${FEATURE_SPIN_VIEWER:false}

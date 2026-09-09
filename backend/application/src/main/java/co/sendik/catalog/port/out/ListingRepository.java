@@ -1,7 +1,6 @@
 package co.sendik.catalog.port.out;
 
 import co.sendik.catalog.dto.CatalogCursor;
-import co.sendik.catalog.model.CategoryId;
 import co.sendik.catalog.model.Listing;
 import co.sendik.catalog.model.ListingId;
 import co.sendik.catalog.model.ListingStatus;
@@ -47,24 +46,6 @@ public interface ListingRepository {
      * si va por cursor.
      */
     List<Listing> buscarDelVendedor(SellerId vendedor, int pagina, int tamano);
-
-    /**
-     * El catalogo publico: lo que esta publicado, lo mas reciente primero. RN-068.
-     *
-     * <p><strong>Por cursor y no por pagina</strong>, que es lo que contrato-api.md exige
-     * para esta lista y lo que este mismo archivo anunciaba desde HU-007. El cursor lleva
-     * la fecha y el identificador porque {@code published_at} se repite: ordenar solo por
-     * fecha deja pares en orden indefinido, y un tramo que empieza donde el anterior creia
-     * haber terminado se salta o repite elementos.
-     *
-     * <p>El filtro de categorias llega ya resuelto y vacio significa «todo el catalogo».
-     * El caso de uso es quien sabe que una familia son sus hijas; aqui no hay arbol.
-     *
-     * @param categorias donde buscar, o vacio para todas
-     * @param desde por donde seguir, o nulo para el primer tramo
-     * @param limite cuantas traer. Quien llama pide una de mas para saber si hay siguiente
-     */
-    List<Listing> publicadas(List<CategoryId> categorias, @Nullable CatalogCursor desde, int limite);
 
     /**
      * Lo publicado de un vendedor, para cualquiera. RN-068.

@@ -13,7 +13,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param publishing publicacion de prendas (Fase 2)
  * @param catalog catalogo publico: listado, categorias, ficha y perfil del vendedor (Fase 2)
  * @param checkout proceso de compra y pago (Fase 3)
- * @param search busqueda con Typesense (Fase 3)
+ * @param search busqueda y filtros del catalogo (Fase 3, HU-014). Contra PostgreSQL y no
+ *     contra Typesense, que queda aplazado detras del mismo puerto (ADR-0035)
  * @param spinViewer visor 360 en la ficha de producto (Fase 2)
  */
 @ConfigurationProperties(prefix = "sendik.features")

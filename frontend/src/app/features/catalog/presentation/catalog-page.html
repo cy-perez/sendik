@@ -16,15 +16,24 @@
 } @else {
   <p class="tipo-cuerpo catalogo__intro">{{ 'catalog.list.intro' | transloco }}</p>
 
+  <sendik-search-box [texto]="criterios().q" (buscar)="buscar($event)" />
+
   <!--
     La navegación por el árbol. Es un <nav> con su nombre porque son enlaces a otras
     páginas, no un filtro que cambie esta.
+
+    Conserva la cadena de consulta: es la segunda mitad de RN-083, la que dice que la
+    categoría «se puede volver a poner como filtro» después de haber buscado.
   -->
   @if (!falloElArbol() && !cargandoArbol()) {
     <nav class="catalogo__categorias" [attr.aria-label]="'catalog.categories.title' | transloco">
       <ul class="catalogo__ramas">
         <li>
-          <a routerLink="/catalogo" [attr.aria-current]="familiaSlug() === null ? 'page' : null">
+          <a
+            routerLink="/catalogo"
+            queryParamsHandling="preserve"
+            [attr.aria-current]="familiaSlug() === null ? 'page' : null"
+          >
             {{ 'catalog.categories.all' | transloco }}
           </a>
         </li>
@@ -32,6 +41,7 @@
           <li>
             <a
               [routerLink]="['/catalogo', familia.slug]"
+              queryParamsHandling="preserve"
               [attr.aria-current]="
                 familiaSlug() === familia.slug && categoriaSlug() === null ? 'page' : null
               "
@@ -48,6 +58,7 @@
             <li>
               <a
                 [routerLink]="['/catalogo', familiaSlug(), hija.slug]"
+                queryParamsHandling="preserve"
                 [attr.aria-current]="categoriaSlug() === hija.slug ? 'page' : null"
               >
                 {{ nombre(hija) }}
@@ -65,46 +76,150 @@
     <p class="tipo-secundario" role="status">{{ 'catalog.categories.error' | transloco }}</p>
   }
 
-  @if (cargando()) {
-    <p class="solo-lectores" role="status">{{ 'catalog.list.loading' | transloco }}</p>
-    <ul class="catalogo__rejilla" aria-hidden="true">
-      @for (hueco of [0, 1, 2, 3, 4, 5, 6, 7]; track hueco) {
-        <li><p class="esqueleto catalogo__esqueleto"></p></li>
-      }
-    </ul>
-  } @else if (fallo()) {
-    <div role="alert">
-      <p class="tipo-cuerpo">{{ 'catalog.list.error' | transloco }}</p>
-      <button type="button" class="btn btn-secundario" (click)="reintentar()">
-        {{ 'catalog.list.retry' | transloco }}
-      </button>
-    </div>
-  } @else if (vacio()) {
-    <p class="tipo-cuerpo">
-      {{
-        (familiaSlug() === null ? 'catalog.list.empty' : 'catalog.list.emptyInCategory') | transloco
-      }}
-    </p>
-  } @else {
-    <ul class="catalogo__rejilla">
-      @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {
-        <li>
-          <sendik-product-card [publicacion]="publicacion" [primera]="primera" />
-        </li>
-      }
-    </ul>
+  <!--
+    RN-086: los filtros puestos se ven siempre, también con el panel cerrado en móvil. Un
+    filtro activo e invisible es la causa número uno de «aquí no hay nada».
 
-    @if (hayMas()) {
-      <div class="catalogo__mas">
-        <button
-          type="button"
-          class="btn btn-secundario"
-          [disabled]="trayendoMas()"
-          (click)="verMas()"
-        >
-          {{ 'catalog.list.more' | transloco }}
-        </button>
-      </div>
-    }
+    Cada ficha es un botón que dice qué quita, no una etiqueta con un aspa al lado: el
+    nombre accesible tiene que decir la acción completa.
+  -->
+  @if (hayFiltros()) {
+    <div class="catalogo__fichas">
+      <h2 class="solo-lectores">{{ 'catalog.filters.applied' | transloco }}</h2>
+      <ul class="catalogo__fichas-lista">
+        @for (ficha of fichas(); track ficha.campo + (ficha.valor ?? '')) {
+          <li>
+            <!--
+              La frase completa va en `aria-label` y no en un span oculto al lado. Con el
+              span, el nombre accesible salía «Azul Quitar el filtro Azul»: la etiqueta se
+              oía dos veces por ficha. La visible sigue contenida en el nombre.
+            -->
+            <button
+              type="button"
+              class="catalogo__ficha tipo-secundario"
+              [attr.aria-label]="
+                'catalog.filters.remove' | transloco: { filtro: etiquetaDe(ficha) }
+              "
+              (click)="quitar(ficha)"
+            >
+              <span>{{ etiquetaDe(ficha) }}</span>
+              <svg class="icono" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" />
+              </svg>
+            </button>
+          </li>
+        }
+        <li>
+          <button type="button" class="btn btn-texto" (click)="quitarTodos()">
+            {{ 'catalog.filters.clearAll' | transloco }}
+          </button>
+        </li>
+      </ul>
+    </div>
   }
+
+  <!--
+    El anuncio de lo que hay. Vive fuera de todas las ramas y existe desde el primer
+    pintado, que es lo que hace que un lector de pantalla lo lea al cambiar: una región
+    viva insertada junto con su contenido no la anuncia ninguno de forma fiable, y cada
+    cambio de filtro destruye y recrea la rama de resultados.
+  -->
+  <p class="solo-lectores" aria-live="polite" aria-atomic="true">{{ anuncio() }}</p>
+
+  <!--
+    El salto a los resultados: en escritorio hay veinticuatro paradas de tabulación entre
+    la caja y la primera tarjeta, y son las mismas en todas las rutas del catálogo.
+  -->
+  <a class="catalogo__salto" href="#resultados">
+    {{ 'catalog.list.skipToResults' | transloco }}
+  </a>
+
+  <div class="catalogo__cuerpo">
+    <!--
+      Panel lateral en escritorio y hoja en móvil, con el mismo marcado. Es una <section>
+      con nombre y no un <aside>: `complementary` significa «tangencialmente relacionado»,
+      y unos controles que gobiernan el listado no lo son.
+    -->
+    <section class="catalogo__filtros" [attr.aria-label]="'catalog.filters.title' | transloco">
+      <sendik-catalog-filters
+        [criterios]="criterios()"
+        [puestos]="fichas().length"
+        (cambiar)="filtrar($event)"
+      />
+    </section>
+
+    <div id="resultados" class="catalogo__resultados" tabindex="-1" #resultados>
+      @if (cargando()) {
+        <p class="solo-lectores">{{ 'catalog.list.loading' | transloco }}</p>
+        <ul class="catalogo__rejilla" aria-hidden="true">
+          @for (hueco of [0, 1, 2, 3, 4, 5, 6, 7]; track hueco) {
+            <li><p class="esqueleto catalogo__esqueleto"></p></li>
+          }
+        </ul>
+      } @else if (fallo()) {
+        <!--
+          El error de red se distingue del vacío a propósito: que no haya resultados y que
+          la consulta haya fallado no se pueden ver igual.
+        -->
+        <div role="alert">
+          <p class="tipo-cuerpo">{{ 'catalog.list.error' | transloco }}</p>
+          <button type="button" class="btn btn-secundario" (click)="reintentar()">
+            {{ 'catalog.list.retry' | transloco }}
+          </button>
+        </div>
+      } @else if (vacio()) {
+        <!--
+          RN-086: se dice que no hay, y no se rellena con nada aproximado. Los filtros
+          puestos se ven arriba y la salida para quitarlos está aquí mismo.
+        -->
+        <div class="catalogo__vacio">
+          <p class="tipo-cuerpo">
+            {{
+              (criterios().q !== null
+                ? 'catalog.search.empty'
+                : hayFiltros()
+                  ? 'catalog.search.emptyWithFilters'
+                  : familiaSlug() === null
+                    ? 'catalog.list.empty'
+                    : 'catalog.list.emptyInCategory'
+              ) | transloco: { texto: criterios().q }
+            }}
+          </p>
+          @if (hayFiltros()) {
+            <button type="button" class="btn btn-secundario" (click)="quitarTodos()">
+              {{ 'catalog.filters.clearAll' | transloco }}
+            </button>
+          }
+        </div>
+      } @else {
+        <!--
+          El número se anuncia al cambiar. Dice cuántas se están enseñando y no cuántas hay:
+          la paginación por cursor no cuenta el total a propósito, y prometer una cifra que
+          no se tiene sería peor que no darla.
+        -->
+        <p class="tipo-secundario">{{ anuncio() }}</p>
+
+        <ul class="catalogo__rejilla">
+          @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {
+            <li>
+              <sendik-product-card [publicacion]="publicacion" [primera]="primera" />
+            </li>
+          }
+        </ul>
+
+        @if (hayMas()) {
+          <div class="catalogo__mas">
+            <button
+              type="button"
+              class="btn btn-secundario"
+              [disabled]="trayendoMas()"
+              (click)="verMas()"
+            >
+              {{ 'catalog.list.more' | transloco }}
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
 }

@@ -82,3 +82,107 @@
   justify-content: center;
   margin-top: var(--esp-32);
 }
+
+/* ---------- La búsqueda y los filtros. HU-014 ---------- */
+
+/*
+  Una columna en móvil y dos en escritorio. El panel va antes del listado en el marcado y
+  también visualmente: el orden del DOM es el del teclado y el del lector de pantalla, y
+  llegar a los filtros después de recorrer veinticuatro tarjetas no sirve de nada. Lo que
+  compensa tener los filtros delante es el enlace de salto a los resultados.
+*/
+.catalogo__cuerpo {
+  display: grid;
+  gap: var(--esp-24);
+}
+
+.catalogo__fichas-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-8);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--esp-16) 0;
+}
+
+/*
+  La ficha es un botón entero y no una etiqueta con un aspa: lo que se pulsa es «quitar
+  este filtro», y el destino táctil es la ficha completa.
+
+  El tamaño lo pone `.tipo-secundario` desde el marcado, que es la única fuente de verdad
+  del texto; aquí solo se recupera el color, porque esa clase lo aclara y la ficha necesita
+  el de texto normal sobre su propio relleno.
+*/
+.catalogo__ficha {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-8);
+  min-height: var(--destino-tactil);
+  padding: var(--esp-4) var(--esp-12);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-completo);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  cursor: pointer;
+}
+
+/*
+  El borde cambia con el relleno, y no es estética: sobre --color-primario-suave, el borde
+  de control da 2.96:1 y deja de cumplir el mínimo de 3:1 para bordes de control. El par
+  nuevo está registrado en las dos listas de contraste.
+*/
+.catalogo__ficha:hover {
+  background: var(--color-primario-suave);
+  border-color: var(--color-primario);
+}
+
+.catalogo__ficha:focus-visible {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}
+
+.catalogo__vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-16);
+  padding: var(--esp-32) 0;
+}
+
+@media (min-width: 1024px) {
+  .catalogo__cuerpo {
+    /*
+      En `ch` y no en píxeles, por lo mismo que --medida-cifra: la media query se evalúa en
+      píxeles de CSS, así que a 1024 con el texto al 200% una columna fija dejaría los
+      selectores de orden y de sistema de talla truncados dentro del control.
+    */
+    grid-template-columns: minmax(var(--ancho-panel-filtros), max-content) 1fr;
+    align-items: start;
+  }
+}
+
+/*
+  El salto a los resultados. Entre la caja de búsqueda y la primera tarjeta hay
+  veinticuatro paradas de tabulación en escritorio, y son las mismas en toda la familia de
+  rutas del catálogo: es un bloque repetido, que es lo que WCAG 2.4.1 pide poder saltar.
+
+  Se repite aquí el patrón del enlace de la cabecera en vez de compartirlo porque aquel
+  vive en el CSS de su componente y está encapsulado. Si aparece un tercero, sube a
+  marca.css.
+*/
+.catalogo__salto {
+  position: absolute;
+  left: -9999px;
+}
+
+.catalogo__salto:focus {
+  position: static;
+  display: inline-block;
+  margin-bottom: var(--esp-16);
+}
+
+.catalogo__resultados:focus {
+  outline: 3px solid var(--color-foco);
+  outline-offset: 2px;
+}

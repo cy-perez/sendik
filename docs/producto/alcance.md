@@ -411,12 +411,12 @@ para un catálogo pequeño, y que ADR-0035 toma con su señal de revisión. Lo q
 acepta perder está en la ADR y en la historia, con estas palabras: quien escriba
 «camisa oxfrod» no encuentra nada.
 
-**HU-014 es la primera historia de la fase** y está escrita. Con ella nacieron
+**HU-014 es la primera historia de la fase** y está implementada. Con ella nacieron
 las ocho reglas que la búsqueda no tenía, RN-081 a RN-088: hasta hoy
 `reglas-negocio.md` no decía ni siquiera que en la búsqueda se ve solo lo
 publicado.
 
-- **Búsqueda y filtros. En curso: HU-014, escrita el 8 de septiembre de 2026.**
+- **Búsqueda y filtros. Hecho: HU-014, implementada el 9 de septiembre de 2026.**
   Texto sobre título y marca, filtros por categoría, condición, talla, color y
   rango de precio, y cuatro órdenes. **No con Typesense**, que queda aplazado
   detrás del mismo puerto (ADR-0035): esta línea decía «con Typesense» desde

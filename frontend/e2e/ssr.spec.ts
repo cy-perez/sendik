@@ -23,6 +23,48 @@ test.describe('renderizado en servidor', () => {
   });
 
   /**
+   * HU-014, criterio 24. Una busqueda no se indexa, y tiene que decirlo el HTML servido.
+   *
+   * <p>Puesto en el navegador al hidratar llegaria tarde: un rastreador que no ejecuta
+   * JavaScript ya habria leido la pagina sin la etiqueta. Y son combinaciones casi
+   * infinitas de filtros que producen paginas repetidas y casi vacias, lo que perjudica al
+   * sitio entero.
+   *
+   * <p>Se comprueba con las dos caras, porque una sola no dice nada: si la etiqueta
+   * estuviera siempre, el catalogo y las categorias -de donde vienen las visitas- dejarian
+   * de indexarse y ninguna prueba lo notaria.
+   */
+  test('una busqueda no se indexa y el catalogo si', async ({ request }) => {
+    const conBusqueda = await (await request.get('/catalogo?q=camisa')).text();
+    const conFiltro = await (await request.get('/catalogo?color=BLUE')).text();
+    const desnudo = await (await request.get('/catalogo')).text();
+    const soloOrdenado = await (await request.get('/catalogo?sort=price,asc')).text();
+
+    expect(conBusqueda).toContain('name="robots"');
+    expect(conBusqueda).toContain('noindex');
+    expect(conFiltro).toContain('noindex');
+
+    expect(desnudo).not.toContain('noindex');
+    // El catalogo ordenado de otra manera sigue siendo el catalogo, no una busqueda.
+    expect(soloOrdenado).not.toContain('noindex');
+  });
+
+  /**
+   * La caja de busqueda viene en el HTML, no aparece al hidratar.
+   *
+   * <p>Sin esto, quien entra con la red lenta ve el catalogo y no tiene con que buscar
+   * hasta que baje el JavaScript, que es justo cuando mas falta hace.
+   */
+  test('la caja de busqueda llega en el HTML servido', async ({ request }) => {
+    const html = await (await request.get('/catalogo')).text();
+
+    // El rol y la etiqueta, no el identificador del DOM: lo que hay que demostrar es que la
+    // caja llega servida y con su nombre ya traducido, no cómo se llama por dentro.
+    expect(html).toContain('role="search"');
+    expect(html).toContain('Buscar en el catálogo');
+  });
+
+  /**
    * La direccion canonica, en toda pagina.
    *
    * <p>Se comprueba con una cadena de consulta puesta a proposito: sin recortarla, la

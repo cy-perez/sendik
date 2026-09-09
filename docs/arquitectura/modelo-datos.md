@@ -341,8 +341,25 @@ desde un día y no desde otro cuando el agregador reporta con retraso.
 - `favorites(user_id, created_at desc, listing_id desc)` para la lista propia. Es
   el criterio 11 de HU-011 escrito como índice: ordena por el gesto y desempata por
   publicación, que es lo que el cursor compara.
+- `products` con un índice **GIN sobre el texto buscable** —el título y la marca, sin
+  tildes y con el diccionario `spanish`— para la búsqueda de HU-014. No puede ser
+  parcial por `status` como los dos anteriores: la columna del estado vive en
+  `listings` y el texto en `products`, y un índice no mira otra tabla. El filtro
+  por `PUBLISHED` lo sigue resolviendo el índice de `V14` al unir.
+  La expresión del índice **tiene que ser idéntica** a la de la consulta, o el
+  planificador no lo usa y nadie se entera: la búsqueda devuelve lo mismo, solo
+  que recorriendo la tabla. Por eso vive como constante en `PostgresSearchEngine`
+  y hay una prueba que le pide el plan a PostgreSQL.
 - `payment_events(provider_event_id)` único.
 - `orders(buyer_id, created_at desc)` y `orders(seller_id, created_at desc)`.
+
+**Lo que a propósito no se indexa**, y conviene que esté escrito para no agregarlo
+por reflejo: condición, color y talla, que son de lista cerrada y poca
+selectividad —quince colores sobre un catálogo pequeño reparten mucho—, y el
+precio, cuyo orden obliga a ordenar en memoria hagamos lo que hagamos porque
+cruza dos tablas. Con el catálogo que hay eso es gratis, y el momento de volver a
+mirarlo es la primera señal de revisión de ADR-0035: pasar de 5.000 publicaciones
+`PUBLISHED`. Un índice se crea cuando un plan lo pide.
 
 ## Reglas de integridad
 

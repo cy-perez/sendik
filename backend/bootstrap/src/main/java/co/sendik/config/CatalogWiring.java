@@ -6,6 +6,7 @@ import co.sendik.catalog.port.out.Favorites;
 import co.sendik.catalog.port.out.ListingNotifier;
 import co.sendik.catalog.port.out.ListingRepository;
 import co.sendik.catalog.port.out.ModerationLog;
+import co.sendik.catalog.port.out.SearchEngine;
 import co.sendik.catalog.port.out.SellerEligibility;
 import co.sendik.catalog.port.out.SellerProfiles;
 import co.sendik.catalog.usecase.AddFavoriteUseCase;
@@ -244,11 +245,17 @@ public class CatalogWiring {
         return new ListCategoriesUseCase(categorias);
     }
 
-    // --- El catalogo publico. HU-009 -----------------------------------------
+    // --- El catalogo publico. HU-009, y la busqueda. HU-014 -------------------
 
+    /**
+     * Recibe el motor y no el repositorio desde HU-014: el catalogo y la busqueda son la
+     * misma consulta con distintas condiciones, y quien la resuelve es el puerto que
+     * ADR-0035 llena con PostgreSQL. Cambiarlo a Typesense es cambiar que implementacion de
+     * {@link SearchEngine} se inyecta aqui, y nada mas.
+     */
     @Bean
-    ListCatalogUseCase listCatalogUseCase(ListingRepository publicaciones, Categories categorias) {
-        return new ListCatalogUseCase(publicaciones, categorias);
+    ListCatalogUseCase listCatalogUseCase(SearchEngine motor, Categories categorias) {
+        return new ListCatalogUseCase(motor, categorias);
     }
 
     @Bean
