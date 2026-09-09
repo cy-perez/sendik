@@ -324,14 +324,19 @@ solo no bastaba —el controlador lo devuelve tanto si el correo salió como si 
 lo rechazó en firme—, y es el correo recibido lo que lo desambigua. Que el token OIDC
 valida se ve en que respondió 204 y no el 401 que reciben los rastreadores.
 
-**Para `dev` esto deja de bloquear el lanzamiento. Para `prod` no, y es configuración:**
-el entorno `prod` de GitHub **no tiene ninguna de las cuatro variables** `MAIL_QUEUE_*`, y
-el flujo respalda la bandera con `|| 'false'`. Un despliegue a `prod` hoy no falla al
-arrancar: se va con la cola apagada y el correo se entrega en el hilo de la petición. Eso
-ya no reproduce el fallo original —lo causaba el `AsyncMailSender` que se retiró— pero
-tampoco es lo que ADR-0031 decidió, y hace la petición de registro tan lenta como tarde el
-proveedor. Falta crear las cuatro variables de `prod`, con su propia
-`MAIL_QUEUE_HANDLER_URL` sobre `api.sendik.co`.
+**Para `dev` esto deja de bloquear el lanzamiento. Para `prod` era configuración, y quedó
+creada el 8 de septiembre de 2026.** El entorno `prod` no tenía ninguna de las cuatro
+variables `MAIL_QUEUE_*` y el flujo respalda la bandera con `|| 'false'`, así que un
+despliegue se habría ido con la cola apagada y el correo entregado en el hilo de la
+petición —ya no el fallo original, que lo causaba el `AsyncMailSender` retirado, pero
+tampoco lo que ADR-0031 decidió—. Las cuatro existen ya, con su propia
+`MAIL_QUEUE_HANDLER_URL` sobre `api.sendik.co`, y en GCP no hubo nada que crear porque la
+cola y la cuenta sirven para los dos entornos.
+
+**Que existan no es que funcionen.** Eso mismo se sabía de `dev` el 6 de septiembre y la
+cola estuvo dos días sin una sola tarea. `api.sendik.co` no responde todavía, así que la
+entrega en `prod` queda por comprobar el día del primer despliegue, con el mismo disparo y
+los mismos tres eslabones que en `dev` (`docs/operacion/entornos.md`).
 
 **Y el envío real destapó lo que ninguna suite podía ver: los correos en español salen sin
 tildes ni eñes.** No es codificación: están así en el código, en tres archivos —los diez
