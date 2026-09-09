@@ -381,7 +381,49 @@ leerlos.
 
 ## Fase 3 — transacción
 
-- Búsqueda y filtros con Typesense.
+**Abierta el 8 de septiembre de 2026, y es la fase en curso.** Empezó tres días
+después de cerrarse la Fase 2, y abrirla fue una decisión y no una consecuencia:
+cerrar una fase no abre la siguiente.
+
+**Lo que la fase no arrastra.** Los dos frenos que bloqueaban el lanzamiento
+dejaron de estarlo antes de abrirla: los textos legales están publicados y
+vigentes en `dev` desde el 8 de septiembre —versión `2026-09-08b`, auditada
+contra la Ley 1480, el Decreto 1377 y la Circular 005 de 2017 de la SIC— y el
+correo transaccional sale y se comprobó de punta a punta ese mismo día. Lo que
+queda abierto de lo legal es de abogado colegiado o de tercero, no de redacción.
+
+**Lo que sí sigue abierto y no lo cierra esta fase:** `prod` no se ha desplegado
+nunca, sus versiones legales siguen en `borrador-local`, la entrega del correo
+allí está sin comprobar y las tres banderas de la Fase 2 siguen apagadas. Son un
+camino paralelo, no uno que venga después de este.
+
+**Arranca por la búsqueda, y la razón es de dependencias.** De todo lo que sigue,
+la búsqueda es lo único que no espera a nadie: el pago necesita a Wompi y el
+envío necesita las cuatro respuestas de Skydropx que
+`docs/operacion/entrega-textos-legales-2026-09-08b.md` dejó por contestar —razón
+social, país, facturación del flete y adenda de tratamiento—, más la cobertura
+real (RN-080). Empezar por donde no hay bloqueo deja que esas gestiones maduren
+en paralelo en vez de detener la fase entera.
+
+Y arranca **sin Typesense**: la búsqueda se implementa contra PostgreSQL detrás
+del puerto que ADR-0008 definió, que es la salida que esa misma ADR dejó escrita
+para un catálogo pequeño, y que ADR-0035 toma con su señal de revisión. Lo que se
+acepta perder está en la ADR y en la historia, con estas palabras: quien escriba
+«camisa oxfrod» no encuentra nada.
+
+**HU-014 es la primera historia de la fase** y está escrita. Con ella nacieron
+las ocho reglas que la búsqueda no tenía, RN-081 a RN-088: hasta hoy
+`reglas-negocio.md` no decía ni siquiera que en la búsqueda se ve solo lo
+publicado.
+
+- **Búsqueda y filtros. En curso: HU-014, escrita el 8 de septiembre de 2026.**
+  Texto sobre título y marca, filtros por categoría, condición, talla, color y
+  rango de precio, y cuatro órdenes. **No con Typesense**, que queda aplazado
+  detrás del mismo puerto (ADR-0035): esta línea decía «con Typesense» desde
+  agosto y lo que la sostenía era ADR-0008, que ya preveía empezar con
+  PostgreSQL si el catálogo seguía siendo pequeño. Lo es: `prod` no se ha
+  desplegado nunca. La marca queda fuera de los filtros y dentro del texto
+  buscable, porque es texto libre (RN-085).
 - Carrito y proceso de compra.
 - Pago con Wompi: PSE, Nequi, tarjetas, Bancolombia a la mano y Addi.
 - División del pago y retención de la comisión del 5%.

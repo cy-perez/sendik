@@ -146,12 +146,18 @@ Un commit por unidad lógica. No mezcles refactor con funcionalidad.
 catálogo, favoritos y panel del vendedor. Sus tres banderas están encendidas en
 `dev` y apagadas en `prod`. La Fase 1 se cerró el 21 de agosto.
 
-**La Fase 3 no ha empezado.** Cerrar una fase no abre la siguiente: eso es una
-decisión, y hasta que se tome no se implementa nada de búsqueda, carrito, pagos ni
-envíos, aunque el diseño ya lo contemple. El alcance por fase está en
-`docs/producto/alcance.md`.
+**La Fase 3 está en curso desde el 8 de septiembre de 2026** y arranca por la
+búsqueda: HU-014, contra PostgreSQL y no contra Typesense, que queda aplazado
+detrás del mismo puerto (ADR-0035). Abrirla fue una decisión y no una
+consecuencia de cerrar la anterior. Dentro de la fase el orden lo mandan las
+dependencias: el pago espera a Wompi y el envío espera las cuatro respuestas de
+Skydropx, así que nada de carrito, pagos ni envíos se implementa todavía. La
+Fase 4 sigue sin abrir. El alcance por fase está en `docs/producto/alcance.md`.
 
-Dos cosas bloquean el lanzamiento y ninguna es de Fase 3: los **textos legales**,
-que siguen siendo relleno sin valor legal, y el **correo transaccional**, que no
-sale —`docs/operacion/entornos.md`—. La segunda se descubrió al encender las
-banderas en `dev`.
+Lo que bloqueaba el lanzamiento dejó de hacerlo: los **textos legales** están
+publicados y vigentes en `dev` desde el 8 de septiembre —versión `2026-09-08b`—
+y el **correo transaccional** sale y se comprobó de punta a punta ese mismo día.
+Lo que sigue abierto es otra cosa: `prod` no se ha desplegado nunca, sus
+versiones legales siguen en `borrador-local`, la entrega del correo allí está sin
+comprobar y las tres banderas de la Fase 2 siguen apagadas
+—`docs/operacion/entornos.md`—.
