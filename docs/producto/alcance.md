@@ -341,12 +341,18 @@ cola estuvo dos días sin una sola tarea. `api.sendik.co` no responde todavía, 
 entrega en `prod` queda por comprobar el día del primer despliegue, con el mismo disparo y
 los mismos tres eslabones que en `dev` (`docs/operacion/entornos.md`).
 
-**Y el envío real destapó lo que ninguna suite podía ver: los correos en español salen sin
-tildes ni eñes.** No es codificación: están así en el código, en tres archivos —los diez
+**Y el envío real destapó lo que ninguna suite podía ver: los correos en español salían sin
+tildes ni eñes.** No era codificación: estaban así en el código, en tres archivos —los diez
 asuntos de `ResendMailSender`, los cuatro de `ListingMailTexts` y los motivos de rechazo
-de `ListingRejectionTexts`, que viajan dentro del correo—. En dos de ellos cambia el
-significado: «Tu contrasena cambio» y «Alguien intento registrarse» dejan un sustantivo
-donde debía haber un verbo. Queda anotado y sin arreglar aquí.
+de `ListingRejectionTexts`, que viajan dentro del correo—. En dos de ellos cambiaba el
+significado: «Tu contrasena cambio» y «Alguien intento registrarse» dejaban un sustantivo
+donde debía haber un verbo.
+
+~~Queda anotado y sin arreglar aquí.~~ **Arreglado el 8 de septiembre de 2026** en el
+commit `358609a`, los tres archivos: hoy `ResendMailSender` dice «Tu contraseña cambió» y
+«Alguien intentó registrarse». Ninguna suite podía verlo entonces y ninguna puede verlo
+ahora —lo que se compara son claves, no ortografía—, así que la garantía sigue siendo
+leerlos.
 
 ### Lo que no entra en el cierre
 

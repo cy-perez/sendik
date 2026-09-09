@@ -31,7 +31,8 @@ PostgreSQL 17. Migraciones con Flyway en
 | birth_date | date | RN-008: solo mayores de 18. Se guarda la fecha, no el resultado |
 | city | text | opcional. Dato público: sale junto a las publicaciones |
 | phone | text | opcional. Dato interno: nunca en un perfil público |
-| avatar_url | text | opcional |
+| avatar_key | text | opcional. Clave del archivo en el almacén público; la dirección se construye en el borde (V6, ADR-0018) |
+| avatar_url | text | **sin uso.** La sustituyó `avatar_key` en V6 y se elimina en una migración posterior: lo destructivo va en dos pasos |
 | locale | text | `es` o `en` |
 | status | text | `ACTIVE`, `BLOCKED`, `CLOSING`, `CLOSED` |
 | closed_at | timestamptz | nulo mientras la cuenta siga abierta (V4, criterio 23) |
