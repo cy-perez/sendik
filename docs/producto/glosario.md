@@ -85,8 +85,13 @@ aplica la frase.
 | Español | Código | Definición |
 |---|---|---|
 | Búsqueda | `Search` | Encontrar productos escribiendo lo que se busca, sobre el título y la marca (RN-082). Es una forma de mirar el mismo catálogo, no una sección aparte: sin texto y sin filtros lo que se ve es el catálogo. |
-| Consulta | `SearchQuery` | Lo que se pregunta: el texto, los filtros aplicados y el orden pedido. Viaja entera y viaja en la dirección, para que un resultado se pueda compartir y recargar. |
+| Consulta | `SearchQuery` | Lo que se pregunta: el texto, los filtros aplicados y el orden pedido. Viaja entera y viaja en la dirección, para que un resultado se pueda compartir y recargar. En el código es `ListCatalogQuery`, porque es la misma pregunta del catálogo con más condiciones: buscar nada devuelve el catálogo. |
 | Motor de búsqueda | `SearchEngine` | El puerto por el que la aplicación pregunta, definido en ADR-0008. Detrás está PostgreSQL desde HU-014 y Typesense cuando el catálogo lo justifique (ADR-0035). Quien usa el puerto no sabe cuál de los dos hay debajo, y esa es toda la razón de que exista. |
+| Criterios | `SearchCriteria` | La **consulta ya resuelta contra el árbol**: lo mismo que `SearchQuery` pero con las categorías donde de verdad hay publicaciones, porque no se publica en una familia sino en una categoría suya. Son dos tipos y no uno porque el motor no sabe que existe un árbol, y esa ignorancia es lo que permite cambiarlo (ADR-0035). |
+| Resultado | `SearchHit` | Una publicación que casó, con lo que puntuó. La puntuación la calcula el motor sobre el texto buscado, cambia con cada búsqueda y no pertenece a la publicación: por eso viaja aparte y **no sale en la respuesta** (RN-084). |
+| Texto buscado | `SearchText` | Lo que alguien escribió, ya limpio. No existe vacío: cuando no hay nada que buscar lo que corresponde es su ausencia, y eso incluye el texto de pura puntuación. |
+| Orden | `CatalogSort` | Cuál de los cuatro de RN-088. No hay un quinto, y esa es toda la garantía de RN-084: adelantar un resultado por haberlo pagado exigiría agregarlo a la vista de todos. |
+| Rango de precio | `PriceRange` | Entre cuánto y cuánto, con **los dos extremos incluidos**. Cualquiera de los dos puede faltar; los dos del revés no es un vacío, es un error. |
 | Filtro | `Filter` | Condición de lista cerrada que acota un listado: categoría, condición, talla, color y rango de precio. **La marca no lo es** y no lo puede ser mientras sea texto libre (RN-085). Se dice «filtro» y no «faceta»: una faceta lleva el conteo delante y eso todavía no existe. |
 
 ## Transacción
