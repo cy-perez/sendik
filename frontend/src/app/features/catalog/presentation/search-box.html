@@ -4,19 +4,19 @@
   porque en la página hay una sola caja pero el rol admite varias.
 -->
 <form
-  class="buscador"
+  class="buscador-catalogo"
   role="search"
   [attr.aria-label]="'catalog.search.region' | transloco"
   (submit)="$event.preventDefault(); enviar()"
 >
-  <label class="buscador__etiqueta" for="buscador-texto">
+  <label class="buscador-catalogo__etiqueta" for="buscador-texto">
     {{ 'catalog.search.label' | transloco }}
   </label>
 
-  <div class="buscador__campo">
+  <div class="buscador-catalogo__campo">
     <input
       id="buscador-texto"
-      class="buscador__entrada"
+      class="buscador-catalogo__entrada"
       type="search"
       autocomplete="off"
       [attr.placeholder]="'catalog.search.placeholder' | transloco"
@@ -27,7 +27,7 @@
     @if (hayTexto()) {
       <button
         type="button"
-        class="buscador__limpiar"
+        class="buscador-catalogo__limpiar"
         [attr.aria-label]="'catalog.search.clear' | transloco"
         (click)="limpiar()"
       >

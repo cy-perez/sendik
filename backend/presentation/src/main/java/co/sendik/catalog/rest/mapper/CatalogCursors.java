@@ -30,6 +30,11 @@ import tools.jackson.databind.JsonNode;
  * traduccion del borde solo agregaria un sitio donde equivocarse. Lo que si es del contrato
  * es el {@code sort} que el cliente escribe, y de eso se ocupa {@link CatalogSorts}.
  *
+ * <p>Tiene una consecuencia que conviene decir: <strong>renombrar una constante de
+ * {@link CatalogSort} invalida todos los cursores en circulacion</strong>, que pasarian a
+ * responder 400. Hoy no cuesta nada -{@code prod} no se ha desplegado nunca- y el dia que
+ * cueste, la salida es aceptar tambien el nombre viejo durante una version.
+ *
  * <p><strong>El tipo no se comparte y eso es lo importante.</strong> {@link CatalogCursor} y
  * {@code FavoriteCursor} siguen siendo records distintos, asi que el compilador impide que el
  * cursor de un listado sirva en el otro; si lo permitiera, pasar el de aqui a la lista de
@@ -69,16 +74,22 @@ public final class CatalogCursors {
             return null;
         }
 
-        JsonNode nodo = Cursores.nodo(texto);
-        CatalogSort orden = orden(Cursores.exigir(nodo, CAMPO_ORDEN));
-        ListingId id = new ListingId(Cursores.uuid(nodo, Cursores.CAMPO_ID));
-        String clave = Cursores.exigir(nodo, CAMPO_CLAVE);
+        // Entero dentro de `leer`, y no solo la decodificacion. Un cursor cuyo campo sea un
+        // objeto o un arreglo hace que `asString()` lance una excepcion de Jackson que no es
+        // IllegalArgumentException: fuera de aqui salia como 500 con la traza entera, cuando
+        // un cursor inventado es un 400 y nada mas.
+        return Cursores.leer(() -> {
+            JsonNode nodo = Cursores.nodo(texto);
+            CatalogSort orden = orden(Cursores.exigir(nodo, CAMPO_ORDEN));
+            ListingId id = new ListingId(Cursores.uuid(nodo, Cursores.CAMPO_ID));
+            String clave = Cursores.exigir(nodo, CAMPO_CLAVE);
 
-        return switch (orden) {
-            case NEWEST -> CatalogCursor.porFecha(instante(clave), id);
-            case PRICE_ASC, PRICE_DESC -> CatalogCursor.porPrecio(orden, pesos(clave), id);
-            case RELEVANCE -> CatalogCursor.porRelevancia(numero(clave), id);
-        };
+            return switch (orden) {
+                case NEWEST -> CatalogCursor.porFecha(instante(clave), id);
+                case PRICE_ASC, PRICE_DESC -> CatalogCursor.porPrecio(orden, pesos(clave), id);
+                case RELEVANCE -> CatalogCursor.porRelevancia(numero(clave), id);
+            };
+        });
     }
 
     /** Una sola clave y no tres campos opcionales: el cursor lleva la de su orden y ya. */
@@ -120,10 +131,22 @@ public final class CatalogCursors {
         }
     }
 
+    /**
+     * La puntuacion del cursor de relevancia.
+     *
+     * <p>Se rechaza lo que no es finito, y no es celo: {@code Double.parseDouble} acepta
+     * {@code NaN} e {@code Infinity}, y en PostgreSQL {@code NaN} es mayor que cualquier
+     * otro valor. Un cursor con {@code NaN} dentro deja de acotar el tramo y devuelve el
+     * conjunto entero paginado desde el principio.
+     */
     private static double numero(String clave) {
         try {
-            return Double.parseDouble(clave);
-        } catch (RuntimeException e) {
+            double valor = Double.parseDouble(clave);
+            if (!Double.isFinite(valor)) {
+                throw new IllegalArgumentException("El cursor no es valido");
+            }
+            return valor;
+        } catch (NumberFormatException e) {
             throw new IllegalArgumentException("El cursor no es valido", e);
         }
     }

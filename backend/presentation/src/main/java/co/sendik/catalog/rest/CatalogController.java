@@ -2,7 +2,6 @@ package co.sendik.catalog.rest;
 
 import co.sendik.catalog.dto.CatalogPage;
 import co.sendik.catalog.dto.ListCatalogQuery;
-import co.sendik.catalog.model.SearchText;
 import co.sendik.catalog.rest.dto.CatalogPageResponse;
 import co.sendik.catalog.rest.mapper.CatalogPages;
 import co.sendik.catalog.rest.mapper.CatalogQueries;
@@ -10,7 +9,6 @@ import co.sendik.catalog.usecase.ListCatalogUseCase;
 import co.sendik.shared.port.out.PublicFileStore;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -91,22 +89,30 @@ public class CatalogController {
      * protege a cualquiera que lo use, y el de aqui hace que el 400 salga antes de tocar la
      * base y con el nombre del parametro que el cliente escribio.
      *
-     * <p>El tope de {@code q} tambien esta en los dos sitios y por lo mismo. Por encima se
-     * responde 400 y no se recorta: recortar en silencio devuelve resultados de una busqueda
-     * que nadie pidio.
+     * <p><strong>Los parametros de busqueda entran todos como texto</strong>, y el tope de
+     * {@code q} no se declara aqui con {@code @Size}. Es deliberado y cuesta explicarlo:
+     * la validacion de argumentos y la conversion de tipos ocurren <em>antes</em> de que
+     * este metodo empiece, asi que un {@code @Size} sobre {@code q} o un {@code Long} en
+     * los precios responderian 400 con la bandera apagada, y ese 400 diria que el
+     * parametro se entiende —justo lo que el criterio 26 no quiere—. Convertidos aqui
+     * dentro, los rechaza {@link SearchText} y {@link co.sendik.catalog.model.PriceRange},
+     * que salen igualmente como 400 cuando la busqueda existe.
+     *
+     * <p>Por encima del tope se responde 400 y no se recorta: recortar en silencio devuelve
+     * resultados de una busqueda que nadie pidio.
      */
     @GetMapping
     public CatalogPageResponse catalogo(
             @RequestParam(name = "limit", defaultValue = "24") @Min(1) @Max(ListCatalogQuery.LIMITE_MAXIMO) int limit,
             @RequestParam(name = "cursor", required = false) @Nullable String cursor,
             @RequestParam(name = "category", required = false) @Nullable String category,
-            @RequestParam(name = "q", required = false) @Size(max = SearchText.LARGO_MAXIMO) @Nullable String q,
+            @RequestParam(name = "q", required = false) @Nullable String q,
             @RequestParam(name = "condition", required = false) @Nullable List<String> condition,
             @RequestParam(name = "sizeSystem", required = false) @Nullable String sizeSystem,
             @RequestParam(name = "size", required = false) @Nullable String size,
             @RequestParam(name = "color", required = false) @Nullable List<String> color,
-            @RequestParam(name = "minPrice", required = false) @Nullable Long minPrice,
-            @RequestParam(name = "maxPrice", required = false) @Nullable Long maxPrice,
+            @RequestParam(name = "minPrice", required = false) @Nullable String minPrice,
+            @RequestParam(name = "maxPrice", required = false) @Nullable String maxPrice,
             @RequestParam(name = "sort", required = false) @Nullable String sort)
             throws NoResourceFoundException {
 
@@ -133,8 +139,8 @@ public class CatalogController {
             @Nullable String sizeSystem,
             @Nullable String size,
             @Nullable List<String> color,
-            @Nullable Long minPrice,
-            @Nullable Long maxPrice,
+            @Nullable String minPrice,
+            @Nullable String maxPrice,
             @Nullable String sort)
             throws NoResourceFoundException {
 

@@ -286,10 +286,15 @@ describe('CatalogPage', () => {
     const router = TestBed.inject(Router);
     const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    const caja = fixture.nativeElement.querySelector('#buscador-texto') as HTMLInputElement;
+    // Por rol y no por clase ni por identificador: lo que la prueba afirma es que hay una
+    // caja de búsqueda que se puede enviar, no cómo se llama su CSS. Con el selector de
+    // clase, renombrar el bloque ponía esto en rojo sin que nada cambiara para quien busca.
+    const caja = fixture.nativeElement.querySelector(
+      'input[type="search"]',
+    ) as HTMLInputElement;
     caja.value = 'tenis';
     caja.dispatchEvent(new Event('input'));
-    (fixture.nativeElement.querySelector('form.buscador') as HTMLFormElement).dispatchEvent(
+    (fixture.nativeElement.querySelector('[role="search"]') as HTMLFormElement).dispatchEvent(
       new Event('submit'),
     );
 
@@ -307,7 +312,11 @@ describe('CatalogPage', () => {
       hasMore: false,
     });
 
-    const fichas = [...fixture.nativeElement.querySelectorAll('.catalogo__ficha')];
+    // Por el nombre accesible, que es lo que la persona oye y lo que RN-086 exige que
+    // diga qué quita. La clase es implementación.
+    const fichas = [
+      ...fixture.nativeElement.querySelectorAll('button[aria-label^="Quitar el filtro"]'),
+    ];
     expect(fichas).toHaveLength(2);
 
     const router = TestBed.inject(Router);

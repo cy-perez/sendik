@@ -395,19 +395,6 @@ class BusquedaDelCatalogoTest {
         assertThat(siguiente.items()).hasSize(1);
     }
 
-    /** Criterio 19 y RN-084: en la pagina no hay donde expresar que algo se adelanto. */
-    @Test
-    void deberia_cumplir_RN_084_no_sacando_la_puntuacion_en_la_pagina() {
-        una().titulo("Camisa de lino color hueso").publicar();
-
-        CatalogPage tramo = catalogo.execute(consulta().texto("camisa").arma());
-
-        // Lo que sale son publicaciones, no resultados con puntuacion. Si algun dia la
-        // respuesta llevara un numero de orden, esta linea deja de compilar.
-        assertThat(tramo.items())
-                .allSatisfy(publicacion -> assertThat(publicacion).isInstanceOf(Listing.class));
-    }
-
     // --- apoyo ---------------------------------------------------------------
 
     private List<Listing> buscar(String texto) {

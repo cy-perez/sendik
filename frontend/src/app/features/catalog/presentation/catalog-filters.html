@@ -8,11 +8,17 @@
   class="btn btn-secundario filtros__abrir"
   aria-controls="panel-de-filtros"
   [attr.aria-expanded]="abierto()"
+  [attr.aria-label]="
+    puestos() > 0
+      ? ('catalog.filters.openWithCount' | transloco: { cuantos: puestos() })
+      : ('catalog.filters.open' | transloco)
+  "
   (click)="alternarPanel()"
 >
   {{ 'catalog.filters.open' | transloco }}
+  <!-- La cifra ya va en el nombre accesible: aquí sería «Filtrar 3», que no dice de qué. -->
   @if (puestos() > 0) {
-    <span class="chip">{{ puestos() }}</span>
+    <span class="chip" aria-hidden="true">{{ puestos() }}</span>
   }
 </button>
 
@@ -81,6 +87,15 @@
         (change)="escribirTalla($any($event.target).value)"
       />
     </label>
+
+    <!--
+      Por qué está deshabilitado. Sin esto, el campo apagado es la única señal, y un campo
+      vacío en gris no explica nada: RN-087 dice que una talla sin su escala no se puede
+      comparar con nada.
+    -->
+    @if (criterios().sizeSystem === null) {
+      <p class="tipo-leyenda filtros__pista">{{ 'catalog.filters.sizeHint' | transloco }}</p>
+    }
   </fieldset>
 
   <fieldset class="filtros__grupo">
@@ -109,10 +124,16 @@
         min="0"
         step="1"
         [value]="maximo()"
+        [attr.aria-invalid]="rangoInvalido() ? 'true' : null"
+        [attr.aria-describedby]="rangoInvalido() ? 'error-de-precio' : null"
         (input)="escribirMaximo($any($event.target).value)"
         (blur)="aplicarPrecio()"
       />
     </label>
+
+    @if (rangoInvalido()) {
+      <p id="error-de-precio" class="error">{{ 'catalog.filters.priceRangeError' | transloco }}</p>
+    }
   </fieldset>
 
   <label class="filtros__campo filtros__grupo">

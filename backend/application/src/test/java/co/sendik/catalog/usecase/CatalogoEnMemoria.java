@@ -264,8 +264,8 @@ final class CatalogoEnMemoria {
                 return true;
             }
 
-            String donde = normalizar(textoBuscable(publicacion));
-            return palabras(texto).allMatch(donde::contains);
+            Set<String> tokens = tokens(textoBuscable(publicacion));
+            return palabras(texto).allMatch(tokens::contains);
         }
 
         /**
@@ -287,7 +287,7 @@ final class CatalogoEnMemoria {
         }
 
         private static Stream<String> palabras(SearchText texto) {
-            return Arrays.stream(normalizar(texto.value()).split(" ")).filter(palabra -> !palabra.isEmpty());
+            return tokens(texto.value()).stream();
         }
 
         private static String textoBuscable(Listing publicacion) {
@@ -296,6 +296,22 @@ final class CatalogoEnMemoria {
             String marca = producto.brand() == null ? "" : producto.brand().value();
 
             return titulo + " " + marca;
+        }
+
+        /**
+         * Las palabras sueltas del texto, no el texto entero.
+         *
+         * <p><strong>Por token completo y no por subcadena</strong>, y esta es la diferencia
+         * que mas importa: con {@code contains}, buscar «amis» encontraba «Camisa» aqui y no
+         * encontraba nada contra PostgreSQL, que casa lexemas enteros. ADR-0035 dice que no
+         * hay tolerancia a errores de escritura, asi que una coincidencia parcial es
+         * exactamente la expectativa que alguien escribiria sin darse cuenta y que solo
+         * fallaria en produccion.
+         */
+        private static Set<String> tokens(String texto) {
+            return Arrays.stream(normalizar(texto).split("[^\\p{L}\\p{N}]+"))
+                    .filter(palabra -> !palabra.isEmpty())
+                    .collect(java.util.stream.Collectors.toSet());
         }
 
         /** Sin tildes y en minusculas, que es lo que hacen `unaccent` y el diccionario. */

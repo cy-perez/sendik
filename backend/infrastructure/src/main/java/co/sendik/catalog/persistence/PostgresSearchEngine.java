@@ -1,6 +1,7 @@
 package co.sendik.catalog.persistence;
 
-import static co.sendik.catalog.persistence.JdbcListingRepository.SELECT_BASE;
+import static co.sendik.catalog.persistence.JdbcListingRepository.COLUMNAS_BASE;
+import static co.sendik.catalog.persistence.JdbcListingRepository.DESDE_BASE;
 import static co.sendik.catalog.persistence.JdbcListingRepository.filaAPublicacion;
 
 import co.sendik.catalog.dto.CatalogCursor;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.core.simple.JdbcClient.StatementSpec;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 /**
  * La busqueda, contra PostgreSQL. HU-014, ADR-0035.
@@ -26,6 +27,11 @@ import org.springframework.stereotype.Repository;
  * <p><strong>Aqui vive entera la decision de ADR-0035</strong>, y esa es toda la gracia del
  * puerto: cambiar a Typesense es escribir otra clase como esta y cambiar un bean. Ni el
  * dominio, ni el caso de uso, ni el endpoint, ni la pantalla se enteran.
+ *
+ * <p><strong>RN-081 se escribe aqui una sola vez.</strong> No asi RN-068, su gemela del
+ * catalogo: el escaparate de un vendedor sigue filtrando por {@code PUBLISHED} en
+ * {@code JdbcListingRepository}, porque es otra consulta. Son dos sitios donde esta escrito
+ * el mismo estado, y conviene saberlo antes de tocar uno de los dos.
  *
  * <p><strong>No hay indice que sincronizar</strong>, y eso no es una simplificacion sino la
  * razon principal por la que ADR-0035 eligio esto: se consulta la misma base que ya es la
@@ -41,7 +47,7 @@ import org.springframework.stereotype.Repository;
  * no hay tolerancia a errores de escritura -quien escriba «camisa oxfrod» no encuentra nada-,
  * no hay facetas con conteo, y la relevancia es la de {@code ts_rank} sin calibrar.
  */
-@Repository
+@Component
 public class PostgresSearchEngine implements SearchEngine {
 
     /**
@@ -117,8 +123,16 @@ public class PostgresSearchEngine implements SearchEngine {
 
         // La columna de puntuacion solo cuando alguien la va a leer: calcularla para
         // ordenar por fecha seria trabajo que nadie mira.
-        sql.append(puntua ? "SELECT " + RELEVANCIA + " AS relevancia, " : "SELECT ");
-        sql.append(SELECT_BASE.substring("SELECT ".length()));
+        //
+        // Se compone de las dos mitades de la proyeccion y no recortando la sentencia
+        // entera: recortarle el "SELECT " de delante funciona hasta que alguien escriba
+        // "SELECT DISTINCT" o le ponga un salto de linea, y entonces el SQL sale roto en
+        // ejecucion sin que la compilacion vea nada.
+        sql.append("SELECT ");
+        if (puntua) {
+            sql.append(RELEVANCIA).append(" AS relevancia, ");
+        }
+        sql.append(COLUMNAS_BASE).append(DESDE_BASE);
 
         // RN-081. Se escribe aqui una sola vez y es lo primero de la clausula, para que
         // leerla sea inmediato: de los siete estados, uno.

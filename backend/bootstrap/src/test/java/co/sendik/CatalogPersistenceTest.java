@@ -760,20 +760,26 @@ class CatalogPersistenceTest {
         assertThat(catalogo).doesNotContain(borrador.id(), enRevision.id(), pausada.id());
     }
 
-    /** Lo mas reciente primero, que es lo que el indice de V14 sostiene. */
+    /**
+     * Lo mas reciente primero, que es lo que el indice de V14 sostiene.
+     *
+     * <p>Se recorre <strong>el escaparate de un vendedor propio</strong> y no el catalogo
+     * entero. Leia los primeros cincuenta del catalogo y quedaba a merced de cuantas filas
+     * dejaran las demas pruebas: la vieja se publica dos horas antes, asi que cae detras de
+     * todas las que comparten el instante {@code AHORA}, y en cuanto esas pasen de cuarenta
+     * y nueve se sale del tramo y la prueba falla por algo que no esta comprobando. La
+     * clausula del orden es la misma en las dos consultas, asi que recorrer una demuestra
+     * la otra.
+     */
     @Test
     void deberia_ordenar_el_catalogo_por_fecha_de_publicacion_descendente() {
-        Listing vieja = publicadaEn(AHORA.minus(Duration.ofHours(2)));
-        Listing nueva = publicadaEn(AHORA);
+        SellerId vendedor = new SellerId(nuevoUsuario());
+        Listing vieja = publicadaDe(vendedor, AHORA.minus(Duration.ofHours(2)));
+        Listing nueva = publicadaDe(vendedor, AHORA);
 
-        List<ListingId> mias = catalogo(50).stream()
-                .map(Listing::id)
-                .filter(id -> id.equals(nueva.id()) || id.equals(vieja.id()))
-                .toList();
+        List<Listing> suyas = publicaciones.publicadasDelVendedor(vendedor, null, 50);
 
-        // El orden relativo entre las dos, que es lo que la consulta decide. El absoluto
-        // depende de lo que hayan dejado las demas pruebas.
-        assertThat(mias).containsExactly(nueva.id(), vieja.id());
+        assertThat(suyas).extracting(Listing::id).containsExactly(nueva.id(), vieja.id());
     }
 
     /**
@@ -1090,13 +1096,27 @@ class CatalogPersistenceTest {
         assertThat(buscar(criterios().texto("usada"))).isEmpty();
     }
 
-    /** RN-081: por este segundo camino tampoco sale lo que no esta publicado. */
+    /**
+     * RN-081: por este segundo camino tampoco sale lo que no esta publicado.
+     *
+     * <p>Se siembran cuatro estados con la misma palabra y se afirma que sale <strong>uno</strong>,
+     * y no solo que el pausado no aparece: la regla habla de «cualquiera de los otros seis
+     * estados» y una prueba por estado deja los demas a la buena voluntad de quien escriba
+     * la consulta.
+     */
     @Test
     void deberia_cumplir_RN_081_no_encontrando_lo_que_no_esta_publicado() {
-        Listing publicada = publicadaCon("Camisa grimalto de lino", null);
-        publicaciones.guardar(publicada.pausar(AHORA));
+        Listing viva = publicadaCon("Camisa grimalto de lino", null);
 
-        assertThat(buscar(criterios().texto("grimalto"))).isEmpty();
+        publicaciones.guardar(publicadaCon("Camisa grimalto pausada", null).pausar(AHORA));
+        publicaciones.guardar(publicadaCon("Camisa grimalto archivada", null).archivar(AHORA));
+        publicaciones.guardar(borradorConTomas());
+        publicaciones.guardar(
+                conTomas(borradorDe(medidasDe(MeasurementGroup.TOP)), 8).enviarARevision(AHORA));
+
+        assertThat(buscar(criterios().texto("grimalto")))
+                .extracting(Listing::id)
+                .containsExactly(viva.id());
     }
 
     /** Criterio 14: los filtros se exigen todos y se traducen a un solo SQL. */

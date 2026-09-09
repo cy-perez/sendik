@@ -36,6 +36,9 @@
   gap: var(--esp-8);
   min-height: var(--destino-tactil);
   cursor: pointer;
+  /* Al 200% el nombre del color no cabe al lado de la casilla. Es el mismo motivo por el
+     que `marca.css` lo declara en la fila de la insignia. */
+  flex-wrap: wrap;
 }
 
 .filtros__opcion input:focus-visible {
@@ -58,6 +61,8 @@
   border-radius: var(--radio-sm);
   background-color: var(--color-superficie);
   color: var(--color-texto);
+  /* Como en la caja de búsqueda: sin esto, Arial 13.33px y zoom automático en iOS. */
+  font: inherit;
 }
 
 .filtros__control:focus-visible {
@@ -65,8 +70,16 @@
   outline-offset: 2px;
 }
 
+/* El relleno solo no sirve: --color-fondo sobre --color-superficie da 1.08:1 y el cambio
+   es invisible. El borde discontinuo es la señal no cromática, como en `.vacio`. */
 .filtros__control:disabled {
   background-color: var(--color-fondo);
+  color: var(--color-texto-suave);
+  border-style: dashed;
+}
+
+.filtros__pista {
+  margin-top: var(--esp-4);
   color: var(--color-texto-suave);
 }
 

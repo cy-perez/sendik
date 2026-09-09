@@ -184,11 +184,6 @@ export class CatalogStore {
     this.criterios.set(criterios);
   }
 
-  /** Lo pedido ahora mismo, para que la pantalla pinte las fichas de lo que está puesto. */
-  loPedido(): SearchCriteria {
-    return this.criterios();
-  }
-
   /**
    * Los criterios como cadena estable, que es lo que entra en la clave de consulta.
    *

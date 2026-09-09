@@ -58,8 +58,10 @@ test.describe('renderizado en servidor', () => {
   test('la caja de busqueda llega en el HTML servido', async ({ request }) => {
     const html = await (await request.get('/catalogo')).text();
 
+    // El rol y la etiqueta, no el identificador del DOM: lo que hay que demostrar es que la
+    // caja llega servida y con su nombre ya traducido, no cómo se llama por dentro.
     expect(html).toContain('role="search"');
-    expect(html).toContain('id="buscador-texto"');
+    expect(html).toContain('Buscar en el catálogo');
   });
 
   /**

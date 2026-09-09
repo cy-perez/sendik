@@ -76,6 +76,20 @@ export class CatalogFilters {
 
   protected readonly ordenActual = computed(() => this.criterios().sort ?? '');
 
+  /**
+   * Si el rango escrito no puede casar con nada.
+   *
+   * <p>Se dice aquí y no se manda: el servidor lo rechaza con 400 —y hace bien, porque un
+   * vacío se leería como «no hay nada de ese precio»— pero un 400 de un campo mal escrito
+   * llega a la pantalla como error de red, que le dice a quien busca que Sendik está caído.
+   */
+  protected readonly rangoInvalido = computed(() => {
+    const minimo = numeroDe(this.minimo());
+    const maximo = numeroDe(this.maximo());
+
+    return minimo !== null && maximo !== null && minimo > maximo;
+  });
+
   protected alternarPanel(): void {
     this.abierto.update((estaba) => !estaba);
   }
@@ -129,6 +143,11 @@ export class CatalogFilters {
 
   /** Al salir del campo, no en cada tecla: ver {@link minimo}. */
   protected aplicarPrecio(): void {
+    // Con el rango del revés no se pide nada: lo que corresponde es decirlo en el campo.
+    if (this.rangoInvalido()) {
+      return;
+    }
+
     this.cambiar.emit({
       ...this.criterios(),
       minPrice: numeroDe(this.minimo()),

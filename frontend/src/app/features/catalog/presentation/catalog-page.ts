@@ -3,8 +3,10 @@ import {
   Component,
   computed,
   effect,
+  ElementRef,
   inject,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Meta } from '@angular/platform-browser';
@@ -80,6 +82,15 @@ export class CatalogPage {
 
   protected readonly fichas = computed(() => filtrosPuestos(this.criterios()));
 
+  /**
+   * Donde va el foco al quitar un filtro, y el destino del enlace de salto.
+   *
+   * <p>Sin esto, quitar una ficha destruye el boton que tenia el foco y el foco cae al
+   * cuerpo del documento: quien navega con teclado tiene que volver a tabular desde el
+   * principio de la pagina despues de cada filtro que quita.
+   */
+  private readonly resultados = viewChild<ElementRef<HTMLElement>>('resultados');
+
   protected readonly hayFiltros = computed(() => this.fichas().length > 0);
 
   protected readonly arbol = computed<readonly Category[]>(() => this.store.arbol());
@@ -130,6 +141,30 @@ export class CatalogPage {
   protected readonly vacio = computed(
     () => !this.cargando() && !this.fallo() && this.publicaciones().length === 0,
   );
+
+  /**
+   * Lo que se anuncia al cambiar la lista, y lo que se lee sobre la rejilla.
+   *
+   * <p>Dice cuantas se estan ensenando y no cuantas hay: la paginacion por cursor no cuenta
+   * el total a proposito, y prometer una cifra que no se tiene seria peor que no darla.
+   */
+  protected readonly anuncio = computed(() => {
+    if (this.cargando()) {
+      return this.idioma.translate('catalog.list.loading');
+    }
+    if (this.fallo()) {
+      return this.idioma.translate('catalog.list.error');
+    }
+    if (this.vacio()) {
+      return this.idioma.translate('catalog.search.emptyWithFilters');
+    }
+
+    const cuantas = this.publicaciones().length;
+    return this.idioma.translate(
+      cuantas === 1 ? 'catalog.search.showingOne' : 'catalog.search.showing',
+      { cuantas },
+    );
+  });
 
   constructor() {
     // Sincroniza el filtro del listado con la dirección. Es un efecto porque sincroniza
@@ -189,6 +224,27 @@ export class CatalogPage {
   }
 
   /**
+   * La etiqueta de una ficha, ya traducida y con los precios en formato local.
+   *
+   * <p>El formato es cosa de la pantalla y no del dominio: `search-criteria.ts` es
+   * TypeScript puro y no conoce la configuracion regional. Sin esto, la ficha decia
+   * «De 50000 a 200000», sin separador de miles y en los dos idiomas igual.
+   */
+  protected etiquetaDe(ficha: FiltroPuesto): string {
+    const parametro = ficha.parametro ?? {};
+    const formateado = Object.fromEntries(
+      Object.entries(parametro).map(([nombre, valor]) => [
+        nombre,
+        typeof valor === 'number'
+          ? new Intl.NumberFormat(this.idioma.getActiveLang()).format(valor)
+          : valor,
+      ]),
+    );
+
+    return this.idioma.translate(ficha.etiqueta, formateado);
+  }
+
+  /**
    * Buscar es ir al catálogo entero. RN-083.
    *
    * <p>Escribir en la caja **suelta la categoría** que se estaba navegando, y no es un
@@ -203,20 +259,30 @@ export class CatalogPage {
   }
 
   /** Los filtros se quedan donde se está: acotan lo que ya se está viendo. */
-  protected filtrar(criterios: SearchCriteria): void {
-    void this.router.navigate([], {
+  protected filtrar(criterios: SearchCriteria): Promise<boolean> {
+    return this.router.navigate([], {
       relativeTo: this.ruta,
       queryParams: aParametros(criterios),
     });
   }
 
-  protected quitar(ficha: FiltroPuesto): void {
-    this.filtrar(sinFiltro(this.criterios(), ficha));
+  protected async quitar(ficha: FiltroPuesto): Promise<void> {
+    await this.filtrar(sinFiltro(this.criterios(), ficha));
+    this.devolverElFoco();
   }
 
   /** La salida del vacío honesto: se van los filtros, no lo que se estaba buscando. */
-  protected quitarTodos(): void {
-    this.filtrar(sinFiltros(this.criterios()));
+  protected async quitarTodos(): Promise<void> {
+    await this.filtrar(sinFiltros(this.criterios()));
+    this.devolverElFoco();
+  }
+
+  /**
+   * Al quitar un filtro desaparece el botón que tenía el foco, así que hay que decir dónde
+   * sigue. Los resultados son el destino natural: es lo que acaba de cambiar.
+   */
+  private devolverElFoco(): void {
+    this.resultados()?.nativeElement.focus();
   }
 
   protected verMas(): void {

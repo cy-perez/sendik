@@ -91,14 +91,4 @@ public record ListCatalogQuery(
     public CatalogSort ordenEfectivo() {
         return CatalogSort.efectivo(orden, texto != null);
     }
-
-    /** Si no acota nada. Con esto puesto, buscar y listar el catalogo son la misma cosa. */
-    public boolean sinFiltros() {
-        return texto == null
-                && condiciones.isEmpty()
-                && talla == null
-                && colores.isEmpty()
-                && precio.sinLimite()
-                && orden == null;
-    }
 }

@@ -122,7 +122,7 @@ final class Cursores {
      * <p>Se traga el motivo a proposito: decirle a quien manda un cursor inventado que le
      * falta el campo «p» es ensenarle a fabricar uno valido.
      */
-    private static <T> T leer(java.util.function.Supplier<T> lectura) {
+    static <T> T leer(java.util.function.Supplier<T> lectura) {
         try {
             return lectura.get();
         } catch (RuntimeException e) {

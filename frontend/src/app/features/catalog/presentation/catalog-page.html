@@ -89,14 +89,20 @@
       <ul class="catalogo__fichas-lista">
         @for (ficha of fichas(); track ficha.campo + (ficha.valor ?? '')) {
           <li>
-            <button type="button" class="catalogo__ficha" (click)="quitar(ficha)">
-              <span>{{ ficha.etiqueta | transloco: ficha.parametro }}</span>
-              <span class="solo-lectores">
-                {{
-                  'catalog.filters.remove'
-                    | transloco: { filtro: ficha.etiqueta | transloco: ficha.parametro }
-                }}
-              </span>
+            <!--
+              La frase completa va en `aria-label` y no en un span oculto al lado. Con el
+              span, el nombre accesible salía «Azul Quitar el filtro Azul»: la etiqueta se
+              oía dos veces por ficha. La visible sigue contenida en el nombre.
+            -->
+            <button
+              type="button"
+              class="catalogo__ficha tipo-secundario"
+              [attr.aria-label]="
+                'catalog.filters.remove' | transloco: { filtro: etiquetaDe(ficha) }
+              "
+              (click)="quitar(ficha)"
+            >
+              <span>{{ etiquetaDe(ficha) }}</span>
               <svg class="icono" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" />
               </svg>
@@ -104,7 +110,7 @@
           </li>
         }
         <li>
-          <button type="button" class="btn-texto" (click)="quitarTodos()">
+          <button type="button" class="btn btn-texto" (click)="quitarTodos()">
             {{ 'catalog.filters.clearAll' | transloco }}
           </button>
         </li>
@@ -112,22 +118,39 @@
     </div>
   }
 
+  <!--
+    El anuncio de lo que hay. Vive fuera de todas las ramas y existe desde el primer
+    pintado, que es lo que hace que un lector de pantalla lo lea al cambiar: una región
+    viva insertada junto con su contenido no la anuncia ninguno de forma fiable, y cada
+    cambio de filtro destruye y recrea la rama de resultados.
+  -->
+  <p class="solo-lectores" aria-live="polite" aria-atomic="true">{{ anuncio() }}</p>
+
+  <!--
+    El salto a los resultados: en escritorio hay veinticuatro paradas de tabulación entre
+    la caja y la primera tarjeta, y son las mismas en todas las rutas del catálogo.
+  -->
+  <a class="catalogo__salto" href="#resultados">
+    {{ 'catalog.list.skipToResults' | transloco }}
+  </a>
+
   <div class="catalogo__cuerpo">
     <!--
-      Panel lateral en escritorio y hoja en móvil, con el mismo marcado. Es un <aside>
-      porque acota el listado sin ser el listado.
+      Panel lateral en escritorio y hoja en móvil, con el mismo marcado. Es una <section>
+      con nombre y no un <aside>: `complementary` significa «tangencialmente relacionado»,
+      y unos controles que gobiernan el listado no lo son.
     -->
-    <aside class="catalogo__filtros" [attr.aria-label]="'catalog.filters.title' | transloco">
+    <section class="catalogo__filtros" [attr.aria-label]="'catalog.filters.title' | transloco">
       <sendik-catalog-filters
         [criterios]="criterios()"
         [puestos]="fichas().length"
         (cambiar)="filtrar($event)"
       />
-    </aside>
+    </section>
 
-    <div class="catalogo__resultados">
+    <div id="resultados" class="catalogo__resultados" tabindex="-1" #resultados>
       @if (cargando()) {
-        <p class="solo-lectores" role="status">{{ 'catalog.list.loading' | transloco }}</p>
+        <p class="solo-lectores">{{ 'catalog.list.loading' | transloco }}</p>
         <ul class="catalogo__rejilla" aria-hidden="true">
           @for (hueco of [0, 1, 2, 3, 4, 5, 6, 7]; track hueco) {
             <li><p class="esqueleto catalogo__esqueleto"></p></li>
@@ -149,7 +172,7 @@
           RN-086: se dice que no hay, y no se rellena con nada aproximado. Los filtros
           puestos se ven arriba y la salida para quitarlos está aquí mismo.
         -->
-        <div class="catalogo__vacio" role="status">
+        <div class="catalogo__vacio">
           <p class="tipo-cuerpo">
             {{
               (criterios().q !== null
@@ -174,12 +197,7 @@
           la paginación por cursor no cuenta el total a propósito, y prometer una cifra que
           no se tiene sería peor que no darla.
         -->
-        <p class="tipo-secundario" role="status">
-          {{
-            (publicaciones().length === 1 ? 'catalog.search.showingOne' : 'catalog.search.showing')
-              | transloco: { cuantas: publicaciones().length }
-          }}
-        </p>
+        <p class="tipo-secundario">{{ anuncio() }}</p>
 
         <ul class="catalogo__rejilla">
           @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {

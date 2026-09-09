@@ -77,6 +77,9 @@ const PARES: readonly Par[] = [
   // HU-008. La confirmacion y las marcas de la cola son cajas con borde de
   // control que se apoyan sobre el fondo de PAGINA, no dentro de una tarjeta.
   ['Borde de control sobre el fondo', '--color-borde-control', '--color-fondo', AA_GRANDE],
+  // HU-014. La ficha de filtro puesto cambia de relleno en hover y su borde deja de estar
+  // sobre el fondo de pagina. Con el borde de control daba 2.96:1.
+  ['Borde de ficha de filtro en hover', '--color-primario', '--color-primario-suave', AA_GRANDE],
   ['Borde de aviso propio sobre tarjeta', '--color-primario', '--color-superficie', AA_GRANDE],
   // Las cajas de aviso y de error llevan fondo de tarjeta pero se apoyan sobre
   // el fondo de pagina: su borde linda con los dos y es informacion no textual.

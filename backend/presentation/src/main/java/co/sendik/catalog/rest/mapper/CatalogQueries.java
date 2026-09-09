@@ -44,8 +44,8 @@ public final class CatalogQueries {
             @Nullable String sizeSystem,
             @Nullable String size,
             @Nullable List<String> color,
-            @Nullable Long minPrice,
-            @Nullable Long maxPrice,
+            @Nullable String minPrice,
+            @Nullable String maxPrice,
             @Nullable String sort,
             @Nullable String cursor,
             int limit) {
@@ -53,9 +53,9 @@ public final class CatalogQueries {
         return new ListCatalogQuery(
                 SearchText.de(q),
                 category == null || category.isBlank() ? null : CategoryId.de(category),
-                valores(condition, Condition::valueOf),
+                valores(condition, Condition.values()),
                 talla(sizeSystem, size),
-                valores(color, Color::valueOf),
+                valores(color, Color.values()),
                 precio(minPrice, maxPrice),
                 CatalogSorts.orden(sort),
                 CatalogCursors.cursor(cursor),
@@ -69,8 +69,8 @@ public final class CatalogQueries {
             @Nullable String sizeSystem,
             @Nullable String size,
             @Nullable List<String> color,
-            @Nullable Long minPrice,
-            @Nullable Long maxPrice,
+            @Nullable String minPrice,
+            @Nullable String maxPrice,
             @Nullable String sort) {
 
         return puesto(q)
@@ -78,8 +78,8 @@ public final class CatalogQueries {
                 || puesto(sizeSystem)
                 || puesto(size)
                 || !vacia(color)
-                || minPrice != null
-                || maxPrice != null
+                || puesto(minPrice)
+                || puesto(maxPrice)
                 || puesto(sort);
     }
 
@@ -89,7 +89,7 @@ public final class CatalogQueries {
      * <p>Conjunto y no lista porque repetir un valor no significa nada, y ordenado por
      * insercion para que dos peticiones iguales produzcan la misma consulta.
      */
-    private static <T> Set<T> valores(@Nullable List<String> crudos, java.util.function.Function<String, T> aValor) {
+    private static <T extends Enum<T>> Set<T> valores(@Nullable List<String> crudos, T[] admitidos) {
         if (crudos == null || crudos.isEmpty()) {
             return Set.of();
         }
@@ -97,10 +97,33 @@ public final class CatalogQueries {
         Set<T> convertidos = new LinkedHashSet<>();
         for (String crudo : crudos) {
             if (!crudo.isBlank()) {
-                convertidos.add(aValor.apply(crudo.trim()));
+                convertidos.add(deLaLista(crudo, admitidos));
             }
         }
         return convertidos;
+    }
+
+    /**
+     * Un valor de una lista cerrada, <strong>sin devolver lo que llego</strong>.
+     *
+     * <p>Es la diferencia con {@code Enum.valueOf}, y no es cosmetica: aquel construye el
+     * mensaje con el texto recibido —«No enum constant ... Color.loQueSea»— y ese mensaje
+     * acaba en el registro del servidor, que es una ruta publica y sin cuenta. Quien mande
+     * un color con saltos de linea dentro escribe lineas enteras en el registro, y en Cloud
+     * Logging cada una se lee como una entrada aparte.
+     *
+     * <p>Es el mismo patron que ya usan {@code CategoryId.de} y {@link CatalogSorts}: se dice
+     * que el valor no existe, no cual era.
+     */
+    private static <T extends Enum<T>> T deLaLista(String crudo, T[] admitidos) {
+        String limpio = crudo.trim();
+
+        for (T candidato : admitidos) {
+            if (candidato.name().equals(limpio)) {
+                return candidato;
+            }
+        }
+        throw new IllegalArgumentException("El filtro no admite ese valor");
     }
 
     /**
@@ -121,7 +144,15 @@ public final class CatalogQueries {
             throw new IllegalArgumentException("La talla se filtra con su sistema: hacen falta los dos");
         }
 
-        return new Size(SizeSystem.valueOf(sistema.trim()), valor.trim());
+        SizeSystem escala = deLaLista(sistema, SizeSystem.values());
+
+        try {
+            return new Size(escala, valor.trim());
+        } catch (IllegalArgumentException e) {
+            // El dominio nombra la talla recibida en su mensaje, que le sirve a quien publica.
+            // Aqui no puede salir: es entrada publica y el mensaje se registra.
+            throw new IllegalArgumentException("Esa talla no existe en ese sistema");
+        }
     }
 
     /**
@@ -131,13 +162,34 @@ public final class CatalogQueries {
      * maximo lo rechaza {@link PriceRange}, que es donde esta escrito por que no puede ser un
      * vacio.
      */
-    private static PriceRange precio(@Nullable Long minimo, @Nullable Long maximo) {
-        if (minimo == null && maximo == null) {
+    private static PriceRange precio(@Nullable String minimo, @Nullable String maximo) {
+        if (!puesto(minimo) && !puesto(maximo)) {
             return PriceRange.SIN_LIMITE;
         }
 
-        return new PriceRange(
-                minimo == null ? null : Money.dePesos(minimo), maximo == null ? null : Money.dePesos(maximo));
+        return new PriceRange(pesos(minimo), pesos(maximo));
+    }
+
+    /**
+     * Un entero de pesos, o nulo si no vino.
+     *
+     * <p>Se convierte aqui y no en la firma del controlador porque un {@code Long} en el
+     * borde se convierte antes de que el metodo empiece, y con la bandera de busqueda
+     * apagada eso responderia 400 en vez del 404 del criterio 26.
+     *
+     * <p>Lo que no es un entero se rechaza. El decimal tambien, y no por rigor: RN-029 dice
+     * que el peso colombiano no usa decimales, asi que un precio con coma es un dato que
+     * alguien tecleo mal.
+     */
+    private static @Nullable Money pesos(@Nullable String crudo) {
+        if (!puesto(crudo)) {
+            return null;
+        }
+        try {
+            return Money.dePesos(Long.parseLong(crudo.trim()));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("El precio tiene que ser un entero de pesos", e);
+        }
     }
 
     private static boolean puesto(@Nullable String valor) {

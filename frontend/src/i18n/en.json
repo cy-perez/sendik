@@ -1264,7 +1264,8 @@
       "loading": "Loading the catalogue",
       "error": "We couldn't load the catalogue. Try again.",
       "retry": "Try again",
-      "more": "See more"
+      "more": "See more",
+      "skipToResults": "Skip to results"
     },
     "categories": {
       "title": "Categories",
@@ -1376,7 +1377,10 @@
         "priceBetween": "From {{desde}} to {{hasta}}",
         "priceFrom": "From {{desde}}",
         "priceTo": "Up to {{hasta}}"
-      }
+      },
+      "sizeHint": "Pick a size system first.",
+      "priceRangeError": "The lowest price cannot be higher than the highest.",
+      "openWithCount": "Filter, {{cuantos}} applied"
     },
     "sort": {
       "default": "Best match",

@@ -1264,7 +1264,8 @@
       "loading": "Cargando el catálogo",
       "error": "No pudimos cargar el catálogo. Inténtalo de nuevo.",
       "retry": "Reintentar",
-      "more": "Ver más"
+      "more": "Ver más",
+      "skipToResults": "Saltar a los resultados"
     },
     "categories": {
       "title": "Categorías",
@@ -1376,7 +1377,10 @@
         "priceBetween": "De {{desde}} a {{hasta}}",
         "priceFrom": "Desde {{desde}}",
         "priceTo": "Hasta {{hasta}}"
-      }
+      },
+      "sizeHint": "Elige primero el sistema de talla.",
+      "priceRangeError": "El precio mínimo no puede ser mayor que el máximo.",
+      "openWithCount": "Filtrar, {{cuantos}} puestos"
     },
     "sort": {
       "default": "Lo que mejor encaje",

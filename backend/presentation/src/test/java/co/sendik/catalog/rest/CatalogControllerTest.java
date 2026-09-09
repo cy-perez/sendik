@@ -17,6 +17,7 @@ import co.sendik.catalog.model.Color;
 import co.sendik.catalog.model.Condition;
 import co.sendik.catalog.model.ListingId;
 import co.sendik.catalog.model.SearchText;
+import co.sendik.catalog.model.SellerId;
 import co.sendik.catalog.model.Size;
 import co.sendik.catalog.model.SizeSystem;
 import co.sendik.catalog.rest.mapper.CatalogCursors;
@@ -26,7 +27,9 @@ import co.sendik.shared.money.Money;
 import co.sendik.shared.port.out.PublicFileStore;
 import co.sendik.shared.rest.ApiExceptionHandler;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -175,7 +178,14 @@ class CatalogControllerTest {
 
         mvc.perform(get("/api/v1/listings")).andExpect(status().isOk());
 
-        assertThat(consultaPedida().sinFiltros()).isTrue();
+        ListCatalogQuery consulta = consultaPedida();
+
+        assertThat(consulta.texto()).isNull();
+        assertThat(consulta.condiciones()).isEmpty();
+        assertThat(consulta.colores()).isEmpty();
+        assertThat(consulta.talla()).isNull();
+        assertThat(consulta.precio().sinLimite()).isTrue();
+        assertThat(consulta.orden()).isNull();
     }
 
     /** Los cuatro ordenes de RN-088, con los nombres del contrato. */
@@ -317,6 +327,151 @@ class CatalogControllerTest {
                 .build();
 
         sinBusqueda.perform(get("/api/v1/listings").param("color", "AZUL")).andExpect(status().isNotFound());
+    }
+
+    /**
+     * Criterio 26, la parte que se me escapaba: el 404 tiene que salir **antes** de que
+     * nadie mire si lo pedido es valido.
+     *
+     * <p>Estos dos no pasaban por el cuerpo del metodo cuando eran un {@code @Size} sobre
+     * {@code q} y un {@code Long} en los precios: la validacion de restricciones y la
+     * conversion de argumentos ocurren antes de que el metodo empiece, asi que respondian
+     * 400 con la bandera apagada. Y ese 400 dice que el parametro se entiende, que es tanto
+     * como confirmar que la busqueda esta detras, apagada.
+     */
+    @Test
+    void deberia_responder_404_y_no_400_a_un_texto_larguisimo_con_la_bandera_apagada() throws Exception {
+        MockMvc sinBusqueda = sinLaBandera();
+
+        sinBusqueda
+                .perform(get("/api/v1/listings").param("q", "a".repeat(SearchText.LARGO_MAXIMO + 1)))
+                .andExpect(status().isNotFound());
+        sinBusqueda
+                .perform(get("/api/v1/listings").param("minPrice", "no-es-un-numero"))
+                .andExpect(status().isNotFound());
+    }
+
+    /** Y con la bandera encendida, los mismos dos son 400. */
+    @Test
+    void deberia_rechazar_un_precio_que_no_es_un_numero() throws Exception {
+        rechaza("minPrice", "no-es-un-numero");
+        rechaza("maxPrice", "50.000");
+    }
+
+    /**
+     * Un cursor fabricado es 400, tambien cuando lo que trae dentro no es una cadena.
+     *
+     * <p>Con un objeto donde deberia ir el orden, Jackson lanza una excepcion suya —que no es
+     * {@link IllegalArgumentException}— y el cursor salia como 500 con la traza entera en el
+     * registro. Es una ruta publica y sin cuenta: cualquiera podia llenar el registro de
+     * errores.
+     */
+    @Test
+    void deberia_rechazar_con_400_un_cursor_cuyo_contenido_no_es_texto() throws Exception {
+        String cursor = Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(("{\"o\":{},\"k\":\"1\",\"i\":\"" + UUID.randomUUID() + "\"}")
+                        .getBytes(StandardCharsets.UTF_8));
+
+        mvc.perform(get("/api/v1/listings").param("cursor", cursor)).andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Y tampoco vale una puntuacion que no es un numero finito.
+     *
+     * <p>{@code Double.parseDouble} acepta {@code NaN}, y en PostgreSQL {@code NaN} es mayor
+     * que cualquier cosa: la condicion de continuidad dejaria de acotar y el tramo volveria a
+     * empezar desde el principio en cada pagina.
+     */
+    @Test
+    void deberia_rechazar_un_cursor_de_relevancia_con_una_puntuacion_que_no_es_finita() throws Exception {
+        String cursor = Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(("{\"o\":\"RELEVANCE\",\"k\":\"NaN\",\"i\":\"" + UUID.randomUUID() + "\"}")
+                        .getBytes(StandardCharsets.UTF_8));
+
+        mvc.perform(get("/api/v1/listings").param("cursor", cursor).param("q", "camisa"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Lo que el cliente escribio no vuelve en el mensaje del error.
+     *
+     * <p>No es discrecion: el manejador registra el mensaje, la ruta es publica y sin cuenta,
+     * y un valor con saltos de linea dentro escribe lineas enteras en el registro del
+     * servidor, que en Cloud Logging se leen como entradas aparte. {@code Enum.valueOf}
+     * construia el mensaje con el texto recibido.
+     */
+    @Test
+    void no_deberia_devolver_el_valor_recibido_al_rechazar_un_filtro() throws Exception {
+        String respuesta = mvc.perform(get("/api/v1/listings").param("color", "INVENTADO_Y_LARGO"))
+                .andExpect(status().isBadRequest())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(respuesta).doesNotContain("INVENTADO_Y_LARGO");
+    }
+
+    /**
+     * Criterio 19 y RN-084, afirmado donde de verdad se puede: sobre el JSON.
+     *
+     * <p>La defensa estructural es que {@link CatalogSort} tiene cuatro valores y ninguno
+     * comprable. Esta es la otra mitad: que la respuesta no lleve un campo donde escribir
+     * una posicion. La puntuacion existe dentro -el motor la calcula para ordenar- y no
+     * puede asomar.
+     */
+    @Test
+    void deberia_cumplir_RN_084_sin_ningun_campo_de_posicion_en_la_respuesta() throws Exception {
+        when(listar.execute(any()))
+                .thenReturn(CatalogPage.ultima(List.of(CatalogoDelBorde.publicada(new SellerId(UUID.randomUUID())))));
+
+        mvc.perform(get("/api/v1/listings").param("q", "camisa"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").exists())
+                .andExpect(jsonPath("$.items[0].score").doesNotExist())
+                .andExpect(jsonPath("$.items[0].relevance").doesNotExist())
+                .andExpect(jsonPath("$.items[0].relevancia").doesNotExist())
+                .andExpect(jsonPath("$.items[0].rank").doesNotExist())
+                .andExpect(jsonPath("$.items[0].position").doesNotExist())
+                .andExpect(jsonPath("$.items[0].promoted").doesNotExist())
+                .andExpect(jsonPath("$.items[0].sponsored").doesNotExist());
+    }
+
+    /**
+     * El cursor de la lista de favoritos no vale en el catalogo.
+     *
+     * <p>Los javadoc de {@code Cursores} y {@code CatalogCursors} dicen tres veces que el
+     * compilador lo impide, y es cierto para los tipos de Java. Por el cable viaja una
+     * cadena, y ahi quien decide es que campos exige cada mapeador: el de favoritos lleva un
+     * instante y el del catalogo un orden. Eso no lo comprobaba nadie.
+     */
+    @Test
+    void deberia_rechazar_el_cursor_de_otra_lista() throws Exception {
+        String deFavoritos = Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(("{\"p\":\"" + CUANDO + "\",\"i\":\"" + UUID.randomUUID() + "\"}")
+                        .getBytes(StandardCharsets.UTF_8));
+
+        mvc.perform(get("/api/v1/listings").param("cursor", deFavoritos)).andExpect(status().isBadRequest());
+    }
+
+    /** Y un cursor con un orden que no existe tampoco se resuelve al de omision. */
+    @Test
+    void deberia_rechazar_un_cursor_con_un_orden_inventado() throws Exception {
+        String inventado = Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(("{\"o\":\"POPULARITY\",\"k\":\"1\",\"i\":\"" + UUID.randomUUID() + "\"}")
+                        .getBytes(StandardCharsets.UTF_8));
+
+        mvc.perform(get("/api/v1/listings").param("cursor", inventado)).andExpect(status().isBadRequest());
+    }
+
+    private MockMvc sinLaBandera() {
+        return MockMvcBuilders.standaloneSetup(new CatalogController(listar, almacen, Optional.empty()))
+                .setControllerAdvice(new ApiExceptionHandler())
+                .setValidator(new LocalValidatorFactoryBean())
+                .build();
     }
 
     // --- apoyo de la busqueda ------------------------------------------------

@@ -101,6 +101,10 @@
      Sale de la foto y no al reves: con la proporcion 3:4 de RN-018, por debajo de
      este ancho la toma se ve como una miniatura y el titulo no cabe en dos lineas. */
   --ancho-tarjeta-min: 220px;
+  /* La columna de filtros del catalogo (HU-014). En `ch` y no en pixeles por lo mismo que
+     --medida-cifra: la caja tiene que crecer con el texto, o al 200% los selectores de
+     orden y de sistema de talla quedan truncados dentro del control. */
+  --ancho-panel-filtros: 20ch;
 
   /* La imagen de una verificacion, en la bandeja del moderador (HU-006).
 

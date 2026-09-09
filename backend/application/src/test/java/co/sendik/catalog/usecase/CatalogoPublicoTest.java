@@ -3,10 +3,12 @@ package co.sendik.catalog.usecase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import co.sendik.catalog.dto.CatalogCursor;
 import co.sendik.catalog.dto.CatalogPage;
 import co.sendik.catalog.dto.ListCatalogQuery;
 import co.sendik.catalog.dto.ListSellerCatalogQuery;
 import co.sendik.catalog.exception.UnknownCategoryException;
+import co.sendik.catalog.model.CatalogSort;
 import co.sendik.catalog.model.Category;
 import co.sendik.catalog.model.CategoryId;
 import co.sendik.catalog.model.Color;
@@ -233,6 +235,62 @@ class CatalogoPublicoTest {
 
         assertThat(tramo.items()).isEmpty();
         assertThat(tramo.hayMas()).isFalse();
+    }
+
+    /**
+     * El cursor del catalogo no vale en el escaparate si nacio con otro orden.
+     *
+     * <p>Desde HU-014 el cursor lleva dentro su orden, y el escaparate solo tiene uno. Uno
+     * de precio -copiado de una busqueda y pegado en el perfil de alguien- llegaba a una
+     * consulta que ordena por fecha y le pedia una fecha que ese cursor no lleva: reventaba
+     * con un 500. El criterio 22 dice 400, y eso es lo que sale de rechazarlo aqui.
+     */
+    @Test
+    void deberia_rechazar_en_el_escaparate_un_cursor_nacido_con_otro_orden_criterio_22() {
+        CatalogCursor dePrecio =
+                CatalogCursor.porPrecio(CatalogSort.PRICE_ASC, Money.dePesos(90_000), ListingId.nuevo());
+
+        assertThatThrownBy(() -> new ListSellerCatalogQuery(new SellerId(UUID.randomUUID()), dePrecio, 24))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("PRICE_ASC");
+    }
+
+    /** Y el del propio escaparate si vale: es el mismo orden que el del catalogo. */
+    @Test
+    void deberia_admitir_en_el_escaparate_el_cursor_del_catalogo() {
+        CatalogCursor deFecha = CatalogCursor.porFecha(AHORA, ListingId.nuevo());
+
+        assertThat(new ListSellerCatalogQuery(new SellerId(UUID.randomUUID()), deFecha, 24).desde())
+                .isEqualTo(deFecha);
+    }
+
+    /**
+     * El escaparate paginado, que hasta HU-014 no probaba nadie.
+     *
+     * <p>Las dos llamadas que habia pasaban {@code desde = null}, asi que la rama que sella
+     * el cursor del escaparate no se ejercitaba en ningun punto de la pila. Y el formato del
+     * cursor acaba de cambiar debajo de ella.
+     */
+    @Test
+    void deberia_paginar_el_escaparate_con_su_propio_cursor() {
+        SellerId vendedor = new SellerId(UUID.randomUUID());
+        for (int i = 0; i < 3; i++) {
+            publicar(CAMISAS, AHORA.minusSeconds(i), vendedor);
+        }
+
+        CatalogPage primera = escaparate.execute(new ListSellerCatalogQuery(vendedor, null, 2));
+        assertThat(primera.hayMas()).isTrue();
+        assertThat(primera.siguiente()).isNotNull();
+        assertThat(primera.siguiente().orden()).isEqualTo(CatalogSort.NEWEST);
+
+        CatalogPage segunda = escaparate.execute(new ListSellerCatalogQuery(vendedor, primera.siguiente(), 2));
+
+        assertThat(segunda.items()).hasSize(1);
+        assertThat(segunda.hayMas()).isFalse();
+        assertThat(primera.items())
+                .extracting(Listing::id)
+                .doesNotContainAnyElementsOf(
+                        segunda.items().stream().map(Listing::id).toList());
     }
 
     // --- apoyo ---------------------------------------------------------------
