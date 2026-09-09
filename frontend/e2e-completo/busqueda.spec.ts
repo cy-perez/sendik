@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 
-import { publicarYAprobar } from './recorridos';
+import {
+  dejarUnaVendedoraVerificada,
+  publicarYAprobar,
+  publicarYEnviarARevision,
+  retirarDeRevision,
+} from './recorridos';
 
 /**
  * La búsqueda y los filtros, de punta a punta. HU-014.
@@ -106,5 +111,55 @@ test.describe('búsqueda del catálogo', () => {
 
     await expect(page).toHaveURL(new RegExp(`/catalogo\\?q=${distintivo}$`));
     await expect(page.getByRole('link').filter({ hasText: titulo }).first()).toBeVisible();
+  });
+  /**
+   * Criterio 25. La primera pantalla llega resuelta en el HTML, no en un esqueleto.
+   *
+   * <p>Se pide con `request` y no con `page` a proposito: `page` ejecuta JavaScript, asi que
+   * pasaria igual aunque el servidor entregara la rejilla vacia y la rellenara el navegador
+   * despues. Es la unica forma de demostrar lo que promete ADR-0025 para una busqueda.
+   *
+   * <p>La otra suite no puede: alli no hay backend, y una busqueda sin datos no tiene
+   * resultados que traer en el HTML.
+   */
+  test('el HTML servido de una busqueda ya trae los resultados', async ({ page, request }) => {
+    const distintivo = `yerpanto${Date.now()}`;
+    const titulo = `Camisa ${distintivo} de lino`;
+
+    await publicarYAprobar(page, titulo, 'ssrbusq');
+
+    const html = await (await request.get(`${RUTA_CATALOGO}?q=${distintivo}`)).text();
+
+    expect(html).toContain(titulo);
+    // Y sin la etiqueta puesta al hidratar: una busqueda no se indexa (criterio 24).
+    expect(html).toContain('noindex');
+  });
+
+  /**
+   * RN-081, la mitad que el catalogo no cubre: **tampoco lo ve su dueno con la sesion
+   * abierta**.
+   *
+   * <p>La regla existe justamente porque la busqueda es un segundo camino hasta el mismo
+   * dato, y una regla que solo viva en la consulta del catalogo no protege a la de la
+   * busqueda. Aqui se recorre con la sesion de quien publico, que es el unico que podria
+   * esperar verla.
+   */
+  test('quien publico no encuentra lo suyo sin aprobar, ni con la sesion abierta', async ({
+    page,
+  }) => {
+    const distintivo = `grimalto${Date.now()}`;
+    const titulo = `Camisa ${distintivo} de lino`;
+
+    await dejarUnaVendedoraVerificada(page, 'rn081');
+    const id = await publicarYEnviarARevision(page, titulo);
+
+    // La sesion sigue abierta: es lo que hace que esta prueba pruebe algo.
+    await page.goto(`${RUTA_CATALOGO}?q=${distintivo}`);
+    await expect(page.getByRole('button', { name: 'Salir' })).toBeVisible();
+
+    await expect(page.getByRole('link').filter({ hasText: titulo })).toHaveCount(0);
+    await expect(page.getByText('No encontramos nada para')).toBeVisible();
+
+    await retirarDeRevision(page, id);
   });
 });
