@@ -131,9 +131,7 @@ public final class CartItem {
      */
     @Override
     public boolean equals(Object otro) {
-        return otro instanceof CartItem item
-                && quien.equals(item.quien)
-                && publicacion.equals(item.publicacion);
+        return otro instanceof CartItem item && quien.equals(item.quien) && publicacion.equals(item.publicacion);
     }
 
     @Override

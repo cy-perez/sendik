@@ -6,6 +6,7 @@ import co.sendik.identity.exception.CloseConfirmationMismatchException;
 import co.sendik.identity.model.User;
 import co.sendik.identity.port.out.MailSender;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
 import co.sendik.shared.port.out.PublicFileStore;
@@ -38,6 +39,7 @@ public class CloseAccountUseCase {
     private final MailSender correo;
     private final PublicFileStore almacen;
     private final UserFavorites favoritos;
+    private final UserCart carrito;
     private final Clock reloj;
 
     public CloseAccountUseCase(
@@ -46,12 +48,14 @@ public class CloseAccountUseCase {
             MailSender correo,
             PublicFileStore almacen,
             UserFavorites favoritos,
+            UserCart carrito,
             Clock reloj) {
         this.usuarios = usuarios;
         this.refrescos = refrescos;
         this.correo = correo;
         this.almacen = almacen;
         this.favoritos = favoritos;
+        this.carrito = carrito;
         this.reloj = reloj;
     }
 
@@ -76,6 +80,10 @@ public class CloseAccountUseCase {
         // Dentro de la misma transaccion que lo demas y antes de anonimizar: si esto
         // fallara despues, la cuenta quedaria sin dueno y con los favoritos puestos.
         favoritos.borrarDe(cuenta.id());
+
+        // Y el carrito con ellos, por la misma razon y con una de mas: no solo dice que le
+        // interesaba, dice que estuvo a punto de comprarlo (HU-015, RN-095).
+        carrito.borrarDe(cuenta.id());
 
         usuarios.cerrarYAnonimizar(cuenta.id(), ahora);
 

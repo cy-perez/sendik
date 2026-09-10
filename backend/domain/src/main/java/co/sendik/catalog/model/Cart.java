@@ -76,7 +76,9 @@ public record Cart(List<CartGroup> grupos) {
         // groupingBy entrega un HashMap cuyo orden depende del hash del identificador.
         Map<SellerId, List<CartLine>> porVendedor = new LinkedHashMap<>();
         for (CartLine linea : recientesPrimero) {
-            porVendedor.computeIfAbsent(linea.vendedor(), vendedor -> new ArrayList<>()).add(linea);
+            porVendedor
+                    .computeIfAbsent(linea.vendedor(), vendedor -> new ArrayList<>())
+                    .add(linea);
         }
 
         List<CartGroup> grupos = new ArrayList<>();

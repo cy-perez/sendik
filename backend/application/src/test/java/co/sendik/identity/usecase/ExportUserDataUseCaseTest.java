@@ -22,6 +22,7 @@ import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.model.UserStatus;
 import co.sendik.identity.port.out.ConsentRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
 import java.time.Clock;
@@ -67,13 +68,16 @@ class ExportUserDataUseCaseTest {
     @Mock
     private UserFavorites favoritos;
 
+    @Mock
+    private UserCart carrito;
+
     private ExportUserDataUseCase caso;
     private UserId usuario;
 
     @BeforeEach
     void prepararCaso() {
         caso = new ExportUserDataUseCase(
-                usuarios, consentimientos, refrescos, favoritos, Clock.fixed(AHORA, ZoneOffset.UTC));
+                usuarios, consentimientos, refrescos, favoritos, carrito, Clock.fixed(AHORA, ZoneOffset.UTC));
         usuario = UserId.nuevo();
     }
 

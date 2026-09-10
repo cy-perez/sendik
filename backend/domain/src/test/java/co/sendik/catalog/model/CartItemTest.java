@@ -82,8 +82,7 @@ class CartItemTest {
         void deberia_rechazar_lo_pausado() {
             Listing pausada = CatalogoDePrueba.publicada().pausar(AHORA);
 
-            assertThatThrownBy(() -> CartItem.de(ALGUIEN, pausada, AHORA))
-                    .isInstanceOf(ListingNotFoundException.class);
+            assertThatThrownBy(() -> CartItem.de(ALGUIEN, pausada, AHORA)).isInstanceOf(ListingNotFoundException.class);
         }
 
         @Test

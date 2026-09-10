@@ -57,7 +57,8 @@ class CartLineTest {
             Listing pausada = publicada.pausar(AHORA);
 
             assertThat(CartLine.de(item, pausada).estaDisponible()).isFalse();
-            assertThat(CartLine.de(item, pausada.reanudar(AHORA)).estaDisponible()).isTrue();
+            assertThat(CartLine.de(item, pausada.reanudar(AHORA)).estaDisponible())
+                    .isTrue();
         }
     }
 

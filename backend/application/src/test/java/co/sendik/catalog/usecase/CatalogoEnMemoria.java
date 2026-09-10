@@ -8,6 +8,7 @@ import co.sendik.catalog.dto.SearchCriteria;
 import co.sendik.catalog.dto.SearchHit;
 import co.sendik.catalog.dto.SellerProfileView;
 import co.sendik.catalog.model.BuyerId;
+import co.sendik.catalog.model.CartItem;
 import co.sendik.catalog.model.CatalogSort;
 import co.sendik.catalog.model.Category;
 import co.sendik.catalog.model.CategoryId;
@@ -25,6 +26,7 @@ import co.sendik.catalog.model.SearchText;
 import co.sendik.catalog.model.SellerId;
 import co.sendik.catalog.model.SizeSystem;
 import co.sendik.catalog.port.out.BuyerAccounts;
+import co.sendik.catalog.port.out.CartItems;
 import co.sendik.catalog.port.out.Categories;
 import co.sendik.catalog.port.out.Favorites;
 import co.sendik.catalog.port.out.ListingNotifier;
@@ -86,6 +88,23 @@ final class CatalogoEnMemoria {
         /** Todo lo guardado, para el motor de busqueda, que consulta la misma base. */
         List<Listing> todas() {
             return List.copyOf(filas.values());
+        }
+
+        /**
+         * Varias de una vez, en cualquier estado y sin orden garantizado.
+         *
+         * <p>Devuelve solo las que existen y no falla por las que no, igual que el
+         * {@code WHERE id IN (...)} de verdad: quien llama sabe que pidio. El orden es el de
+         * insercion, que no es el de la peticion, y eso es a proposito —el puerto declara que
+         * no hay orden definido, asi que una prueba que dependiera de el estaria probando el
+         * doble y no la base—.
+         */
+        @Override
+        public List<Listing> buscarVarias(List<ListingId> ids) {
+            return ids.stream()
+                    .map(filas::get)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
         }
 
         @Override
@@ -523,6 +542,66 @@ final class CatalogoEnMemoria {
         @Override
         public boolean estaActiva(BuyerId quien) {
             return !cerradas.contains(quien);
+        }
+    }
+
+    /**
+     * El carrito, en memoria. HU-015.
+     *
+     * <p>Hermano de {@link Guardados} y distinto en lo que importa: {@link #todosDe} entrega
+     * <strong>todo</strong>, tambien lo que dejo de estar publicado. Es la diferencia que
+     * RN-094 obliga a que exista, y si este doble filtrara, el criterio 21 se probaria contra
+     * una mentira.
+     */
+    static final class Carrito implements CartItems {
+
+        /** La clave es el par, que es la identidad del item y la unicidad de la tabla. */
+        private final Map<CartItem, CartItem> filas = new LinkedHashMap<>();
+
+        /**
+         * Idempotente y de la misma forma que la tabla: el par ya presente conserva su fecha
+         * y su precio de entrada en vez de recibir los nuevos.
+         *
+         * <p>Que conserve el precio no es un detalle: si la segunda escritura lo pisara,
+         * volver a pulsar sobre algo que subio de precio borraria justo el aviso de que
+         * subio, y el {@code ON CONFLICT DO NOTHING} de verdad no hace eso.
+         */
+        @Override
+        public void guardar(CartItem item) {
+            filas.putIfAbsent(item, item);
+        }
+
+        @Override
+        public void quitar(BuyerId quien, ListingId publicacion) {
+            filas.remove(CartItem.reconstruir(quien, publicacion, Instant.EPOCH, Money.dePesos(0)));
+        }
+
+        @Override
+        public boolean existe(BuyerId quien, ListingId publicacion) {
+            return filas.containsKey(CartItem.reconstruir(quien, publicacion, Instant.EPOCH, Money.dePesos(0)));
+        }
+
+        /** Sin filtrar por estado, y ordenado como el SQL: lo mas reciente primero. */
+        @Override
+        public List<CartItem> todosDe(BuyerId quien) {
+            return filas.values().stream()
+                    .filter(item -> item.quien().equals(quien))
+                    .sorted(Comparator.comparing(CartItem::agregadoEn)
+                            .thenComparing(item -> item.publicacion().value())
+                            .reversed())
+                    .toList();
+        }
+
+        @Override
+        public int cuantosLleva(BuyerId quien) {
+            return (int) filas.values().stream()
+                    .filter(item -> item.quien().equals(quien))
+                    .count();
+        }
+
+        @Override
+        public void borrarTodosDe(BuyerId quien) {
+            filas.keySet().removeIf(item -> item.quien().equals(quien));
         }
     }
 

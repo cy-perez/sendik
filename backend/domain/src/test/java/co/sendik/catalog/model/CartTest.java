@@ -23,7 +23,8 @@ class CartTest {
     }
 
     private static CartLine noDisponible(SellerId vendedor, long pesos, Duration desde) {
-        Listing pausada = CatalogoDePrueba.publicadaDe(vendedor, Money.dePesos(pesos)).pausar(AHORA);
+        Listing pausada =
+                CatalogoDePrueba.publicadaDe(vendedor, Money.dePesos(pesos)).pausar(AHORA);
 
         return new CartLine(pausada, AHORA.plus(desde), Money.dePesos(pesos));
     }
@@ -45,7 +46,8 @@ class CartTest {
 
         @Test
         void deberia_dejar_un_solo_grupo_cuando_todo_es_del_mismo_vendedor() {
-            Cart carrito = Cart.de(List.of(linea(UNA, 100_000, Duration.ZERO), linea(UNA, 50_000, Duration.ofMinutes(1))));
+            Cart carrito =
+                    Cart.de(List.of(linea(UNA, 100_000, Duration.ZERO), linea(UNA, 50_000, Duration.ofMinutes(1))));
 
             assertThat(carrito.grupos()).hasSize(1);
             assertThat(carrito.grupos().getFirst().lineas()).hasSize(2);
@@ -55,7 +57,8 @@ class CartTest {
         /** Criterio 15: con mas de un vendedor hay que avisar de que seran dos pedidos. */
         @Test
         void deberia_avisar_de_la_division_con_dos_vendedores() {
-            Cart carrito = Cart.de(List.of(linea(UNA, 100_000, Duration.ZERO), linea(OTRA, 50_000, Duration.ofMinutes(1))));
+            Cart carrito =
+                    Cart.de(List.of(linea(UNA, 100_000, Duration.ZERO), linea(OTRA, 50_000, Duration.ofMinutes(1))));
 
             assertThat(carrito.seDividira()).isTrue();
         }
@@ -117,8 +120,8 @@ class CartTest {
         /** RN-094, criterio 21: lo no disponible sigue a la vista y no suma. */
         @Test
         void no_deberia_sumar_lo_que_dejo_de_estar_disponible() {
-            Cart carrito = Cart.de(List.of(
-                    linea(UNA, 100_000, Duration.ZERO), noDisponible(UNA, 900_000, Duration.ofMinutes(1))));
+            Cart carrito = Cart.de(
+                    List.of(linea(UNA, 100_000, Duration.ZERO), noDisponible(UNA, 900_000, Duration.ofMinutes(1))));
 
             CartGroup grupo = carrito.grupos().getFirst();
 
@@ -164,8 +167,8 @@ class CartTest {
 
         @Test
         void deberia_contar_tambien_lo_no_disponible() {
-            Cart carrito = Cart.de(List.of(
-                    linea(UNA, 100_000, Duration.ZERO), noDisponible(OTRA, 50_000, Duration.ofMinutes(1))));
+            Cart carrito = Cart.de(
+                    List.of(linea(UNA, 100_000, Duration.ZERO), noDisponible(OTRA, 50_000, Duration.ofMinutes(1))));
 
             assertThat(carrito.cuantos()).isEqualTo(2);
         }
