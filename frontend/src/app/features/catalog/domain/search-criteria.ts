@@ -248,8 +248,20 @@ function entero(crudo: string | null): number | null {
   return Number.isSafeInteger(numero) && numero >= 0 ? numero : null;
 }
 
+/**
+ * Los que están en la lista cerrada, sin repetidos.
+ *
+ * <p>Repetir un valor en la dirección —`?color=BLUE&color=BLUE`— no significa nada: el
+ * backend lo colapsa en un `LinkedHashSet` y devuelve lo mismo. Aquí importa por otra
+ * razón: cada valor pinta una ficha para quitarlo, y dos fichas con la misma clave de
+ * `track` son un NG0955 de Angular.
+ */
 function soloConocidos<T extends string>(crudos: readonly string[], conocidos: readonly T[]): T[] {
-  return crudos.filter((crudo): crudo is T => (conocidos as readonly string[]).includes(crudo));
+  return [
+    ...new Set(
+      crudos.filter((crudo): crudo is T => (conocidos as readonly string[]).includes(crudo)),
+    ),
+  ];
 }
 
 function primeroConocido<T extends string>(

@@ -768,8 +768,10 @@ class CatalogPersistenceTest {
      * dejaran las demas pruebas: la vieja se publica dos horas antes, asi que cae detras de
      * todas las que comparten el instante {@code AHORA}, y en cuanto esas pasen de cuarenta
      * y nueve se sale del tramo y la prueba falla por algo que no esta comprobando. La
-     * clausula del orden es la misma en las dos consultas, asi que recorrer una demuestra
-     * la otra.
+     * <p><strong>Y demuestra el escaparate y nada mas.</strong> Hasta HU-014 la clausula del
+     * orden era una sola y recorrer una consulta demostraba la otra; desde que el catalogo lo
+     * sirve {@code PostgresSearchEngine}, con su propio {@code orden()}, son dos. La del
+     * catalogo la cubre {@code deberia_ordenar_por_publicacion_mas_reciente_cuando_se_pide_ese_orden}.
      */
     @Test
     void deberia_ordenar_el_catalogo_por_fecha_de_publicacion_descendente() {
@@ -793,8 +795,9 @@ class CatalogPersistenceTest {
     @Test
     void deberia_recorrer_el_catalogo_sin_repetir_ni_perder_publicadas_en_el_mismo_instante() {
         // Las tres del mismo vendedor, y se recorre su escaparate: asi el tramo es solo lo
-        // que esta prueba sembro. La clausula del cursor es la misma en las dos consultas
-        // -la escribe `condicionDelCursor`-, asi que recorrer una demuestra la otra.
+        // que esta prueba sembro. Desde HU-014 hay dos `condicionDelCursor` -la de esta clase
+        // y la de PostgresSearchEngine-, asi que esto ya no demuestra la del catalogo: esa la
+        // cubre `deberia_recorrer_el_catalogo_por_fecha_sin_repetir_ni_perder_las_del_mismo_instante`.
         SellerId vendedor = new SellerId(nuevoUsuario());
         publicadaDe(vendedor, AHORA);
         publicadaDe(vendedor, AHORA);
@@ -1097,9 +1100,38 @@ class CatalogPersistenceTest {
     }
 
     /**
+     * RN-085: la marca se busca como texto y no filtra.
+     *
+     * <p>La historia dio esta regla por no comprobable porque un parametro no reconocido se
+     * ignora en silencio, y eso era solo la mitad: la regla dice que la marca <strong>es
+     * texto buscable</strong>, y esa mitad si se afirma. La otra -que {@code ?brand=} no
+     * hace nada- la fija {@code CatalogControllerTest}, y se pondra en rojo el dia que se
+     * cierre el hueco de los parametros desconocidos, que es cuando hay que releer esto.
+     *
+     * <p>La marca es texto libre y opcional -«Nike», «nike» y «NIKE» serian tres valores
+     * distintos-, que es la razon de que no sea una lista cerrada como el color.
+     */
+    @Test
+    void deberia_cumplir_RN_085_encontrando_por_la_marca_escrita_de_cualquier_forma() {
+        Listing conMarca = publicadaCon("Jean recto azul oscuro", "TRALQUIVIA");
+        Listing sinMarca = publicadaCon("Jean recto negro", null);
+
+        assertThat(buscar(criterios().texto("tralquivia")))
+                .extracting(Listing::id)
+                .containsExactly(conMarca.id());
+        assertThat(buscar(criterios().texto("TrAlQuIvIa")))
+                .extracting(Listing::id)
+                .containsExactly(conMarca.id());
+        assertThat(buscar(criterios().texto("tralquivia")))
+                .extracting(Listing::id)
+                .doesNotContain(sinMarca.id());
+    }
+
+    /**
      * RN-081: por este segundo camino tampoco sale lo que no esta publicado.
      *
-     * <p>Se siembran cuatro estados con la misma palabra y se afirma que sale <strong>uno</strong>,
+     * <p>Se siembran los cinco estados no publicados con la misma palabra -incluido
+     * {@code REJECTED}, que faltaba- y se afirma que sale <strong>uno</strong>,
      * y no solo que el pausado no aparece: la regla habla de «cualquiera de los otros seis
      * estados» y una prueba por estado deja los demas a la buena voluntad de quien escriba
      * la consulta.
@@ -1110,9 +1142,15 @@ class CatalogPersistenceTest {
 
         publicaciones.guardar(publicadaCon("Camisa grimalto pausada", null).pausar(AHORA));
         publicaciones.guardar(publicadaCon("Camisa grimalto archivada", null).archivar(AHORA));
-        publicaciones.guardar(borradorConTomas());
-        publicaciones.guardar(
-                conTomas(borradorDe(medidasDe(MeasurementGroup.TOP)), 8).enviarARevision(AHORA));
+        publicaciones.guardar(borradorConTitulo("Camisa grimalto en borrador"));
+        publicaciones.guardar(borradorConTitulo("Camisa grimalto en revision").enviarARevision(AHORA));
+        publicaciones.guardar(borradorConTitulo("Camisa grimalto rechazada")
+                .enviarARevision(AHORA)
+                .rechazar(
+                        new ModeratorId(nuevoUsuario()),
+                        ListingRejectionReason.PHOTOS_UNUSABLE,
+                        "Las tomas salen movidas.",
+                        AHORA));
 
         assertThat(buscar(criterios().texto("grimalto")))
                 .extracting(Listing::id)
@@ -1276,6 +1314,89 @@ class CatalogPersistenceTest {
         assertThat(plan).contains("idx_products_search");
     }
 
+    /**
+     * Criterio 17 por el camino que de verdad sirve el catalogo.
+     *
+     * <p>Es la mitad que se habia quedado sin prueba: {@code PostgresSearchEngine} tiene su
+     * propio {@code orden()} desde que el catalogo pasa por el, y nadie afirmaba que
+     * {@code NEWEST} ordenara. Se pide el orden a proposito, porque con texto el de omision
+     * es la relevancia (RN-088).
+     */
+    @Test
+    void deberia_ordenar_por_publicacion_mas_reciente_cuando_se_pide_ese_orden() {
+        Listing vieja = publicadaEn("Camisa brendolio vieja", AHORA.minus(Duration.ofHours(2)));
+        Listing nueva = publicadaEn("Camisa brendolio nueva", AHORA);
+
+        assertThat(buscar(criterios().texto("brendolio").orden(CatalogSort.NEWEST)))
+                .extracting(Listing::id)
+                .containsExactly(nueva.id(), vieja.id());
+    }
+
+    /**
+     * Criterio 21 por ese mismo camino, con el empate que lo hace necesario.
+     *
+     * <p>Las tres en el mismo instante: sin el desempate por identificador de
+     * {@code (published_at, id) < (:fecha, :id)}, el segundo tramo repite o se salta.
+     */
+    @Test
+    void deberia_recorrer_el_catalogo_por_fecha_sin_repetir_ni_perder_las_del_mismo_instante() {
+        publicadaEn("Camisa quintaldo de lino", AHORA);
+        publicadaEn("Camisa quintaldo de algodon", AHORA);
+        publicadaEn("Camisa quintaldo de seda", AHORA);
+
+        List<Listing> primera =
+                buscar(criterios().texto("quintaldo").orden(CatalogSort.NEWEST).limite(2));
+        CatalogCursor desde = CatalogCursor.porFecha(
+                Objects.requireNonNull(primera.getLast().publishedAt()),
+                primera.getLast().id());
+        List<Listing> segunda = buscar(criterios()
+                .texto("quintaldo")
+                .orden(CatalogSort.NEWEST)
+                .desde(desde)
+                .limite(2));
+
+        assertThat(primera).hasSize(2);
+        assertThat(segunda).hasSize(1);
+        assertThat(primera)
+                .extracting(Listing::id)
+                .doesNotContainAnyElementsOf(segunda.stream().map(Listing::id).toList());
+    }
+
+    /**
+     * La otra mitad del criterio 18: de mayor a menor.
+     *
+     * <p>Solo se afirmaba {@code PRICE_ASC}. Invertir {@code PRICE_DESC} en el motor dejaba
+     * la suite entera en verde.
+     */
+    @Test
+    void deberia_ordenar_por_precio_de_mayor_a_menor_criterio_18() {
+        Listing barata = publicadaConPrecio("Camisa zurnaldo barata", 50_000);
+        Listing media = publicadaConPrecio("Camisa zurnaldo media", 90_000);
+        Listing cara = publicadaConPrecio("Camisa zurnaldo cara", 140_000);
+
+        assertThat(buscar(criterios().texto("zurnaldo").orden(CatalogSort.PRICE_DESC)))
+                .extracting(Listing::id)
+                .containsExactly(cara.id(), media.id(), barata.id());
+    }
+
+    /**
+     * Criterio 16: con texto y sin orden pedido, manda la relevancia.
+     *
+     * <p><strong>La mas relevante se publica antes que la otra</strong>, asi que si el orden
+     * cayera a la fecha -o si {@code ts_rank} se ordenara al reves- la afirmacion se rompe.
+     * La unica prueba que habia usaba tres titulos identicos, es decir tres puntuaciones
+     * empatadas: cambiar {@code DESC} por {@code ASC} la dejaba en verde.
+     */
+    @Test
+    void deberia_ordenar_por_relevancia_y_no_por_fecha_cuando_hay_texto_criterio_16() {
+        Listing masRelevante = publicadaEn("Marlopio marlopio marlopio de lino", AHORA.minus(Duration.ofHours(2)));
+        Listing menosRelevante = publicadaEn("Camisa marlopio de lino", AHORA);
+
+        assertThat(buscar(criterios().texto("marlopio")))
+                .extracting(Listing::id)
+                .containsExactly(masRelevante.id(), menosRelevante.id());
+    }
+
     // --- apoyo de la busqueda ------------------------------------------------
 
     /** El catalogo entero por el motor, que es como lo pide el caso de uso. */
@@ -1373,9 +1494,26 @@ class CatalogPersistenceTest {
         return publicadaCon(titulo, null, Condition.LIKE_NEW, new Size(SizeSystem.ALPHA, "M"), Color.BEIGE, precio);
     }
 
+    /** La misma, publicada en un instante concreto: es lo que hace falta para ordenar por fecha. */
+    private Listing publicadaEn(String titulo, Instant cuando) {
+        return publicadaCon(
+                titulo, null, Condition.LIKE_NEW, new Size(SizeSystem.ALPHA, "M"), Color.BEIGE, 185_000, cuando);
+    }
+
     /** Una publicacion viva con los campos por los que HU-014 busca y filtra. */
     private Listing publicadaCon(
             String titulo, @Nullable String marca, Condition condicion, Size talla, Color color, long precio) {
+        return publicadaCon(titulo, marca, condicion, talla, color, precio, AHORA);
+    }
+
+    private Listing publicadaCon(
+            String titulo,
+            @Nullable String marca,
+            Condition condicion,
+            Size talla,
+            Color color,
+            long precio,
+            Instant cuando) {
 
         Product producto = Product.crear(
                 ProductId.nuevo(),
@@ -1393,10 +1531,36 @@ class CatalogPersistenceTest {
                 null,
                 null);
 
-        Listing borrador = conTomas(Listing.crearBorrador(ListingId.nuevo(), producto, AHORA), 8);
-        Listing enRevision = publicaciones.guardar(borrador.enviarARevision(AHORA));
+        Listing borrador = conTomas(Listing.crearBorrador(ListingId.nuevo(), producto, cuando), 8);
+        Listing enRevision = publicaciones.guardar(borrador.enviarARevision(cuando));
 
-        return publicaciones.guardar(enRevision.aprobar(new ModeratorId(nuevoUsuario()), AHORA));
+        return publicaciones.guardar(enRevision.aprobar(new ModeratorId(nuevoUsuario()), cuando));
+    }
+
+    /**
+     * Un borrador con un titulo concreto, para sembrar estados que la busqueda no debe traer.
+     *
+     * <p>Sin el, los estados no publicados se sembraban con el titulo generico y no llevaban
+     * la palabra buscada: la prueba afirmaba sobre ellos sin que pudieran salir nunca.
+     */
+    private Listing borradorConTitulo(String titulo) {
+        Product producto = Product.crear(
+                ProductId.nuevo(),
+                new SellerId(nuevoUsuario()),
+                categoriaPorSlug("camisas-y-blusas"),
+                new Title(titulo),
+                new Description("Usada dos veces."),
+                null,
+                Condition.LIKE_NEW,
+                new Size(SizeSystem.ALPHA, "M"),
+                medidasDe(MeasurementGroup.TOP),
+                Color.BEIGE,
+                Money.dePesos(185_000),
+                envio(),
+                null,
+                null);
+
+        return conTomas(Listing.crearBorrador(ListingId.nuevo(), producto, AHORA), 8);
     }
 
     private Listing borradorConTomas() {
@@ -1411,12 +1575,6 @@ class CatalogPersistenceTest {
     private Listing publicada() {
         Listing enRevision = publicaciones.guardar(borradorConTomas().enviarARevision(AHORA));
         return publicaciones.guardar(enRevision.aprobar(new ModeratorId(nuevoUsuario()), AHORA));
-    }
-
-    /** Publicada en un instante concreto, para las pruebas de orden y de cursor. */
-    private Listing publicadaEn(Instant cuando) {
-        Listing enRevision = publicaciones.guardar(borradorConTomas().enviarARevision(cuando));
-        return publicaciones.guardar(enRevision.aprobar(new ModeratorId(nuevoUsuario()), cuando));
     }
 
     /** Publicada por un vendedor concreto, para aislar un escaparate de las demas pruebas. */

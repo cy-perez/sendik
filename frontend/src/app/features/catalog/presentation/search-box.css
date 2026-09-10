@@ -38,9 +38,11 @@
   color: var(--color-texto);
 }
 
-.buscador-catalogo__entrada:focus-visible {
-  outline: 3px solid var(--color-foco);
-  outline-offset: 2px;
+/* Chrome y Safari pintan su propia aspa en cuanto hay texto, justo donde está la
+   nuestra: dos controles para lo mismo, y el nativo mide unos 10px, por debajo del
+   destino táctil mínimo. */
+.buscador-catalogo__entrada::-webkit-search-cancel-button {
+  display: none;
 }
 
 /* El aspa de vaciar. Destino táctil completo aunque el icono sea de 20. */
@@ -63,11 +65,6 @@
 
 .buscador-catalogo__limpiar:hover {
   color: var(--color-texto);
-}
-
-.buscador-catalogo__limpiar:focus-visible {
-  outline: 3px solid var(--color-foco);
-  outline-offset: 2px;
 }
 
 .buscador-catalogo__enviar {

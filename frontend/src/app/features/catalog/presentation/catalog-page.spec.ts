@@ -289,12 +289,23 @@ describe('CatalogPage', () => {
     // Por rol y no por clase ni por identificador: lo que la prueba afirma es que hay una
     // caja de búsqueda que se puede enviar, no cómo se llama su CSS. Con el selector de
     // clase, renombrar el bloque ponía esto en rojo sin que nada cambiara para quien busca.
-    const caja = fixture.nativeElement.querySelector('input[type="search"]') as HTMLInputElement;
+    const raiz: HTMLElement = fixture.nativeElement;
+    const caja = raiz.querySelector<HTMLInputElement>('input[type="search"]');
+    if (caja === null) {
+      throw new Error('No hay caja de búsqueda');
+    }
     caja.value = 'tenis';
     caja.dispatchEvent(new Event('input'));
-    (fixture.nativeElement.querySelector('[role="search"]') as HTMLFormElement).dispatchEvent(
-      new Event('submit'),
+
+    // Se pulsa el botón, que es lo que hace una persona, en vez de disparar el `submit` a
+    // mano: así la prueba también sostiene que el botón envía el formulario.
+    const enviar = [...raiz.querySelectorAll<HTMLButtonElement>('[role="search"] button')].find(
+      (boton) => boton.type === 'submit',
     );
+    if (enviar === undefined) {
+      throw new Error('No hay botón de enviar en la caja de búsqueda');
+    }
+    enviar.click();
 
     expect(navegar).toHaveBeenCalledWith(['/catalogo'], { queryParams: { q: 'tenis' } });
   });
@@ -312,15 +323,23 @@ describe('CatalogPage', () => {
 
     // Por el nombre accesible, que es lo que la persona oye y lo que RN-086 exige que
     // diga qué quita. La clase es implementación.
-    const fichas = [
-      ...fixture.nativeElement.querySelectorAll('button[aria-label^="Quitar el filtro"]'),
-    ];
-    expect(fichas).toHaveLength(2);
+    const raiz: HTMLElement = fixture.nativeElement;
+    const conNombre = (parte: string) =>
+      [...raiz.querySelectorAll<HTMLButtonElement>('button')].filter((boton) =>
+        (boton.getAttribute('aria-label') ?? '').includes(parte),
+      );
+
+    // Por el nombre del filtro que quitan -«Azul», «Verde»- y no por el prefijo de la
+    // frase: cambiar la redacción de `catalog.filters.remove` es un cambio de copia sin
+    // consecuencias y no debe poner esto en rojo.
+    expect(conNombre('Azul')).toHaveLength(1);
+    expect(conNombre('Verde')).toHaveLength(1);
+    const fichas = conNombre('Azul');
 
     const router = TestBed.inject(Router);
     const navegar = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    (fichas[0] as HTMLButtonElement).click();
+    fichas[0]?.click();
 
     // Se va el azul y se queda el verde: quitar una ficha no vacía el filtro entero.
     expect(navegar).toHaveBeenCalledWith(
@@ -342,6 +361,63 @@ describe('CatalogPage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('No hay nada con esos filtros');
     expect(fixture.nativeElement.textContent).toContain('Quitar los filtros');
+  });
+
+  /**
+   * Lo que se anuncia es lo que se ve.
+   *
+   * <p>La región viva y el párrafo del vacío elegían la clave por separado: la pantalla
+   * escogía entre cuatro mensajes y el anuncio decía siempre «no hay nada con esos
+   * filtros», también sin un solo filtro puesto. Quien usa lector de pantalla oía una cosa
+   * y quien mira la pantalla leía otra (WCAG 1.3.1).
+   *
+   * <p>Ninguna prueba lo veía porque todas afirman sobre el `textContent` del componente
+   * entero, que contiene los dos a la vez. Esta mira la región viva por su cuenta.
+   */
+  it('anuncia el mismo vacío que enseña, sin filtros puestos', async () => {
+    const { fixture, backend } = await montar();
+    await responder(fixture, backend, { items: [], nextCursor: null, hasMore: false });
+
+    const raiz: HTMLElement = fixture.nativeElement;
+    const region = raiz.querySelector('[aria-live]');
+
+    expect(region?.textContent).toContain('Todavía no hay nada publicado');
+    expect(region?.textContent).not.toContain('No hay nada con esos filtros');
+  });
+
+  /** Y con filtros puestos, el que corresponde. */
+  it('anuncia el vacío de los filtros cuando sí los hay', async () => {
+    consulta.next(convertToParamMap({ color: 'BLUE' }));
+
+    const { fixture, backend } = await montar();
+    await responder(fixture, backend, { items: [], nextCursor: null, hasMore: false });
+
+    const raiz: HTMLElement = fixture.nativeElement;
+    expect(raiz.querySelector('[aria-live]')?.textContent).toContain(
+      'No hay nada con esos filtros',
+    );
+  });
+
+  /**
+   * Un 400 no es un vacío, y no se pueden ver igual (RN-086).
+   *
+   * <p>Es lo que llega cuando alguien pega una dirección con el rango del revés o con un
+   * cursor incoherente: `desdeParametros` no los filtra, así que el 400 del servidor sube
+   * hasta aquí. Un vacío diría «no hay nada de ese precio», que es mentira.
+   */
+  it('distingue un 400 del servidor del vacío honesto', async () => {
+    consulta.next(convertToParamMap({ minPrice: '100000', maxPrice: '50000' }));
+
+    const { fixture, backend } = await montar();
+    backend.expectOne((llamada) => llamada.url === `${API}/categories`).flush(arbol);
+    backend
+      .expectOne((llamada) => llamada.url === `${API}/listings`)
+      .flush({ code: 'COMMON_VALIDATION_FAILED' }, { status: 400, statusText: 'Bad Request' });
+    await bombear(fixture);
+
+    const raiz: HTMLElement = fixture.nativeElement;
+    expect(raiz.querySelector('[role="alert"]')).not.toBeNull();
+    expect(raiz.textContent).not.toContain('No hay nada con esos filtros');
   });
 
   /** Y con texto se dice qué se buscó, que no es lo mismo que decir que no hay nada. */

@@ -138,9 +138,10 @@ jobs:
       # falta una obligatoria, allí el contenedor no levanta y el pull request se pone
       # rojo antes de integrar.
       #
-      # Las tres banderas de la Fase 2 y el moderador de arranque se pasan desde aquí, y
-      # es lo que permite que `dev` y `prod` se decidan por separado: el valor lo pone la
-      # variable del entorno de GitHub, no este archivo. **Van juntas a propósito.**
+      # Las tres banderas de la Fase 2 —más `FEATURE_SEARCH`, que es de la Fase 3— y el
+      # moderador de arranque se pasan desde aquí, y es lo que permite que `dev` y `prod`
+      # se decidan por separado: el valor lo pone la variable del entorno de GitHub, no
+      # este archivo. **Las tres primeras van juntas a propósito.**
       # Encender `publishing` sin `SECURITY_BOOTSTRAP_MODERATORS` deja el entorno en un
       # callejón sin salida —se puede publicar y nada puede salir de `PENDING_REVIEW`,
       # porque no hay nadie con el rol para aprobarlo—, que es justo el hueco que HU-008
@@ -210,6 +211,7 @@ jobs:
             --set-env-vars "FEATURE_SELLER_VERIFICATION=${{ vars.FEATURE_SELLER_VERIFICATION || 'false' }}" \
             --set-env-vars "FEATURE_PUBLISHING=${{ vars.FEATURE_PUBLISHING || 'false' }}" \
             --set-env-vars "FEATURE_CATALOG=${{ vars.FEATURE_CATALOG || 'false' }}" \
+            --set-env-vars "FEATURE_SEARCH=${{ vars.FEATURE_SEARCH || 'false' }}" \
             --set-secrets "DB_URL=sendik-db-url:latest" \
             --set-secrets "DB_USERNAME=sendik-db-username:latest" \
             --set-secrets "DB_PASSWORD=sendik-db-password:latest" \

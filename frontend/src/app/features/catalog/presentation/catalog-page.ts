@@ -148,6 +148,24 @@ export class CatalogPage {
    * <p>Dice cuantas se estan ensenando y no cuantas hay: la paginacion por cursor no cuenta
    * el total a proposito, y prometer una cifra que no se tiene seria peor que no darla.
    */
+  /**
+   * Qué dice el vacío, en un solo sitio.
+   *
+   * <p>La plantilla y el anuncio para lector de pantalla eligen la misma clave. Estaban
+   * separados y decían cosas distintas: la pantalla escogía entre cuatro mensajes y la
+   * región viva anunciaba siempre «no hay nada con esos filtros», también cuando no había
+   * ningún filtro puesto. Quien no ve la pantalla oía una cosa y quien la ve leía otra.
+   */
+  protected readonly claveDelVacio = computed(() => {
+    if (this.criterios().q !== null) {
+      return 'catalog.search.empty';
+    }
+    if (this.hayFiltros()) {
+      return 'catalog.search.emptyWithFilters';
+    }
+    return this.familiaSlug() === null ? 'catalog.list.empty' : 'catalog.list.emptyInCategory';
+  });
+
   protected readonly anuncio = computed(() => {
     if (this.cargando()) {
       return this.idioma.translate('catalog.list.loading');
@@ -156,7 +174,7 @@ export class CatalogPage {
       return this.idioma.translate('catalog.list.error');
     }
     if (this.vacio()) {
-      return this.idioma.translate('catalog.search.emptyWithFilters');
+      return this.idioma.translate(this.claveDelVacio(), { texto: this.criterios().q });
     }
 
     const cuantas = this.publicaciones().length;

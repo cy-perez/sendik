@@ -38,7 +38,7 @@ import org.jspecify.annotations.Nullable;
  * lo que permite que manana sea otro (ADR-0035).
  *
  * <p>Una categoria retirada del arbol no devuelve un listado vacio: devuelve
- * {@link UnknownCategoryException}, que sale como 404. Un vacio se leeria como «esta
+ * {@link UnknownCategoryException}. Un vacio se leeria como «esta
  * categoria existe y no tiene nada», que es otra cosa y ademas mentira.
  *
  * <p><strong>Lo que este caso de uso no hace es buscar.</strong> No sabe si detras hay

@@ -1,8 +1,11 @@
 package co.sendik.catalog.rest;
 
+import co.sendik.catalog.dto.CatalogCursor;
 import co.sendik.catalog.dto.CatalogPage;
 import co.sendik.catalog.dto.ListCatalogQuery;
+import co.sendik.catalog.model.CatalogSort;
 import co.sendik.catalog.rest.dto.CatalogPageResponse;
+import co.sendik.catalog.rest.mapper.CatalogCursors;
 import co.sendik.catalog.rest.mapper.CatalogPages;
 import co.sendik.catalog.rest.mapper.CatalogQueries;
 import co.sendik.catalog.usecase.ListCatalogUseCase;
@@ -73,7 +76,7 @@ public class CatalogController {
      *
      * <p>{@code category} admite tanto una hoja como una familia: el caso de uso resuelve las
      * categorias publicables que cuelgan de ella, porque no se publica en una familia sino en
-     * una categoria suya. Una categoria retirada del arbol sale como 404 y no como listado
+     * una categoria suya. Una categoria retirada del arbol se rechaza y no sale como listado
      * vacio, que se leeria como «existe y no tiene nada».
      *
      * <p>{@code condition} y {@code color} se repiten para pedir varios valores
@@ -116,7 +119,7 @@ public class CatalogController {
             @RequestParam(name = "sort", required = false) @Nullable String sort)
             throws NoResourceFoundException {
 
-        exigirBusquedaEncendida(q, condition, sizeSystem, size, color, minPrice, maxPrice, sort);
+        exigirBusquedaEncendida(q, condition, sizeSystem, size, color, minPrice, maxPrice, sort, cursor);
 
         ListCatalogQuery consulta = CatalogQueries.consulta(
                 q, category, condition, sizeSystem, size, color, minPrice, maxPrice, sort, cursor, limit);
@@ -141,15 +144,30 @@ public class CatalogController {
             @Nullable List<String> color,
             @Nullable String minPrice,
             @Nullable String maxPrice,
-            @Nullable String sort)
+            @Nullable String sort,
+            @Nullable String cursor)
             throws NoResourceFoundException {
 
-        if (busqueda.isEmpty()
-                && CatalogQueries.pideBuscar(q, condition, sizeSystem, size, color, minPrice, maxPrice, sort)) {
+        if (busqueda.isPresent()) {
+            return;
+        }
+
+        if (CatalogQueries.pideBuscar(q, condition, sizeSystem, size, color, minPrice, maxPrice, sort)) {
             // La misma excepcion que Spring lanza cuando una ruta no existe, para que la
             // respuesta sea la misma hasta en el codigo de error. Su mensaje habla de
             // recursos estaticos y no sale nunca: se registra en debug y el cliente recibe
             // COMMON_NOT_FOUND, igual que con las otras tres banderas.
+            throw new NoResourceFoundException(HttpMethod.GET, RUTA, RUTA);
+        }
+
+        // Y el cursor, que es el unico parametro que puede pedir buscar sin decirlo: uno
+        // nacido bajo un orden de HU-014 sigue valiendo despues de apagar la bandera, y sin
+        // esto lo rechazaria ListCatalogQuery con un 400 que dice «ese orden lo entiendo».
+        // Decodificarlo aqui no reabre lo que el metodo evita: un cursor ilegible ya
+        // responde 400 con la bandera encendida y con ella apagada desde HU-009, asi que ese
+        // 400 no distingue un entorno del otro.
+        CatalogCursor desde = CatalogCursors.cursor(cursor);
+        if (desde != null && desde.orden() != CatalogSort.NEWEST) {
             throw new NoResourceFoundException(HttpMethod.GET, RUTA, RUTA);
         }
     }

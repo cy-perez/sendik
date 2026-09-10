@@ -275,7 +275,7 @@ estos parámetros, lo que devuelve es el catálogo tal cual (HU-014, criterio 8)
 | Parámetro | Forma | Notas |
 |---|---|---|
 | `q` | texto, máximo 120 caracteres | Busca en **título y marca**, nunca en la descripción (RN-082). Por encima del tope es 400 y no se recorta |
-| `category` | identificador | Admite una hoja o una familia. Una que no está en el árbol es **404**, no un listado vacío |
+| `category` | identificador | Admite una hoja o una familia. Una que no está en el árbol **no devuelve un listado vacío**: responde `CATALOG_UNKNOWN_CATEGORY`, hoy con estado **422** (ver la nota) |
 | `condition` | repetible: `?condition=NEW&condition=GOOD` | Las cuatro de RN-064 |
 | `sizeSystem` + `size` | los dos o ninguno | RN-087: la talla se filtra dentro de su sistema. Uno sin el otro es 400 |
 | `color` | repetible | Los quince de lista cerrada |
@@ -298,6 +298,18 @@ orden distinto responde **400** y no un listado incoherente: la condición de
 continuidad se compararía contra una columna que ya no ordena nada, y el
 resultado no sería una página incompleta sino una arbitraria. Sigue siendo opaco:
 se recibe y se devuelve, no se lee ni se fabrica.
+
+> **El estado de una categoría desconocida no es el que esta tabla decía, y gana el
+> código.** HU-014 escribió «404» en tres sitios —aquí y dos javadoc— y lo que responde
+> `ApiExceptionHandler` es **422**, porque `CATALOG_UNKNOWN_CATEGORY` se mapea así desde
+> HU-007, donde tiene todo el sentido: al publicar, una categoría que no existe es un campo
+> del cuerpo que hay que corregir, no un recurso que falte. Leyendo el catálogo se lee al
+> revés, y el 404 sería lo natural.
+>
+> **No se cambia aquí y es a propósito**: el código de error es uno solo para los dos
+> caminos, así que mover el mapeo convertiría en 404 el rechazo de publicar, que sí es un
+> 422. Separarlos es una decisión con consecuencia en HU-007, HU-009 y HU-014 a la vez, y
+> no de esta rama. Queda escrito para que se decida y no se descubra.
 
 **Detrás de `FEATURE_SEARCH`.** Con la bandera apagada la ruta sigue sirviendo el
 catálogo, y cualquier parámetro de búsqueda responde 404 con `COMMON_NOT_FOUND`,

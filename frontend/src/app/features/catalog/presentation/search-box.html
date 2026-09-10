@@ -15,6 +15,7 @@
 
   <div class="buscador-catalogo__campo">
     <input
+      #entrada
       id="buscador-texto"
       class="buscador-catalogo__entrada"
       type="search"
@@ -31,14 +32,14 @@
         [attr.aria-label]="'catalog.search.clear' | transloco"
         (click)="limpiar()"
       >
-        <svg class="icono" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" />
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       </button>
     }
   </div>
 
-  <button type="submit" class="btn btn-primario buscador__enviar">
+  <button type="submit" class="btn btn-primario buscador-catalogo__enviar">
     {{ 'catalog.search.submit' | transloco }}
   </button>
 </form>

@@ -81,11 +81,22 @@ Están implementadas en el servidor de SSR, en `frontend/src/server.ts`:
 | Qué | Valor |
 |---|---|
 | `X-Content-Type-Options` | `nosniff` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Referrer-Policy` | ~~`strict-origin-when-cross-origin`~~ `strict-origin` desde el 10 de septiembre de 2026 |
 | `X-Frame-Options` | `DENY` |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
 | Caché de `/fuentes/` | `public, max-age=31536000, immutable` |
 | Caché de `/legal/` | `public, max-age=300` |
+
+**La política de referente se endureció al integrar HU-014**, y queda anotado aquí
+porque esta tabla es donde está escrito el requisito.
+`strict-origin-when-cross-origin` recorta la dirección hacia terceros pero la manda
+**entera dentro del mismo origen**, así que cada recurso de
+`/catalogo?q=…` viajaba con el texto buscado en la cabecera `Referer`, y el registro
+de peticiones de Cloud Run lo guarda junto a la IP: el historial de búsquedas que
+esa historia decidió no tener, reconstruido por accidente. `strict-origin` manda
+solo el origen en los dos casos. Nada del sitio lee el referente, así que no se
+pierde nada. No abre una decisión nueva: es la misma de esta ADR, aplicada más
+estrecha.
 
 El middleware se registra antes que todo lo demás, así que las cabeceras van
 también en las respuestas que no renderiza Angular: los archivos estáticos y el

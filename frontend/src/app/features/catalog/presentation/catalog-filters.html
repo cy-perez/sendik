@@ -83,6 +83,7 @@
         type="text"
         autocomplete="off"
         [disabled]="criterios().sizeSystem === null"
+        [attr.aria-describedby]="criterios().sizeSystem === null ? 'pista-talla' : null"
         [value]="criterios().size ?? ''"
         (change)="escribirTalla($any($event.target).value)"
       />
@@ -94,7 +95,9 @@
       comparar con nada.
     -->
     @if (criterios().sizeSystem === null) {
-      <p class="tipo-leyenda filtros__pista">{{ 'catalog.filters.sizeHint' | transloco }}</p>
+      <p id="pista-talla" class="tipo-leyenda filtros__pista">
+        {{ 'catalog.filters.sizeHint' | transloco }}
+      </p>
     }
   </fieldset>
 
@@ -110,6 +113,8 @@
         min="0"
         step="1"
         [value]="minimo()"
+        [attr.aria-invalid]="rangoInvalido() ? 'true' : null"
+        [attr.aria-describedby]="rangoInvalido() ? 'error-de-precio' : null"
         (input)="escribirMinimo($any($event.target).value)"
         (blur)="aplicarPrecio()"
       />
@@ -132,7 +137,9 @@
     </label>
 
     @if (rangoInvalido()) {
-      <p id="error-de-precio" class="error">{{ 'catalog.filters.priceRangeError' | transloco }}</p>
+      <p id="error-de-precio" class="error tipo-secundario" role="alert">
+        {{ 'catalog.filters.priceRangeError' | transloco }}
+      </p>
     }
   </fieldset>
 

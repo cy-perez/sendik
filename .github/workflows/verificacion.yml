@@ -293,10 +293,16 @@ jobs:
       # Las mismas ordenes que ejecuta el despliegue, con el mismo contexto de
       # construccion. Lo que aqui no construya, alli tampoco.
       #
-      # Y con las tres banderas de la Fase 2 encendidas, que es la forma que tiene `dev`.
-      # Con ellas apagadas este ensayo no construia ni un solo bean de verificacion, de
-      # publicacion ni de catalogo: arrancaba un backend mucho mas pequeno que el que se
-      # despliega, y una variable que faltara solo para esos beans no se veia aqui.
+      # Y con las banderas encendidas, que es la forma que tiene `dev`: las tres de la
+      # Fase 2 y `FEATURE_SEARCH`, que es de la Fase 3. Con las tres primeras apagadas este
+      # ensayo no construia ni un solo bean de verificacion, de publicacion ni de catalogo:
+      # arrancaba un backend mucho mas pequeno que el que se despliega, y una variable que
+      # faltara solo para esos beans no se veia aqui.
+      #
+      # `FEATURE_SEARCH` no funciona asi y conviene no confundirlo: lo unico que apaga es un
+      # bean marcador -el motor y el caso de uso se cablean siempre-. Se pasa para que el
+      # ensayo ejercite la misma superficie de la ruta que `dev`, con los parametros de
+      # busqueda respondiendo en vez de dando 404.
       - name: Construir la imagen del backend
         run: docker build -t sendik-backend:ensayo backend
 
@@ -348,6 +354,7 @@ jobs:
             -e FEATURE_SELLER_VERIFICATION=true \
             -e FEATURE_PUBLISHING=true \
             -e FEATURE_CATALOG=true \
+            -e FEATURE_SEARCH=true \
             sendik-backend:ensayo
 
           # La misma sonda que usa el despliegue. Flyway migra al arrancar, asi que

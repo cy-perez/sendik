@@ -167,7 +167,14 @@ public final class CatalogQueries {
             return PriceRange.SIN_LIMITE;
         }
 
-        return new PriceRange(pesos(minimo), pesos(maximo));
+        try {
+            return new PriceRange(pesos(minimo), pesos(maximo));
+        } catch (IllegalArgumentException e) {
+            // El dominio nombra los dos importes en su mensaje, que le sirve a quien publica.
+            // Aqui no puede salir, por lo mismo que en la talla: es entrada publica y el
+            // mensaje se registra.
+            throw new IllegalArgumentException("El precio minimo supera al maximo");
+        }
     }
 
     /**

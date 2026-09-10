@@ -17,7 +17,10 @@ test.describe('cabeceras de seguridad', () => {
     const cabeceras = (await request.get('/')).headers();
 
     expect(cabeceras['x-content-type-options']).toBe('nosniff');
-    expect(cabeceras['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    // `strict-origin` y no `strict-origin-when-cross-origin`: el segundo manda la
+    // direccion entera en las peticiones del mismo origen, y con HU-014 eso es el texto
+    // que alguien busco viajando en cada recurso de la pagina.
+    expect(cabeceras['referrer-policy']).toBe('strict-origin');
     expect(cabeceras['x-frame-options']).toBe('DENY');
     expect(cabeceras['strict-transport-security']).toBe('max-age=31536000; includeSubDomains');
   });
