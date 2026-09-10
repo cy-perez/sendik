@@ -109,7 +109,7 @@ Se descarta antes de almacenarse, con una exclusión en el sink `_Default`:
 
 ```bash
 gcloud logging sinks update _Default \
-  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014: el texto que alguien busca no se conserva junto a su IP. Descarta la entrada de registro de peticiones cuyo URL lleve el parametro q. Las peticiones sin texto siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND httpRequest.requestUrl=~"[?&]q="'
+  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014: el texto que alguien busca no se conserva junto a su IP. Descarta la entrada del registro de peticiones cuando el parametro q viaja en el URL o en la cabecera Referer. Las peticiones sin texto siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND (httpRequest.requestUrl=~"[?&](q|%71|%51)=" OR httpRequest.referer=~"[?&](q|%71|%51)=")'
 ```
 
 **Va sin `service_name`, y es a propósito:** al ser del proyecto cubre
@@ -117,8 +117,20 @@ gcloud logging sinks update _Default \
 existan, sin que nadie tenga que acordarse de repetirla. Es también la razón de que
 esté en el paso 1 y no en el 7.
 
-El filtro pide `[?&]q=` y no `q=` suelto: sin los delimitadores se llevaría por
-delante cualquier URL que contenga esas dos letras dentro de otro parámetro.
+**Tres detalles del filtro, y ninguno es de adorno.**
+
+- Pide `[?&]q=` y no `q=` suelto: sin los delimitadores se llevaría por delante
+  cualquier URL que contenga esas dos letras dentro de otro parámetro.
+- Admite `%71` y `%51` además de `q`. El contenedor decodifica el **nombre** del
+  parámetro, así que `?%71=camison` se enlaza igual a `q` y llega a la búsqueda; sin
+  esa alternancia, un enlace preparado y compartido con alguien dejaba su búsqueda
+  registrada junto a su IP.
+- Mira también `httpRequest.referer`, y esa es la mitad que faltaba. La dirección de
+  la página viaja en la cabecera `Referer` de cada recurso que esa página carga, y
+  Cloud Run la guarda en la misma entrada que la IP. Se cierra en origen —el servidor
+  manda `Referrer-Policy: strict-origin`, que no manda la ruta ni siquiera dentro del
+  mismo sitio (`frontend/src/server.ts`, ADR-0019)— y también aquí, porque la política
+  la respeta el navegador y un cliente cualquiera puede mandar la cabecera que quiera.
 
 **Lo que se pierde y lo que no.** Se pierde la entrada de registro de las peticiones
 **con texto**: su estado y su latencia dejan de poder mirarse una por una. No se pierde
@@ -132,7 +144,7 @@ Comprobarlo, después de hacer una búsqueda de verdad contra el entorno:
 ```bash
 # No debe traer nada. Si trae algo, la exclusión no está puesta.
 gcloud logging read \
-  'logName:"run.googleapis.com%2Frequests" AND httpRequest.requestUrl=~"[?&]q="' \
+  'logName:"run.googleapis.com%2Frequests" AND (httpRequest.requestUrl=~"[?&](q|%71|%51)=" OR httpRequest.referer=~"[?&](q|%71|%51)=")' \
   --limit 5 --freshness=1h
 
 # Y el control: una petición al mismo endpoint sin texto sí queda registrada.
@@ -771,7 +783,7 @@ aparezcan tachadas en los registros cuando haga falta leerlas.
 | `STORAGE_RESTRICTED_BUCKET` | `sendik-reservado` | ídem |
 | `STORAGE_PUBLIC_BASE_URL` | `https://storage.googleapis.com/sendik-publico` | el dominio del CDN |
 | `FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING`, `FEATURE_CATALOG` | `true` las tres desde el 5 de septiembre de 2026 | sin definir, que es apagadas |
-| `FEATURE_SEARCH` | `true` desde el 10 de septiembre de 2026, al integrar HU-014 | sin definir, que es apagada |
+| `FEATURE_SEARCH` | `true` desde el 10 de septiembre de 2026, al integrar HU-014 | sin definir, que es apagada. **Se enciende con `FEATURE_CATALOG` o después, nunca al revés**: el frontend no conoce las banderas y pinta la caja de búsqueda igual |
 
 **Las banderas no estaban en esta tabla y ahora sí.** Su efecto se explica en
 `docs/operacion/configuracion.md`; lo que faltaba aquí era su valor por entorno, que

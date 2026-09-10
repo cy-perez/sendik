@@ -535,11 +535,19 @@ estaban las tres anteriores. En `prod` lo está por omisión —la variable no e
 allí— y no hace falta más: mientras `prod` no se despliegue, definirla sería decidir
 algo que nadie ha decidido.
 
-**No va emparejada con ninguna otra, y conviene decirlo porque las tres de arriba sí
-lo están.** Lo único que la búsqueda necesita para funcionar es el catálogo, y
-`FEATURE_CATALOG` ya está encendida en `dev`: con ella apagada la ruta que las dos
-comparten responde 404 de todos modos, así que encender la búsqueda sola no abre
-ningún callejón sin salida, solo no se nota.
+**No va emparejada, pero sí ordenada, y la dirección que importa es la contraria a la
+que parece.** Encender la búsqueda con el catálogo apagado no rompe nada: la ruta que
+las dos comparten responde 404 de todos modos, así que la búsqueda sola no se nota.
+Lo que sí deja pantalla rota es **el catálogo encendido con la búsqueda apagada**: el
+frontend no conoce las banderas —no hay mecanismo para ello y nunca lo ha habido—, así
+que pinta la caja de búsqueda y el panel de filtros igual, y en cuanto alguien los usa
+el backend responde 404, que la pantalla enseña como error.
+
+Por eso el orden al encenderlas en un entorno nuevo es: **la búsqueda se enciende con
+el catálogo o después, nunca el catálogo solo**. Hoy no afecta a nadie —en `dev` las
+cuatro están encendidas y `prod` no se ha desplegado— pero es justo el estado en el que
+quedaría `prod` el día que alguien encienda allí las tres de la Fase 2 siguiendo la
+tabla de `docs/operacion/despliegue.md`.
 
 Van con respaldo explícito (`${{ vars.X || 'false' }}`) y no a secas. Una variable
 que no está definida se expande a cadena vacía, y ahí el `${FEATURE_CATALOG:false}`

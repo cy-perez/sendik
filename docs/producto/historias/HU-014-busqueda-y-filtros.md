@@ -177,8 +177,12 @@ No entra:
   que no hay nada de ese precio.
 - **Precio negativo o con decimales.** El peso colombiano se guarda como entero
   (RN-029) y aquí se valida igual.
-- **Una categoría que ya no está en el árbol.** 404, como en el catálogo, y no un
-  listado vacío que se leería como «existe y no tiene nada».
+- **Una categoría que ya no está en el árbol.** Se rechaza, y no un listado vacío que se
+  leería como «existe y no tiene nada». ~~404, como en el catálogo~~ — **el estado no es
+  404 sino 422**, y se descubrió al revisar: `CATALOG_UNKNOWN_CATEGORY` se mapea así desde
+  HU-007, donde publicar en una categoría inexistente sí es un campo que corregir. Cambiarlo
+  aquí lo cambiaría también allí, así que queda anotado en `contrato-api.md` como decisión
+  pendiente y no se toca en esta historia.
 - **Una publicación que se vende o se archiva mientras alguien pagina.** Deja de
   casar y desaparece de las páginas siguientes. Es lo mismo que ya pasa en el
   catálogo y es la razón de paginar por cursor.
@@ -318,6 +322,16 @@ Tres cosas, y ninguna es un descuido: son decisiones que no me correspondía tom
   texto pierden su entrada de registro entera, así que su estado y su latencia solo se ven en
   las métricas de Cloud Run, que una exclusión no toca. Es configuración del proyecto y no de
   un servicio, así que cubre `prod` desde antes de que exista.
+
+  **Y la primera versión del cierre no bastaba, que es lo que encontró la revisión.** El
+  texto no viajaba solo en la dirección: `Referrer-Policy` era
+  `strict-origin-when-cross-origin`, que manda la dirección **entera dentro del mismo
+  origen**, así que cada recurso de `/catalogo?q=…` repetía el texto buscado en la cabecera
+  `Referer` y Cloud Run lo guardaba en la misma entrada que la IP —entradas que el primer
+  filtro, que solo miraba el URL, no tocaba—. Ahora la política es `strict-origin` (ADR-0019)
+  y el filtro mira las dos cosas. Y admite el nombre del parámetro codificado —`%71`—,
+  porque el contenedor lo decodifica y `?%71=camison` llegaba igual a la búsqueda saltándose
+  el filtro.
 - **Un parámetro mal escrito se ignora en silencio.** `?brand=Nike` o `?colour=BLUE`
   devuelven el catálogo entero con 200, y `contrato-api.md` dice que lo no reconocido se
   rechaza con 400. No es de esta historia —pasa en toda la API— pero con siete filtros

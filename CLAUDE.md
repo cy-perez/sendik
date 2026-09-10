@@ -146,10 +146,12 @@ Un commit por unidad lógica. No mezcles refactor con funcionalidad.
 catálogo, favoritos y panel del vendedor. Sus tres banderas están encendidas en
 `dev` y apagadas en `prod`. La Fase 1 se cerró el 21 de agosto.
 
-**La Fase 3 está en curso desde el 8 de septiembre de 2026** y arranca por la
+**La Fase 3 está en curso desde el 8 de septiembre de 2026** y arrancó por la
 búsqueda: HU-014, contra PostgreSQL y no contra Typesense, que queda aplazado
 detrás del mismo puerto (ADR-0035). Abrirla fue una decisión y no una
-consecuencia de cerrar la anterior. Dentro de la fase el orden lo mandan las
+consecuencia de cerrar la anterior. **HU-014 quedó integrada el 10 de septiembre
+de 2026**, con `FEATURE_SEARCH` sumada a las tres de la Fase 2 en `dev` y apagada
+en `prod`: allí son cuatro banderas, no tres. Dentro de la fase el orden lo mandan las
 dependencias: el pago espera a Wompi y el envío espera las cuatro respuestas de
 Skydropx, así que nada de carrito, pagos ni envíos se implementa todavía. La
 Fase 4 sigue sin abrir. El alcance por fase está en `docs/producto/alcance.md`.
