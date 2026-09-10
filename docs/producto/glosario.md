@@ -99,6 +99,10 @@ aplica la frase.
 | Español | Código | Definición |
 |---|---|---|
 | Respaldo | `Backing` | Que Sendik responde por la transacción: el pago no llega al vendedor hasta que el comprador confirma la entrega, y hay una ventana para reportar si lo recibido no es lo publicado. Es la promesa central del producto y la única palabra que la nombra: nunca "compra protegida", "garantía" ni "seguro". |
+| Carrito | `Cart` | Lo que alguien reunió y todavía no ha comprado. **No aparta nada** (RN-089): quien pague primero se lleva el producto. Se dice «carrito» y no «bolsa», que es la palabra del alcance de la Fase 3 y la que entiende también quien compra tecnología. |
+| Ítem del carrito | `CartItem` | Un producto dentro del carrito. Paralelo exacto de «Ítem de pedido»: su identidad es el par persona-producto, y por eso no hay cantidad (RN-091). La fila de «Palabras que no se usan» prohíbe «artículo» e «ítem» **como sinónimos de producto en texto visible**, que es otra cosa: aquí nombra la línea de un documento, como ya lo hace en el pedido. |
+| Grupo del carrito | `CartGroup` | Los productos de un mismo vendedor dentro del carrito, con su subtotal. Es la unidad de la pantalla y **será un pedido** (RN-090). Tiene nombre propio porque un carrito con dos vendedores son dos pedidos y dos envíos, y eso se ve desde el carrito. |
+| Subtotal | `Subtotal` | Lo que suman los productos **disponibles** de un vendedor, sin envío. **No es el total y nunca se rotula así** (RN-096): el total son las tres cifras de RN-076 y el costo de envío todavía no existe. |
 | Pedido | `Order` | Compra de uno o varios productos a un mismo vendedor. |
 | Ítem de pedido | `OrderItem` | Un producto dentro del pedido. |
 | Pago | `Payment` | Intento de cobro a través de la pasarela. |
