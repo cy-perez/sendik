@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -151,6 +152,34 @@ public class ApiExceptionHandler {
 
         ProblemDetail problema = construir(HttpStatus.BAD_REQUEST, ErrorCode.COMMON_VALIDATION_FAILED, traceId);
         problema.setProperty("errors", errores);
+
+        return ResponseEntity.badRequest().body(problema);
+    }
+
+    /**
+     * Falta un parametro de consulta obligatorio. 400, no 500.
+     *
+     * <p><strong>Es el mismo defecto que el de arriba, en su otra forma, y aparecio con el
+     * carrito de HU-015.</strong> Hasta ahora ningun parametro de consulta era obligatorio
+     * —{@code limit}, {@code cursor} y los filtros del catalogo tienen valor por omision o son
+     * opcionales— asi que esta excepcion no la lanzaba nadie y caia en el manejador de
+     * {@code Exception}: 500 con la traza entera en nivel error, para cualquiera que pidiera
+     * {@code GET /api/v1/carts} sin {@code ids}.
+     *
+     * <p>El {@code ids} del carrito anonimo es el primero que no puede tener omision: sin
+     * identificadores no hay carrito que armar, y devolver uno vacio seria contestar que su
+     * carrito esta vacio a quien no ha preguntado eso.
+     *
+     * <p>Va en {@code errors} con el nombre del parametro que falta, en el mismo formato que
+     * sus dos gemelos. Un 400 que no dice cual falta obliga a adivinar.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ProblemDetail> deParametroQueFalta(MissingServletRequestParameterException e) {
+        String traceId = nuevoTraceId();
+        LOG.info("Falta un parametro obligatorio traceId={}: {}", traceId, e.getParameterName());
+
+        ProblemDetail problema = construir(HttpStatus.BAD_REQUEST, ErrorCode.COMMON_VALIDATION_FAILED, traceId);
+        problema.setProperty("errors", List.of(Map.of("field", e.getParameterName(), "code", "NotNull")));
 
         return ResponseEntity.badRequest().body(problema);
     }

@@ -243,7 +243,10 @@ class UsersControllerTest {
                         List.of(new UserDataExport.Consentimiento("PRIVACY", "2026-08-01", AHORA)),
                         List.of(),
                         // HU-011: los favoritos entran en la descarga.
-                        List.of(new UserDataExport.Favorito(PUBLICACION_GUARDADA, AHORA))));
+                        List.of(new UserDataExport.Favorito(PUBLICACION_GUARDADA, AHORA)),
+                        // HU-015: y el carrito, por una razon mas fuerte: no dice solo que le
+                        // interesa, dice que estuvo a punto de comprarlo.
+                        List.of(new UserDataExport.ProductoEnCarrito(PUBLICACION_GUARDADA, AHORA))));
 
         MvcResult resultado = mvc.perform(get("/api/v1/users/me/export"))
                 .andExpect(status().isOk())

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import co.sendik.catalog.dto.CartCommand;
 import co.sendik.catalog.dto.CartItemState;
+import co.sendik.catalog.dto.CartView;
 import co.sendik.catalog.dto.MergeCartCommand;
 import co.sendik.catalog.dto.MergeResult;
 import co.sendik.catalog.exception.BuyerAccountClosedException;
@@ -76,6 +77,7 @@ class CarritoTest {
     private CatalogoEnMemoria.Publicaciones publicaciones;
     private CatalogoEnMemoria.Carrito filas;
     private CatalogoEnMemoria.Cuentas cuentas;
+    private CatalogoEnMemoria.Perfiles perfiles;
 
     private AddToCartUseCase agregar;
     private RemoveFromCartUseCase quitar;
@@ -93,14 +95,15 @@ class CarritoTest {
         publicaciones = new CatalogoEnMemoria.Publicaciones();
         filas = new CatalogoEnMemoria.Carrito();
         cuentas = new CatalogoEnMemoria.Cuentas();
+        perfiles = new CatalogoEnMemoria.Perfiles();
         reloj = AHORA;
 
         RelojMovible tiempo = new RelojMovible();
-        leer = new ReadCartUseCase(filas, publicaciones);
+        leer = new ReadCartUseCase(filas, publicaciones, perfiles);
         agregar = new AddToCartUseCase(filas, publicaciones, cuentas, tiempo);
         quitar = new RemoveFromCartUseCase(filas);
         estado = new ReadCartItemStateUseCase(filas, publicaciones);
-        anonimo = new PreviewCartUseCase(publicaciones, tiempo);
+        anonimo = new PreviewCartUseCase(publicaciones, perfiles, tiempo);
         fusionar = new MergeCartUseCase(filas, publicaciones, cuentas, leer, tiempo);
         exportar = new ExportCartUseCase(filas);
         borrar = new EraseCartUseCase(filas);
@@ -307,10 +310,10 @@ class CarritoTest {
             avanzar(Duration.ofMinutes(1));
             agregar.execute(new CartCommand(ALGUIEN, publicarDe(otra, 50_000).id()));
 
-            Cart carrito = leer.execute(ALGUIEN);
+            CartView carrito = leer.execute(ALGUIEN);
 
             assertThat(carrito.grupos()).hasSize(2);
-            assertThat(carrito.seDividira()).isTrue();
+            assertThat(carrito.carrito().seDividira()).isTrue();
         }
 
         /**
@@ -423,7 +426,7 @@ class CarritoTest {
             Listing segunda = publicarDe(una, 30_000);
             Listing tercera = publicarDe(otra, 50_000);
 
-            Cart carrito = anonimo.execute(List.of(primera.id(), segunda.id(), tercera.id()));
+            CartView carrito = anonimo.execute(List.of(primera.id(), segunda.id(), tercera.id()));
 
             assertThat(carrito.grupos()).hasSize(2);
             assertThat(carrito.cuantos()).isEqualTo(3);
@@ -439,7 +442,7 @@ class CarritoTest {
             Listing deOtra = publicarDe(otra, 50_000);
             Listing deUna = publicarDe(una, 100_000);
 
-            Cart carrito = anonimo.execute(List.of(deOtra.id(), deUna.id()));
+            CartView carrito = anonimo.execute(List.of(deOtra.id(), deUna.id()));
 
             assertThat(carrito.grupos().getFirst().vendedor()).isEqualTo(otra);
         }
@@ -454,7 +457,7 @@ class CarritoTest {
             Listing pausada = publicar();
             publicaciones.guardar(pausada.pausar(AHORA));
 
-            Cart carrito = anonimo.execute(List.of(publicada.id(), pausada.id()));
+            CartView carrito = anonimo.execute(List.of(publicada.id(), pausada.id()));
 
             assertThat(carrito.cuantos()).isEqualTo(1);
         }
@@ -463,7 +466,7 @@ class CarritoTest {
         void deberia_descartar_sin_error_un_identificador_inventado() {
             Listing publicada = publicar();
 
-            Cart carrito = anonimo.execute(List.of(ListingId.nuevo(), publicada.id()));
+            CartView carrito = anonimo.execute(List.of(ListingId.nuevo(), publicada.id()));
 
             assertThat(carrito.cuantos()).isEqualTo(1);
         }

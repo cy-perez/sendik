@@ -1,13 +1,17 @@
 package co.sendik.catalog.usecase;
 
+import co.sendik.catalog.dto.CartView;
+import co.sendik.catalog.dto.SellerProfileView;
 import co.sendik.catalog.model.BuyerId;
 import co.sendik.catalog.model.Cart;
 import co.sendik.catalog.model.CartItem;
 import co.sendik.catalog.model.CartLine;
 import co.sendik.catalog.model.Listing;
 import co.sendik.catalog.model.ListingId;
+import co.sendik.catalog.model.SellerId;
 import co.sendik.catalog.port.out.CartItems;
 import co.sendik.catalog.port.out.ListingRepository;
+import co.sendik.catalog.port.out.SellerProfiles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,10 +43,12 @@ public class ReadCartUseCase {
 
     private final CartItems carrito;
     private final ListingRepository publicaciones;
+    private final SellerProfiles vendedores;
 
-    public ReadCartUseCase(CartItems carrito, ListingRepository publicaciones) {
+    public ReadCartUseCase(CartItems carrito, ListingRepository publicaciones, SellerProfiles vendedores) {
         this.carrito = carrito;
         this.publicaciones = publicaciones;
+        this.vendedores = vendedores;
     }
 
     /*
@@ -50,11 +56,11 @@ public class ReadCartUseCase {
      * spring-tx y con -Xlint:all -Werror ese aviso rompe la compilacion.
      */
     @Transactional
-    public Cart execute(BuyerId quien) {
+    public CartView execute(BuyerId quien) {
         List<CartItem> items = carrito.todosDe(quien);
 
         if (items.isEmpty()) {
-            return Cart.de(List.of());
+            return new CartView(Cart.de(List.of()), Map.of());
         }
 
         Map<ListingId, Listing> porId = new HashMap<>();
@@ -70,6 +76,30 @@ public class ReadCartUseCase {
             }
         }
 
-        return Cart.de(lineas);
+        return conVendedores(Cart.de(lineas), vendedores);
+    }
+
+    /**
+     * Le pone a cada grupo el perfil de su vendedor.
+     *
+     * <p>Una consulta por vendedor distinto y no por linea: un carrito de veinte productos de
+     * un mismo vendedor pregunta una vez. Con el tope de RN-097 el peor caso son veinte
+     * vendedores distintos, que es una pantalla que nadie va a tener y que aun asi cabe.
+     *
+     * <p>Un perfil que no responde se omite del mapa y no rompe nada: el grupo se pinta con lo
+     * que hay. Que no se pueda leer el nombre de un vendedor no es razon para negarle a nadie
+     * su carrito.
+     *
+     * <p>Estatico y con el puerto por argumento porque lo comparte {@link PreviewCartUseCase},
+     * que hace exactamente lo mismo con un carrito que no esta en la base.
+     */
+    static CartView conVendedores(Cart armado, SellerProfiles vendedores) {
+        Map<SellerId, SellerProfileView> perfiles = new HashMap<>();
+        armado.grupos()
+                .forEach(grupo -> vendedores
+                        .buscar(grupo.vendedor())
+                        .ifPresent(perfil -> perfiles.put(grupo.vendedor(), perfil)));
+
+        return new CartView(armado, perfiles);
     }
 }

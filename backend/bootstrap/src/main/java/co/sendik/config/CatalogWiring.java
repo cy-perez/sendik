@@ -98,7 +98,8 @@ public class CatalogWiring {
      */
     @Bean
     ExposedFeatures expuestas(FeatureFlags banderas) {
-        return new ExposedFeatures(banderas.sellerVerification(), banderas.publishing(), banderas.catalog());
+        return new ExposedFeatures(
+                banderas.sellerVerification(), banderas.publishing(), banderas.catalog(), banderas.checkout());
     }
 
     @Bean
@@ -343,8 +344,8 @@ public class CatalogWiring {
     }
 
     @Bean
-    ReadCartUseCase readCartUseCase(CartItems carrito, ListingRepository publicaciones) {
-        return new ReadCartUseCase(carrito, publicaciones);
+    ReadCartUseCase readCartUseCase(CartItems carrito, ListingRepository publicaciones, SellerProfiles vendedores) {
+        return new ReadCartUseCase(carrito, publicaciones, vendedores);
     }
 
     /**
@@ -353,8 +354,8 @@ public class CatalogWiring {
      * base: no hay fecha de cuando se agrego porque nadie la anoto.
      */
     @Bean
-    PreviewCartUseCase previewCartUseCase(ListingRepository publicaciones, Clock reloj) {
-        return new PreviewCartUseCase(publicaciones, reloj);
+    PreviewCartUseCase previewCartUseCase(ListingRepository publicaciones, SellerProfiles vendedores, Clock reloj) {
+        return new PreviewCartUseCase(publicaciones, vendedores, reloj);
     }
 
     /**

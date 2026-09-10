@@ -1,6 +1,5 @@
 package co.sendik.catalog.dto;
 
-import co.sendik.catalog.model.Cart;
 import co.sendik.catalog.model.ListingId;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +27,7 @@ import java.util.Objects;
  * @param carrito como quedo, ya armado y con sus subtotales
  * @param noEntraron lo que se quedo fuera, por el tope o por no ser agregable
  */
-public record MergeResult(Cart carrito, List<ListingId> noEntraron) {
+public record MergeResult(CartView carrito, List<ListingId> noEntraron) {
 
     public MergeResult {
         Objects.requireNonNull(carrito, "El carrito es obligatorio");

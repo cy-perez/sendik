@@ -18,4 +18,4 @@ package co.sendik.shared.rest;
  * dependencias: la cadena de seguridad es comun, y no puede necesitar a {@code catalog}
  * para compilar.
  */
-public record ExposedFeatures(boolean sellerVerification, boolean publishing, boolean catalog) {}
+public record ExposedFeatures(boolean sellerVerification, boolean publishing, boolean catalog, boolean checkout) {}

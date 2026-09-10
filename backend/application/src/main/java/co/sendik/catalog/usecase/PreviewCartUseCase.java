@@ -1,10 +1,12 @@
 package co.sendik.catalog.usecase;
 
+import co.sendik.catalog.dto.CartView;
 import co.sendik.catalog.model.Cart;
 import co.sendik.catalog.model.CartLine;
 import co.sendik.catalog.model.Listing;
 import co.sendik.catalog.model.ListingId;
 import co.sendik.catalog.port.out.ListingRepository;
+import co.sendik.catalog.port.out.SellerProfiles;
 import co.sendik.shared.money.Money;
 import java.time.Clock;
 import java.time.Instant;
@@ -48,10 +50,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class PreviewCartUseCase {
 
     private final ListingRepository publicaciones;
+    private final SellerProfiles vendedores;
     private final Clock reloj;
 
-    public PreviewCartUseCase(ListingRepository publicaciones, Clock reloj) {
+    public PreviewCartUseCase(ListingRepository publicaciones, SellerProfiles vendedores, Clock reloj) {
         this.publicaciones = publicaciones;
+        this.vendedores = vendedores;
         this.reloj = reloj;
     }
 
@@ -59,9 +63,9 @@ public class PreviewCartUseCase {
      * Sin readOnly = true, por lo mismo que los demas de lectura.
      */
     @Transactional
-    public Cart execute(List<ListingId> ids) {
+    public CartView execute(List<ListingId> ids) {
         if (ids.isEmpty()) {
-            return Cart.de(List.of());
+            return new CartView(Cart.de(List.of()), Map.of());
         }
 
         Map<ListingId, Listing> porId = new HashMap<>();
@@ -81,6 +85,6 @@ public class PreviewCartUseCase {
             lineas.add(new CartLine(publicacion, ahora.minusMillis(i), precio == null ? Money.dePesos(0) : precio));
         }
 
-        return Cart.de(lineas);
+        return ReadCartUseCase.conVendedores(Cart.de(lineas), vendedores);
     }
 }
