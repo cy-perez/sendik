@@ -2,9 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   input,
   linkedSignal,
   output,
+  viewChild,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 
@@ -44,6 +46,8 @@ export class SearchBox {
 
   protected readonly hayTexto = computed(() => this.borrador().trim() !== '');
 
+  private readonly entrada = viewChild.required<ElementRef<HTMLInputElement>>('entrada');
+
   protected escribir(valor: string): void {
     this.borrador.set(valor);
   }
@@ -53,9 +57,16 @@ export class SearchBox {
     this.buscar.emit(limpio === '' ? null : limpio);
   }
 
-  /** Vaciar la caja es buscar sin texto, que es el catálogo (criterio 8). */
+  /**
+   * Vaciar la caja es buscar sin texto, que es el catálogo (criterio 8).
+   *
+   * <p>Y devuelve el foco a la entrada. El aspa vive dentro de `@if (hayTexto())`, así que
+   * al pulsarla se destruye a sí misma en el mismo tic: sin esto el foco cae a `<body>` y
+   * quien navega con teclado vuelve al principio del documento (WCAG 2.4.3).
+   */
   protected limpiar(): void {
     this.borrador.set('');
+    this.entrada().nativeElement.focus();
     this.buscar.emit(null);
   }
 }

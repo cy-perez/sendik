@@ -103,8 +103,8 @@
               (click)="quitar(ficha)"
             >
               <span>{{ etiquetaDe(ficha) }}</span>
-              <svg class="icono" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" />
+              <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
           </li>
@@ -150,7 +150,6 @@
 
     <div id="resultados" class="catalogo__resultados" tabindex="-1" #resultados>
       @if (cargando()) {
-        <p class="solo-lectores">{{ 'catalog.list.loading' | transloco }}</p>
         <ul class="catalogo__rejilla" aria-hidden="true">
           @for (hueco of [0, 1, 2, 3, 4, 5, 6, 7]; track hueco) {
             <li><p class="esqueleto catalogo__esqueleto"></p></li>
@@ -174,16 +173,7 @@
         -->
         <div class="catalogo__vacio">
           <p class="tipo-cuerpo">
-            {{
-              (criterios().q !== null
-                ? 'catalog.search.empty'
-                : hayFiltros()
-                  ? 'catalog.search.emptyWithFilters'
-                  : familiaSlug() === null
-                    ? 'catalog.list.empty'
-                    : 'catalog.list.emptyInCategory'
-              ) | transloco: { texto: criterios().q }
-            }}
+            {{ claveDelVacio() | transloco: { texto: criterios().q } }}
           </p>
           @if (hayFiltros()) {
             <button type="button" class="btn btn-secundario" (click)="quitarTodos()">
@@ -197,7 +187,7 @@
           la paginación por cursor no cuenta el total a propósito, y prometer una cifra que
           no se tiene sería peor que no darla.
         -->
-        <p class="tipo-secundario">{{ anuncio() }}</p>
+        <p class="tipo-secundario" aria-hidden="true">{{ anuncio() }}</p>
 
         <ul class="catalogo__rejilla">
           @for (publicacion of publicaciones(); track publicacion.id; let primera = $first) {

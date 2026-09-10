@@ -166,4 +166,22 @@ class BusquedaTest {
             assertThat(CatalogSort.PRICE_ASC.necesitaTexto()).isFalse();
         }
     }
+
+    /**
+     * Lo que alguien busca no se conserva en ningun registro
+     * ({@code docs/operacion/datos-personales.md}).
+     *
+     * <p>Hoy ninguna clase de {@code catalog} tiene un {@code Logger}, asi que la garantia
+     * descansaba entera en que nadie escribiera nunca un {@code LOG.debug("consulta={}",
+     * consulta)}. {@code SearchText} viaja dentro de {@code ListCatalogQuery} y de
+     * {@code SearchCriteria}, que son {@code record}: su {@code toString()} generado incrusta
+     * el de sus campos. Esta prueba es lo que impide que el valor vuelva a ese camino.
+     */
+    @Test
+    void deberia_no_imprimir_el_texto_que_alguien_busco() {
+        SearchText texto = new SearchText("camison de maternidad");
+
+        assertThat(texto.toString()).doesNotContain("camison", "maternidad");
+        assertThat(texto.value()).isEqualTo("camison de maternidad");
+    }
 }

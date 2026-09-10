@@ -173,13 +173,19 @@
 */
 .catalogo__salto {
   position: absolute;
-  left: -9999px;
+  z-index: 5;
+  left: var(--esp-8);
+  transform: translateY(-250%);
+  padding: var(--esp-8) var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-decoration: none;
 }
 
 .catalogo__salto:focus {
-  position: static;
-  display: inline-block;
-  margin-bottom: var(--esp-16);
+  transform: translateY(0);
 }
 
 .catalogo__resultados:focus {

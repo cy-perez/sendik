@@ -78,7 +78,12 @@ test.describe('búsqueda del catálogo', () => {
 
     await page.goto(`${RUTA_CATALOGO}?q=${distintivo}&color=BLACK`);
 
-    await expect(page.getByText('No encontramos nada para')).toBeVisible();
+    // Dentro de la zona de resultados, y no en toda la página: el mismo texto está también
+    // en la región viva que lo anuncia, que es lo que oye quien usa lector de pantalla.
+    // Antes decían cosas distintas —la pantalla elegía entre cuatro mensajes y el anuncio
+    // decía siempre «no hay nada con esos filtros»—, y esa era la razón de que aquí no
+    // hiciera falta acotar.
+    await expect(page.locator('#resultados').getByText('No encontramos nada para')).toBeVisible();
 
     // El filtro puesto se ve, aunque el panel esté cerrado.
     const ficha = page.getByRole('button', { name: /Quitar el filtro Negro/ });
@@ -158,7 +163,7 @@ test.describe('búsqueda del catálogo', () => {
     await expect(page.getByRole('button', { name: 'Salir' })).toBeVisible();
 
     await expect(page.getByRole('link').filter({ hasText: titulo })).toHaveCount(0);
-    await expect(page.getByText('No encontramos nada para')).toBeVisible();
+    await expect(page.locator('#resultados').getByText('No encontramos nada para')).toBeVisible();
 
     await retirarDeRevision(page, id);
   });

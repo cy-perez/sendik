@@ -41,11 +41,6 @@
   flex-wrap: wrap;
 }
 
-.filtros__opcion input:focus-visible {
-  outline: 3px solid var(--color-foco);
-  outline-offset: 2px;
-}
-
 .filtros__campo {
   display: block;
   margin-bottom: var(--esp-12);
@@ -65,9 +60,10 @@
   font: inherit;
 }
 
-.filtros__control:focus-visible {
-  outline: 3px solid var(--color-foco);
-  outline-offset: 2px;
+/* `.error` no es global: cada componente que la usa la define. Sin esto el único error
+   del panel se veía como texto normal. */
+.error {
+  color: var(--color-error);
 }
 
 /* El relleno solo no sirve: --color-fondo sobre --color-superficie da 1.08:1 y el cambio

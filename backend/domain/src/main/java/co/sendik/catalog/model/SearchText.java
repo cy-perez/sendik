@@ -75,8 +75,15 @@ public record SearchText(String value) {
         return texto.codePoints().anyMatch(Character::isLetterOrDigit);
     }
 
+    /**
+     * <strong>No devuelve el texto.</strong> Lo que alguien busca no se conserva en ningun
+     * registro -{@code docs/operacion/datos-personales.md}- y este objeto viaja dentro de
+     * {@code ListCatalogQuery} y de {@code SearchCriteria}, que son {@code record}: su
+     * {@code toString()} generado incrusta el de sus campos, asi que un {@code LOG.debug}
+     * sobre la consulta lo publicaria entero. Quien necesite el valor tiene {@link #value()}.
+     */
     @Override
     public String toString() {
-        return value;
+        return "SearchText[" + value.length() + " caracteres]";
     }
 }

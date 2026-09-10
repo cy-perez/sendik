@@ -81,9 +81,14 @@ app.use((_request, response, next) => {
   // Sin esto, un archivo subido por alguien se puede servir como el tipo que el
   // navegador adivine y no como el que declaramos.
   response.setHeader('X-Content-Type-Options', 'nosniff');
-  // La direccion completa no sale del sitio hacia terceros: un identificador en
-  // la ruta no tiene por que llegarle a quien recibe la visita.
-  response.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // La direccion completa no sale de esta pagina, ni hacia terceros ni hacia nosotros
+  // mismos. Con `strict-origin-when-cross-origin` solo se recortaba hacia fuera: dentro
+  // del mismo origen viajaba entera, asi que cada recurso que carga
+  // `/catalogo?q=camison+de+maternidad` mandaba ese texto en la cabecera `Referer`, y el
+  // registro de peticiones de Cloud Run lo guarda junto a la IP. Es el historial de
+  // busquedas que HU-014 decidio no tener, reconstruido por accidente
+  // (docs/operacion/datos-personales.md). Nada del sitio lee el referente.
+  response.setHeader('Referrer-Policy', 'strict-origin');
   // Nadie mete el sitio en un marco. Es la defensa contra el robo de clics sobre
   // los formularios de sesion.
   response.setHeader('X-Frame-Options', 'DENY');

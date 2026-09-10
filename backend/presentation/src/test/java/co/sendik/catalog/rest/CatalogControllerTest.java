@@ -1,6 +1,7 @@
 package co.sendik.catalog.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -21,6 +22,7 @@ import co.sendik.catalog.model.SellerId;
 import co.sendik.catalog.model.Size;
 import co.sendik.catalog.model.SizeSystem;
 import co.sendik.catalog.rest.mapper.CatalogCursors;
+import co.sendik.catalog.rest.mapper.CatalogQueries;
 import co.sendik.catalog.usecase.ListCatalogUseCase;
 import co.sendik.shared.file.FileKey;
 import co.sendik.shared.money.Money;
@@ -227,11 +229,42 @@ class CatalogControllerTest {
         rechaza("sizeSystem", "ALPHA");
     }
 
-    /** Caso borde: el minimo por encima del maximo es 400, no un vacio. */
+    /**
+     * Caso borde: el minimo por encima del maximo es 400, no un vacio.
+     *
+     * <p><strong>Y el mensaje no repite lo que llego.</strong> El del dominio nombra los dos
+     * importes, que le sirve a quien publica, y {@code ApiExceptionHandler} lo registra: era
+     * el unico punto del camino nuevo donde entrada del cliente acababa en un registro.
+     * Es el mismo envoltorio que ya tenia la talla, y esta asercion es lo que lo sostiene.
+     */
     @Test
-    void deberia_rechazar_un_rango_de_precio_del_reves() throws Exception {
+    void deberia_rechazar_un_rango_de_precio_del_reves_sin_repetir_los_importes() throws Exception {
         mvc.perform(get("/api/v1/listings").param("minPrice", "100000").param("maxPrice", "50000"))
                 .andExpect(status().isBadRequest());
+
+        // El cuerpo de la respuesta no lleva el mensaje -es un ProblemDetail con su codigo-,
+        // asi que se afirma sobre la excepcion, que es lo que ApiExceptionHandler registra.
+        assertThatThrownBy(() ->
+                        CatalogQueries.consulta(null, null, null, null, null, null, "100000", "50000", null, null, 24))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageNotContaining("100000")
+                .hasMessageNotContaining("50000");
+    }
+
+    /**
+     * RN-085: la marca no es filtro, y hoy eso se ve en que {@code ?brand=} no hace nada.
+     *
+     * <p>Esta prueba fija el silencio a proposito, y <strong>se pondra en rojo el dia que se
+     * cierre el hueco</strong> de los parametros no reconocidos que contrato-api.md manda
+     * rechazar con 400. Es justo cuando alguien tiene que volver a mirar esta decision: la
+     * marca es texto libre y opcional, asi que no filtra, y ese dia habra que decidir si el
+     * 400 la nombra o no.
+     */
+    @Test
+    void deberia_cumplir_RN_085_ignorando_la_marca_como_filtro() throws Exception {
+        when(listar.execute(any())).thenReturn(CatalogPage.ultima(List.of()));
+
+        mvc.perform(get("/api/v1/listings").param("brand", "Nike")).andExpect(status().isOk());
     }
 
     /** Caso borde: el peso no tiene decimales ni negativos (RN-029). */
