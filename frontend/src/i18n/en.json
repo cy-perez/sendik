@@ -114,6 +114,10 @@
     "favorites": {
       "title": "Your favorites · Sendik",
       "description": "The listings you saved on Sendik."
+    },
+    "cart": {
+      "title": "Your cart · Sendik",
+      "description": "What you saved on Sendik to buy."
     }
   },
   "layout": {
@@ -1388,6 +1392,45 @@
       "publishedAt,desc": "Most recent",
       "price,asc": "Price: low to high",
       "price,desc": "Price: high to low"
+    },
+    "cart": {
+      "toggle": {
+        "add": "Add to cart",
+        "added": "In your cart",
+        "remove": "Remove from cart"
+      },
+      "title": "Your cart",
+      "intro": "What you are carrying, not bought yet.",
+      "loading": "Loading your cart",
+      "error": "We could not load your cart. Please try again.",
+      "retry": "Try again",
+      "perSellerNotice": "Each seller is a separate order and a separate shipment.",
+      "shippingLater": "Shipping cost is calculated at checkout.",
+      "subtotal": "Subtotal",
+      "seller": "Sold by {{ nombre }}",
+      "sellerUnknown": "Seller",
+      "unavailable": "No longer available",
+      "priceChanged": "The price changed since you added it",
+      "remove": "Remove",
+      "full": "Your cart holds up to {{ tope }} products. Remove one to add another.",
+      "notMerged": "We could not add {{ cuantos }} of the products saved in this browser.",
+      "noStorage": "This browser cannot save your cart. Sign in so you do not lose it.",
+      "merge": {
+        "question": "We found {{ cuantos }} products saved in this browser. Add them to your cart?",
+        "accept": "Add them",
+        "discard": "No, thanks"
+      },
+      "empty": {
+        "title": "Your cart is empty",
+        "body": "Whatever you save shows up here until you decide to buy it. Nothing is held for you: whoever pays first gets it.",
+        "cta": "Browse the catalogue"
+      },
+      "errors": {
+        "own": "This listing is yours, so you cannot add it to your cart.",
+        "unavailable": "This listing is no longer available.",
+        "full": "Your cart holds up to {{ tope }} products.",
+        "failed": "We could not update your cart. Please try again."
+      }
     }
   },
   "moderation": {

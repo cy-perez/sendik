@@ -114,6 +114,10 @@
     "favorites": {
       "title": "Tus favoritos · Sendik",
       "description": "Las publicaciones que guardaste en Sendik."
+    },
+    "cart": {
+      "title": "Tu carrito · Sendik",
+      "description": "Lo que guardaste en Sendik para comprar."
     }
   },
   "layout": {
@@ -1388,6 +1392,45 @@
       "publishedAt,desc": "Lo más reciente",
       "price,asc": "Precio: de menor a mayor",
       "price,desc": "Precio: de mayor a menor"
+    },
+    "cart": {
+      "toggle": {
+        "add": "Agregar al carrito",
+        "added": "En el carrito",
+        "remove": "Quitar del carrito"
+      },
+      "title": "Tu carrito",
+      "intro": "Lo que llevas, sin comprar todavía.",
+      "loading": "Cargando tu carrito",
+      "error": "No pudimos cargar tu carrito. Inténtalo de nuevo.",
+      "retry": "Reintentar",
+      "perSellerNotice": "Cada vendedor es un pedido y un envío aparte.",
+      "shippingLater": "El costo de envío se calcula al comprar.",
+      "subtotal": "Subtotal",
+      "seller": "Vendido por {{ nombre }}",
+      "sellerUnknown": "Vendedor",
+      "unavailable": "Ya no está disponible",
+      "priceChanged": "El precio cambió desde que lo agregaste",
+      "remove": "Quitar",
+      "full": "Tu carrito admite hasta {{ tope }} productos. Quita alguno para agregar otro.",
+      "notMerged": "No pudimos agregar {{ cuantos }} de los productos que tenías guardados en este navegador.",
+      "noStorage": "Este navegador no puede guardar tu carrito. Entra a tu cuenta para no perderlo.",
+      "merge": {
+        "question": "Encontramos {{ cuantos }} productos guardados en este navegador. ¿Los agregas a tu carrito?",
+        "accept": "Agregarlos",
+        "discard": "No, gracias"
+      },
+      "empty": {
+        "title": "Tu carrito está vacío",
+        "body": "Lo que vayas guardando aparece aquí hasta que decidas comprarlo. Nada queda apartado: quien pague primero se lo lleva.",
+        "cta": "Ver el catálogo"
+      },
+      "errors": {
+        "own": "Esta publicación es tuya, así que no la puedes agregar al carrito.",
+        "unavailable": "Esta publicación ya no está disponible.",
+        "full": "Tu carrito admite hasta {{ tope }} productos.",
+        "failed": "No pudimos actualizar tu carrito. Inténtalo de nuevo."
+      }
     }
   },
   "moderation": {

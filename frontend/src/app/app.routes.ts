@@ -91,6 +91,22 @@ export const routes: Routes = [
       import('./features/catalog/presentation/favorites-page').then((m) => m.FavoritesPage),
   },
   {
+    // El carrito. HU-015.
+    //
+    // **Sin guard, y a diferencia de todo lo demas que es de una persona.** Un carrito no es
+    // de una cuenta hasta que alguien entra: quien no ha entrado tiene el suyo en el
+    // navegador y esta pantalla se lo pinta igual (criterio 13). Pedir sesion aqui haria
+    // imposible el criterio 8.
+    //
+    // Existe aunque FEATURE_CHECKOUT este apagada, igual que las del catalogo: la API
+    // responde 404 y la pantalla muestra su estado de error.
+    path: 'carrito',
+    title: 'meta.cart.title',
+    data: { descriptionKey: 'meta.cart.description' },
+    loadComponent: () =>
+      import('./features/catalog/presentation/cart-page').then((m) => m.CartPage),
+  },
+  {
     path: 'registro',
     title: 'meta.register.title',
     data: { descriptionKey: 'meta.register.description' },

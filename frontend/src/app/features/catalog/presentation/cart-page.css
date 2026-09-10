@@ -1,0 +1,119 @@
+:host {
+  display: block;
+}
+
+.carrito__intro {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-8);
+  margin-bottom: var(--esp-24);
+  max-width: var(--medida);
+}
+
+.carrito__aviso {
+  margin-bottom: var(--esp-16);
+  max-width: var(--medida);
+}
+
+/* La pregunta de la fusion. Va delante del carrito y no en un dialogo: un dialogo atrapa el
+   foco y obliga a decidir para poder mirar, y lo razonable aqui es ver el carrito antes de
+   contestar. */
+.carrito__fusion {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-16);
+  margin-bottom: var(--esp-24);
+  max-width: var(--medida);
+}
+
+.carrito__fusion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  margin-top: var(--esp-12);
+}
+
+/* El grupo por vendedor es la unidad visual (criterio 14). El borde lo cierra para que se
+   vea que es un pedido y no una lista suelta de productos. */
+.carrito__grupo {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-16);
+  margin-bottom: var(--esp-24);
+  max-width: var(--medida);
+}
+
+.carrito__vendedor {
+  margin-bottom: var(--esp-12);
+}
+
+.carrito__lineas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--esp-16);
+}
+
+.carrito__linea {
+  display: grid;
+  gap: var(--esp-8);
+  padding-bottom: var(--esp-16);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.carrito__linea:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Lo no disponible baja de contraste, pero **no se comunica solo asi**: el precio va tachado
+   y el texto lo dice con palabras (criterio 25). Tres senales y solo una es de color. */
+.carrito__linea--apagada .carrito__titulo,
+.carrito__linea--apagada .precio {
+  color: var(--color-texto-suave);
+}
+
+.carrito__no-disponible {
+  color: var(--color-texto-suave);
+}
+
+.carrito__aviso-precio {
+  color: var(--color-aviso);
+}
+
+/* El destino tactil de 44px lo pone .btn; aqui solo se evita que el boton se estire a lo
+   ancho de la fila, que en movil lo dejaria del tamano de la pantalla. */
+.carrito__quitar {
+  justify-self: start;
+}
+
+/* El subtotal cierra su grupo. **En movil queda pegado a el y no flotando**: con dos
+   vendedores, un subtotal flotante no se sabe de cual es. */
+.carrito__subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--esp-16);
+  margin-top: var(--esp-16);
+  padding-top: var(--esp-16);
+  border-top: 1px solid var(--color-borde);
+}
+
+.carrito__envio {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-8);
+}
+
+.carrito__vacio {
+  max-width: var(--medida);
+}
+
+.carrito__esqueleto {
+  display: grid;
+  gap: var(--esp-16);
+  max-width: var(--medida);
+}
+
+.carrito__esqueleto-linea {
+  height: var(--esp-48);
+}

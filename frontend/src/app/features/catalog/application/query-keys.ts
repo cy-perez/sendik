@@ -76,4 +76,34 @@ export const queryKeys = {
    * favorito viajaría dentro del HTML servido y la ficha dejaría de ser pública.
    */
   favorite: (id: string) => ['catalog', 'favorites', 'one', id] as const,
+  /**
+   * El carrito, y **de qué origen**. HU-015.
+   *
+   * <p>Los dos tramos del final no son adorno. El carrito de quien tiene sesión lo sirve
+   * `GET /users/me/cart` y el de quien no la tiene se arma con los identificadores del
+   * navegador: son dos respuestas distintas, y con una clave común entrar pintaría por un
+   * instante el carrito anónimo dentro de la sesión recién abierta.
+   *
+   * <p>Los identificadores entran en la clave por lo mismo que los criterios de búsqueda
+   * entran en la de `list`: cada conjunto es una petición distinta, y quitar un producto sin
+   * sesión tiene que pedir de nuevo en vez de servir lo de antes.
+   */
+  cart: (haySesion: boolean, ids: readonly string[]) =>
+    ['catalog', 'cart', haySesion ? 'sesion' : 'navegador', ids.join(',')] as const,
+  /**
+   * El prefijo de todo lo del carrito, para invalidarlo junto.
+   *
+   * <p>Hace falta porque {@link cart} devuelve una clave completa: tras agregar o quitar hay
+   * que tirar el carrito sea cual sea el origen con el que se pidió, y pasar `cart(...)`
+   * invalidaría solo el que coincida. Es el mismo problema que resolvió `anyOne`.
+   */
+  cartAny: ['catalog', 'cart'] as const,
+  /**
+   * El estado del control para una publicación concreta.
+   *
+   * <p>Entrada aparte de la de la ficha, por lo mismo que la de favoritos: `one(id)` guarda
+   * lo que responde `GET /listings/{id}`, que es igual para todo el mundo y se renderiza en
+   * el servidor; esto es de la sesión y se pide desde el navegador.
+   */
+  cartItem: (id: string) => ['catalog', 'cart', 'one', id] as const,
 } as const;

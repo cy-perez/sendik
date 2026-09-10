@@ -68,6 +68,11 @@ const RUTAS_PUBLICAS: readonly { readonly ruta: string; readonly nombre: string 
   // el encabezado y la invitacion a entrar del criterio 16. Es una pantalla que ve
   // cualquiera que escriba la direccion, y se quedo fuera de esta lista al escribirla.
   { ruta: '/mis-favoritos', nombre: 'mis favoritos' },
+  // HU-015. **Es la unica pantalla privada que si se puede auditar entera sin sesion**, y no
+  // por casualidad: un carrito no es de una cuenta hasta que alguien entra, asi que sin ella
+  // no sale una invitacion a entrar sino el carrito vacio del criterio 19, que es lo que ve
+  // cualquiera que llegue por primera vez.
+  { ruta: '/carrito', nombre: 'carrito' },
   // HU-014. Sin backend, lo que axe recorre del catalogo es su estado de error, y sobre
   // todo **la caja de busqueda y el panel de filtros**, que se pintan igual: se ven antes
   // de que llegue nada y son la interfaz nueva de esta historia.
