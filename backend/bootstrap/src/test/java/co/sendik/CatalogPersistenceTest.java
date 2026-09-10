@@ -663,6 +663,22 @@ class CatalogPersistenceTest {
      * funciona: borrar {@code , id DESC} del adaptador la dejaba en verde. Con tres acciones
      * distintas se afirma sobre lo que devuelve {@code historial}, que es lo que se quiere
      * proteger, y sin el desempate el orden sale mal.
+     *
+     * <p><strong>Y el orden esperado no se escribe a mano, que es lo que la hacia
+     * intermitente.</strong> Afirmaba {@code ARCHIVED, APPROVED, SUBMITTED}, es decir, el
+     * orden inverso al de insercion, dando por hecho que identificadores creados uno detras
+     * de otro salen crecientes. No es cierto dentro del mismo milisegundo: el generador de
+     * v7 pone azar en los 74 bits que siguen a la marca de tiempo y **no lleva contador
+     * monotono**, cosa que ADR-0015 aceptó por escrito. Aprobar y archivar caben de sobra en
+     * un milisegundo -- en el corredor de la integracion continua caben--, y ahi el orden de
+     * los dos identificadores es una moneda al aire. Fallo asi en `main` el 10 de septiembre
+     * de 2026, despues de pasar en el pull request y dos veces en local.
+     *
+     * <p>Lo que se afirma ahora es la regla y no una de sus dos caras: que {@code historial}
+     * devuelve exactamente lo que devuelve ordenar por identificador descendente, leido de la
+     * base por separado. Sigue teniendo dientes -- sin {@code , id DESC} el adaptador
+     * devuelve el orden de insercion, que con tres identificadores al azar coincide con este
+     * una vez de cada seis-- y ya no depende de quien gane la moneda.
      */
     @Test
     void deberia_desempatar_por_identificador_cuando_dos_eventos_caen_a_la_misma_hora() {
@@ -675,9 +691,20 @@ class CatalogPersistenceTest {
 
         List<ModerationEvent> rastro = bitacora.historial(publicacion.id());
 
+        List<ModerationAction> porIdentificador = jdbc
+                .sql("SELECT action FROM moderation_events WHERE listing_id = :publicacion ORDER BY id DESC")
+                .param("publicacion", publicacion.id().value())
+                .query(String.class)
+                .list()
+                .stream()
+                .map(ModerationAction::valueOf)
+                .toList();
+
+        assertThat(rastro).extracting(ModerationEvent::action).containsExactlyElementsOf(porIdentificador);
         assertThat(rastro)
                 .extracting(ModerationEvent::action)
-                .containsExactly(ModerationAction.ARCHIVED, ModerationAction.APPROVED, ModerationAction.SUBMITTED);
+                .containsExactlyInAnyOrder(
+                        ModerationAction.ARCHIVED, ModerationAction.APPROVED, ModerationAction.SUBMITTED);
         assertThat(rastro).extracting(ModerationEvent::occurredAt).containsOnly(AHORA);
     }
 
