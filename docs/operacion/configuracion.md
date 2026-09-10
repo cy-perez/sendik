@@ -522,11 +522,24 @@ Se manejan como configuración, no como ramas de Git de larga vida:
 Se enciende cada una cuando su funcionalidad exista y no cuando empiece la fase
 que la contiene. Es lo que permite desplegar código incompleto sin exponerlo.
 
-**El valor por omisión de las seis es `false`, y se decide por entorno.** Las tres
-de la Fase 2 —`FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING` y
-`FEATURE_CATALOG`— viajan desde `despliegue.yml` como variables del entorno de
-GitHub, así que `dev` y `prod` se deciden por separado y sin tocar código. Las tres
-restantes ni siquiera se pasan: no hay nada que encender todavía.
+**El valor por omisión de las seis es `false`, y se decide por entorno.** Cuatro
+viajan desde `despliegue.yml` como variables del entorno de GitHub, así que `dev` y
+`prod` se deciden por separado y sin tocar código: las tres de la Fase 2
+—`FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING` y `FEATURE_CATALOG`— y
+`FEATURE_SEARCH`, que se sumó el 10 de septiembre de 2026 al integrar HU-014.
+`FEATURE_CHECKOUT` y `FEATURE_SPIN_VIEWER` ni siquiera se pasan: no hay nada que
+encender todavía.
+
+**`FEATURE_SEARCH` está encendida en `dev` y apagada en `prod`**, que es donde
+estaban las tres anteriores. En `prod` lo está por omisión —la variable no existe
+allí— y no hace falta más: mientras `prod` no se despliegue, definirla sería decidir
+algo que nadie ha decidido.
+
+**No va emparejada con ninguna otra, y conviene decirlo porque las tres de arriba sí
+lo están.** Lo único que la búsqueda necesita para funcionar es el catálogo, y
+`FEATURE_CATALOG` ya está encendida en `dev`: con ella apagada la ruta que las dos
+comparten responde 404 de todos modos, así que encender la búsqueda sola no abre
+ningún callejón sin salida, solo no se nota.
 
 Van con respaldo explícito (`${{ vars.X || 'false' }}`) y no a secas. Una variable
 que no está definida se expande a cadena vacía, y ahí el `${FEATURE_CATALOG:false}`

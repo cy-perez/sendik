@@ -770,6 +770,14 @@ aparezcan tachadas en los registros cuando haga falta leerlas.
 | `STORAGE_PUBLIC_BUCKET` | `sendik-publico` | ídem |
 | `STORAGE_RESTRICTED_BUCKET` | `sendik-reservado` | ídem |
 | `STORAGE_PUBLIC_BASE_URL` | `https://storage.googleapis.com/sendik-publico` | el dominio del CDN |
+| `FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING`, `FEATURE_CATALOG` | `true` las tres desde el 5 de septiembre de 2026 | sin definir, que es apagadas |
+| `FEATURE_SEARCH` | `true` desde el 10 de septiembre de 2026, al integrar HU-014 | sin definir, que es apagada |
+
+**Las banderas no estaban en esta tabla y ahora sí.** Su efecto se explica en
+`docs/operacion/configuracion.md`; lo que faltaba aquí era su valor por entorno, que
+es lo que hay que poner al crear el entorno de GitHub. Una bandera sin definir se
+expande a cadena vacía en el flujo y el respaldo `|| 'false'` la deja apagada, así
+que dejarla fuera de `prod` es la forma de tenerla apagada allí y no un olvido.
 
 Y las del frontend, que desde ADR-0024 también se despliega desde aquí. Van en el
 mismo sitio y por la misma razón: ninguna es secreta —el sitio las dice en voz alta
