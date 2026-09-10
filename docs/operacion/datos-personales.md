@@ -39,6 +39,12 @@ Si alguna no tiene respuesta, el campo no se crea.
 - **Los registros nunca contienen** contrasenas, tokens, numeros de documento,
   cuentas bancarias ni la imagen de una selfie. Tampoco parcialmente, tampoco en
   nivel `debug`, tampoco en el mensaje de una excepcion.
+- **El texto que alguien busca tampoco se conserva.** La aplicacion no lo escribe en
+  ningun registro, pero viaja en la direccion y el registro de peticiones de Cloud Run
+  guarda la direccion entera junto a la IP. Una exclusion del proyecto lo descarta antes
+  de almacenarlo (`docs/operacion/despliegue.md`, paso 1). Conservarlo seria tener un
+  historial de busquedas: un dato nuevo, sin finalidad autorizada, que HU-014 decidio
+  expresamente no tener.
 - Las respuestas de la API devuelven solo los campos que la pantalla necesita.
   Un endpoint de perfil publico no incluye correo ni telefono.
 - Los datos de verificacion no viajan al frontend una vez aprobada la

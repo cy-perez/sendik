@@ -97,6 +97,50 @@ gcloud artifacts repositories create sendik \
   --description="Imágenes de Sendik"
 ```
 
+### El registro no guarda el texto de las búsquedas
+
+Los registros de peticiones de Cloud Run llevan el URL completo —con su cadena de
+consulta— en la misma entrada que la IP de quien pidió. Desde HU-014 ese URL puede
+traer `q`, que es lo que alguien escribió para buscar. Guardado junto a la IP, eso
+reconstruye por accidente el historial de búsquedas que la historia decidió **no**
+tener (`docs/operacion/datos-personales.md`).
+
+Se descarta antes de almacenarse, con una exclusión en el sink `_Default`:
+
+```bash
+gcloud logging sinks update _Default \
+  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014: el texto que alguien busca no se conserva junto a su IP. Descarta la entrada de registro de peticiones cuyo URL lleve el parametro q. Las peticiones sin texto siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND httpRequest.requestUrl=~"[?&]q="'
+```
+
+**Va sin `service_name`, y es a propósito:** al ser del proyecto cubre
+`sendik-backend-dev`, `sendik-web-dev` y los dos servicios de `prod` el día que
+existan, sin que nadie tenga que acordarse de repetirla. Es también la razón de que
+esté en el paso 1 y no en el 7.
+
+El filtro pide `[?&]q=` y no `q=` suelto: sin los delimitadores se llevaría por
+delante cualquier URL que contenga esas dos letras dentro de otro parámetro.
+
+**Lo que se pierde y lo que no.** Se pierde la entrada de registro de las peticiones
+**con texto**: su estado y su latencia dejan de poder mirarse una por una. No se pierde
+nada más. Las peticiones sin `q` —el catálogo, los filtros, las fichas— siguen
+registradas enteras, y las métricas de Cloud Run son otra cosa que una exclusión de
+registros no toca: el conteo y la latencia de la búsqueda se siguen viendo ahí, que es
+con lo que habrá que responder si la búsqueda pública necesita límite de tasa.
+
+Comprobarlo, después de hacer una búsqueda de verdad contra el entorno:
+
+```bash
+# No debe traer nada. Si trae algo, la exclusión no está puesta.
+gcloud logging read \
+  'logName:"run.googleapis.com%2Frequests" AND httpRequest.requestUrl=~"[?&]q="' \
+  --limit 5 --freshness=1h
+
+# Y el control: una petición al mismo endpoint sin texto sí queda registrada.
+gcloud logging read \
+  'logName:"run.googleapis.com%2Frequests" AND httpRequest.requestUrl=~"/api/v1/listings"' \
+  --limit 5 --freshness=1h --format='value(httpRequest.requestUrl)'
+```
+
 ## 2. La base de datos
 
 En `dev` es Neon o Supabase en capa gratuita; al lanzar `prod`, Cloud SQL. Lo único que necesita el backend es la cadena de conexión JDBC, el usuario y

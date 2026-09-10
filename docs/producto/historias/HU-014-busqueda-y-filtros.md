@@ -307,11 +307,17 @@ Tres cosas, y ninguna es un descuido: son decisiones que no me correspondía tom
   búsqueda de texto completo, y ordenar por relevancia obliga a puntuar fila a fila: el tope
   de 50 acota lo que se devuelve, no el trabajo. Cambiar eso es cambiar una decisión escrita
   del contrato.
-- **`q` viaja en la cadena de consulta**, así que queda en el registro de peticiones de
-  Cloud Run junto a la IP, en los dos servicios. Dentro de la aplicación no se registra —lo
-  comprueban los mensajes de error, que no devuelven lo que se escribió— pero eso reconstruye
-  de forma incidental el historial de búsquedas que esta historia decidió no tener. Se cierra
-  con un filtro de exclusión en Cloud Logging, que es configuración y no código.
+- ~~**`q` viaja en la cadena de consulta**, así que queda en el registro de peticiones de
+  Cloud Run junto a la IP, en los dos servicios.~~ **Cerrado el 10 de septiembre de 2026, y
+  antes de que existiera la primera búsqueda.** Dentro de la aplicación nunca se registró —lo
+  comprueban los mensajes de error, que no devuelven lo que se escribió, y el limitador de
+  tasa, que usa `getRequestURI()` y no ve la cadena de consulta—. Y al registro de peticiones
+  no llegó a entrar: la exclusión del sink `_Default` se puso con `FEATURE_SEARCH` todavía
+  apagada, y una lectura de los treinta días anteriores confirmó que ninguna entrada traía
+  `q`. Está en `docs/operacion/despliegue.md`, paso 1, con lo que cuesta: las peticiones con
+  texto pierden su entrada de registro entera, así que su estado y su latencia solo se ven en
+  las métricas de Cloud Run, que una exclusión no toca. Es configuración del proyecto y no de
+  un servicio, así que cubre `prod` desde antes de que exista.
 - **Un parámetro mal escrito se ignora en silencio.** `?brand=Nike` o `?colour=BLUE`
   devuelven el catálogo entero con 200, y `contrato-api.md` dice que lo no reconocido se
   rechaza con 400. No es de esta historia —pasa en toda la API— pero con siete filtros
