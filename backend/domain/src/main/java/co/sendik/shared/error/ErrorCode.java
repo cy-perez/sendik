@@ -255,6 +255,28 @@ public enum ErrorCode {
      */
     CATALOG_SELF_FAVORITE_FORBIDDEN,
 
+    /**
+     * RN-092: nadie agrega al carrito su propia publicacion.
+     *
+     * <p>Codigo propio y 403, por lo mismo que {@link #CATALOG_SELF_FAVORITE_FORBIDDEN},
+     * y por una razon mas fuerte que aquel: comprarse a si mismo moveria dinero y comision
+     * en circulo. Alli la regla evita una senal sin sentido; aqui evita una transaccion.
+     */
+    CATALOG_SELF_CART_FORBIDDEN,
+
+    /**
+     * RN-097: el carrito admite hasta veinte productos.
+     *
+     * <p>422 y no 403: la peticion es legitima y quien la manda tiene derecho a hacerla,
+     * lo que pasa es que el carrito no da para mas. Es lo mismo que {@code 422} dice del
+     * resto del catalogo —la peticion se entiende y no se puede cumplir— y lo contrario de
+     * lo que diria un 403, que hablaria de permisos que aqui no faltan.
+     *
+     * <p>El mensaje tiene que nombrar el tope. Un rechazo que no dice cuantos caben deja a
+     * quien lo recibe quitando productos a ciegas.
+     */
+    CATALOG_CART_FULL,
+
     /** La peticion no cumple el contrato. El detalle por campo va en {@code errors}. */
     COMMON_VALIDATION_FAILED,
 
