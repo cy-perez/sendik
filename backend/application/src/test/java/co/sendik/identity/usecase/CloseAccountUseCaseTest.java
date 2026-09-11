@@ -17,6 +17,7 @@ import co.sendik.identity.model.UserId;
 import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.port.out.MailSender;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
@@ -58,13 +59,23 @@ class CloseAccountUseCaseTest {
     @Mock
     private UserCart carrito;
 
+    @Mock
+    private ShippingAddressRepository direcciones;
+
     private CloseAccountUseCase caso;
     private User usuario;
 
     @BeforeEach
     void prepararCaso() {
         caso = new CloseAccountUseCase(
-                usuarios, refrescos, correo, almacen, favoritos, carrito, Clock.fixed(AHORA, ZoneOffset.UTC));
+                usuarios,
+                refrescos,
+                correo,
+                almacen,
+                favoritos,
+                carrito,
+                direcciones,
+                Clock.fixed(AHORA, ZoneOffset.UTC));
 
         usuario = User.registrar(
                 UserId.nuevo(),

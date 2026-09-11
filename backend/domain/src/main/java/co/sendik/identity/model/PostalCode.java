@@ -25,7 +25,9 @@ public record PostalCode(String value) {
         value = value.replaceAll("\\s", "");
 
         if (!VALIDO.matcher(value).matches()) {
-            throw new IllegalArgumentException("El codigo postal colombiano son seis digitos, y llego: " + value);
+            // Sin el valor dentro: `ApiExceptionHandler` registra el mensaje de esta
+            // excepcion, y un codigo postal es parte de una direccion (criterio 19).
+            throw new IllegalArgumentException("El codigo postal colombiano son seis digitos");
         }
     }
 

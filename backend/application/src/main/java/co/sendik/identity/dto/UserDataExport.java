@@ -33,7 +33,8 @@ public record UserDataExport(
         List<Consentimiento> consentimientos,
         List<Sesion> sesiones,
         List<Favorito> favoritos,
-        List<ProductoEnCarrito> carrito) {
+        List<ProductoEnCarrito> carrito,
+        List<Direccion> direcciones) {
 
     /**
      * @param ciudad nula si nunca se puso o si se quito. Se emite igual con valor
@@ -98,4 +99,32 @@ public record UserDataExport(
      * identificado, y en cuanto se fusiona pasa a ser estas filas.
      */
     public record ProductoEnCarrito(String publicacion, Instant agregadoEl) {}
+
+    /**
+     * Una direccion de entrega guardada. HU-016.
+     *
+     * <p><strong>Sale entera, al reves que el favorito y el producto del carrito.</strong>
+     * Alli va el identificador y no el titulo porque el titulo es del vendedor y puede
+     * cambiar; aqui no hay nada que sea de otro: el nombre de quien recibe, el telefono, la
+     * linea y las indicaciones los escribio esta persona. Entregar solo un identificador
+     * seria no entregar nada.
+     *
+     * <p><strong>Van los nombres y no los codigos.</strong> «11001» no responde ninguna
+     * pregunta que alguien pueda hacerse sobre sus propios datos; «Bogotá, D.C.» si.
+     *
+     * <p>Cuando quien recibe no es el titular, aqui salen el nombre y el telefono de un
+     * tercero (RN-104). Salen igual: es lo que Sendik guarda asociado a esta cuenta, y el
+     * derecho a conocer es sobre lo que hay.
+     */
+    public record Direccion(
+            String quienRecibe,
+            String telefono,
+            String departamento,
+            String municipio,
+            String linea,
+            @Nullable String complemento,
+            @Nullable String indicaciones,
+            @Nullable String codigoPostal,
+            boolean predeterminada,
+            Instant guardadaEl) {}
 }
