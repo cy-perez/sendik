@@ -37,7 +37,7 @@ Lo común vive en `buildSrc`, en dos plugins de convención:
 `domain` no recibe **ni el BOM**. Una plataforma no aporta clases, pero
 declararla en el módulo que debe estar limpio confunde a quien lo lea después.
 
-La prueba `ArchitectureTest`, en `bootstrap`, comprueba doce reglas y falla si
+La prueba `ArchitectureTest`, en `bootstrap`, comprueba dieciséis reglas y falla si
 alguien lo intenta. No la desactives.
 
 El JDK no se instala a mano: `gradle/gradle-daemon-jvm.properties` fija Temurin

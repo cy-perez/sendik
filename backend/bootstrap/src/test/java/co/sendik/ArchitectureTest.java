@@ -152,6 +152,32 @@ class ArchitectureTest {
         regla.check(todasLasClasesIncluidasLasPruebas());
     }
 
+    /**
+     * El atajo que deja sin efecto la regla de la configuracion tipada.
+     *
+     * <p>El grafo de Gradle impide que {@code presentation} importe una clase de
+     * {@code @ConfigurationProperties}, que vive en {@code infrastructure}, pero no impide
+     * lo equivalente: leer el valor con {@code @Value} en el borde, porque
+     * {@code spring-beans} esta en su classpath por el starter de webmvc. Con eso la regla
+     * de backend/CLAUDE.md -todo valor externo en una clase tipada y validada- se queda
+     * escrita y nada la comprueba.
+     *
+     * <p>Llego con ADR-0036, donde la configuracion entra por {@code bootstrap} y la
+     * correccion entera depende de que siga entrando por ahi. Cubre el campo y no el
+     * parametro de constructor, que ArchUnit no ve.
+     */
+    @Test
+    void no_se_leen_valores_de_configuracion_con_value() {
+        ArchRule regla = noFields()
+                .should()
+                .beAnnotatedWith("org.springframework.beans.factory.annotation.Value")
+                .because("todo valor externo se declara en una clase @ConfigurationProperties"
+                        + " tipada y validada, en infrastructure (backend/CLAUDE.md)")
+                .allowEmptyShould(true);
+
+        regla.check(todasLasClasesIncluidasLasPruebas());
+    }
+
     @Test
     void no_se_usa_jackson_2_sino_jackson_3() {
         ArchRule regla = noClasses()
