@@ -1032,7 +1032,10 @@ de la cabecera a DEBUG, una línea por forma distinta, con números y nunca con
 direcciones:
 
 ```bash
-gcloud logging read   'resource.type="cloud_run_revision" AND resource.labels.service_name="sendik-backend-dev"'   --project sendik-col --limit 200 --format 'value(textPayload)' --freshness=30m   | grep "X-Forwarded-For con"
+gcloud logging read \
+  'resource.type="cloud_run_revision" AND resource.labels.service_name="sendik-backend-dev"' \
+  --project sendik-col --limit 200 --format 'value(textPayload)' --freshness=30m \
+  | grep "X-Forwarded-For con"
 ```
 
 Dice cuántas entradas trae, cuál se toma, si hay algo delante de las entradas de la
@@ -1061,7 +1064,10 @@ todas esas peticiones cuentan juntas—, y es lo primero que hay que buscar al
 desplegar a un entorno nuevo:
 
 ```bash
-gcloud logging read   'resource.type="cloud_run_revision" AND severity>=WARNING AND textPayload:"Se usa la direccion de la conexion"'   --project sendik-col --limit 20   --format 'value(resource.labels.service_name,textPayload)'
+gcloud logging read \
+  'resource.type="cloud_run_revision" AND severity>=WARNING AND textPayload:"Se usa la direccion de la conexion"' \
+  --project sendik-col --limit 20 \
+  --format 'value(resource.labels.service_name,textPayload)'
 ```
 
 El aviso dice la causa con un nombre —`CERO_SALTOS`, `SIN_CABECERA`, `FALTAN_ENTRADAS`,
@@ -1069,23 +1075,43 @@ El aviso dice la causa con un nombre —`CERO_SALTOS`, `SIN_CABECERA`, `FALTAN_E
 `local`, donde es correcto: el código no puede distinguir «no hay proxy delante» de «la
 variable llegó en cero».
 
-**La cabecera puede llegar repetida, y de eso queda una comprobación pendiente.** Se leen
-todas las ocurrencias y se aplanan en orden, porque `getHeader` devuelve solo la primera
-línea. Pero contar desde el final supone que lo que añade la plataforma queda al final de
-la lista aplanada, y **eso no se ha medido**: las tres mediciones del 10 de septiembre
-usaron una sola línea. La comprobación es trece peticiones con **dos** cabeceras
-`X-Forwarded-For`, la primera fija:
+**La cabecera puede llegar repetida, y eso está medido.** Se leen todas las ocurrencias y
+se aplanan en orden, porque `getHeader` devuelve solo la primera línea. Pero contar desde el
+final supone que lo que añade la plataforma queda al final de la lista aplanada, y eso no se
+sigue de las tres mediciones del 10 de septiembre, que usaron una sola línea.
+
+**Comprobado esa misma noche en la revisión `sendik-backend-dev-00047-pc2`: Cloud Run
+escribe al final.** La sonda es trece peticiones con dos líneas `X-Forwarded-For`, y lo que
+la hace discriminar es que **la segunda varíe**: si la plataforma escribiera en la primera
+ocurrencia, la entrada elegida cambiaría con la segunda línea y no habría tope. Con las dos
+líneas iguales no se distingue nada, que es el error fácil aquí.
 
 ```bash
 for i in $(seq 1 13); do
-  curl -s -o /dev/null -w "%{http_code}
-" -X POST https://api-dev.sendik.co/api/v1/auth/verify-email     -H 'Content-Type: application/json'     -H 'X-Forwarded-For: 9.9.9.9' -H 'X-Forwarded-For: 9.9.9.9'     -d '{"token":"no-existe"}'
+  curl -s -o /dev/null -w '%{http_code}\n' \
+    -X POST https://api-dev.sendik.co/api/v1/auth/verify-email \
+    -H 'Content-Type: application/json' \
+    -H 'X-Forwarded-For: 9.9.9.9' \
+    -H "X-Forwarded-For: 203.0.113.$i" \
+    -d '{"token":"no-existe"}'
 done
 ```
 
-Si el 429 aparece, la plataforma añade lo suyo al final y el aplanado es correcto. Si no
-aparece, lo añade a la primera ocurrencia y hay que caer al respaldo cuando la cabecera
-llegue más de una vez.
+Salió `429` en la undécima. Si no apareciera, la plataforma escribiría en la primera
+ocurrencia y habría que caer al respaldo cuando la cabecera llegue más de una vez.
+
+**Las tres sondas juntas, que es la comprobación completa al desplegar a un entorno
+nuevo.** Entre una y otra hay que dejar pasar la ventana del minuto, porque ahora las tres
+cuentan contra la misma clave:
+
+| Sonda | Qué manda | Qué tiene que salir |
+|---|---|---|
+| Línea base | doce peticiones sin tocar la cabecera | `429` en la undécima: el tope está vivo |
+| Evasión | doce con un `X-Forwarded-For` inventado distinto cada una | `429` en la undécima: la dirección no la elige quien llama |
+| Cabecera repetida | trece con dos líneas, la segunda variando | `429` en la undécima: la plataforma escribe al final |
+
+En `dev` las tres salieron así la noche del 10 de septiembre de 2026, con cero avisos de
+respaldo en la ventana.
 
 ## Volver atrás
 

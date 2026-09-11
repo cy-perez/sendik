@@ -70,8 +70,16 @@ Tomcat.
 
 La dirección de quien llama es la entrada que está `sendik.client-ip.trusted-hops`
 posiciones **desde el final** de `X-Forwarded-For`, con `1` en Cloud Run y `0` en
-`local`, donde la cabecera se ignora entera. `server.forward-headers-strategy` se
-queda sin poner, a propósito.
+`local`, donde la cabecera se ignora entera. `server.forward-headers-strategy` se queda
+sin poner, a propósito.
+
+**El `1` está medido y no supuesto.** Lo que no se podía observar desde fuera era si Cloud
+Run añade algo **después** de la dirección del cliente, y de eso dependía la cifra entera.
+El registro del borde, en una petición sin cabecera, lo dice sin sacar ninguna dirección:
+«`X-Forwarded-For con 1 entradas; se toma la numero 1; nada delante de las nuestras: true;
+coincide con la direccion de la conexion: false`». Una sola entrada y nada detrás. El
+`false` del final confirma además que sí hay un proxy delante: la dirección de la conexión
+no es la de quien llama, que es por lo que el respaldo sería una clave compartida.
 
 **Se leen todas las ocurrencias de la cabecera, no solo la primera.** `getHeader`
 devuelve una sola línea por contrato del servlet, y contar desde el final solo protege
@@ -83,9 +91,14 @@ de RFC 9110.
 Eso sí depende de una cosa, y conviene no dejarla implícita: de que lo que añade la
 infraestructura quede **al final de la lista aplanada**. Si un salto, ante una cabecera
 que llega repetida, añadiera lo suyo a la **primera** ocurrencia en vez de a la última, la
-última entrada sería la que escribió quien llama. **Las tres mediciones del «Contexto»
-usaron una sola línea, así que eso no está medido**, y queda como la primera comprobación
-del despliegue: dos líneas `X-Forwarded-For` y trece peticiones mirando si aparece el 429.
+última entrada sería la que escribió quien llama.
+
+**Medido en `dev` la noche del 10 de septiembre de 2026**, en la revisión
+`sendik-backend-dev-00047-pc2`, porque las tres mediciones del «Contexto» usaron una sola
+línea y esto no se sigue de ellas. Trece peticiones con **dos** líneas `X-Forwarded-For`,
+la primera fija y **la segunda variando** —que es lo que discrimina: si la plataforma
+escribiera en la primera ocurrencia, la entrada elegida cambiaría con la segunda línea y no
+habría tope—: **429 en la undécima**. Cloud Run escribe al final.
 
 **Y la entrada se canoniza antes de usarla.** Se le quitan el puerto y los corchetes de
 IPv6, y de la forma canónica se encarga `InetAddress.ofLiteral` —literal y sin resolver
