@@ -189,17 +189,26 @@ ignora.
 
 **Es un dato de topología y por eso es configuración.** Si algún día hay un
 balanceador delante de Cloud Run, la cifra sube y no se toca una línea de código.
-Y equivocarla no es inocuo en ninguno de los dos sentidos: quedarse corto deja que
-quien llama elija su propio identificador y esquive el límite entero; pasarse hace
-que todo el mundo comparta la dirección del proxy y el límite deje fuera a todos a
-la vez. El razonamiento completo, y por qué no se usa
-`server.forward-headers-strategy`, está en ADR-0036.
+Y equivocarla no es inocuo en ninguno de los dos sentidos, que además **no son
+simétricos**: **pasarse es el grave**, porque el conteo se va hacia atrás hasta caer
+dentro de lo que escribió quien llama —con un salto real y dos declarados, basta que
+mande una entrada inventada—, y entonces vuelve a elegir su propio identificador **sin
+que salte ningún aviso**. Quedarse corto lleva al otro fallo: el conteo señala una
+entrada de la infraestructura, que es la misma siempre, y el límite deja fuera a todos a
+la vez. El razonamiento completo, y por qué no se usa `server.forward-headers-strategy`,
+está en ADR-0036.
 
 **Equivocarla no falla al arrancar, así que hay una señal en el registro.** Cuando el
 cálculo no cuadra y la dirección acaba saliendo de la conexión, sale un **WARN** —no un
 DEBUG, porque `prod` corre a INFO—. Detrás de un proxy eso significa que todas esas
-peticiones cuentan juntas, porque la conexión viene del proxy. Cómo buscarlo está en
+peticiones cuentan juntas, porque la conexión viene del proxy. También avisa declarar
+**cero saltos**, que en `local` es correcto y aun así avisa: el código no puede
+distinguirlo de una nube con la variable en cero. Cómo buscarlo está en
 `docs/operacion/despliegue.md`.
+
+**Lo que el WARN no cubre es pasarse**, porque ahí el cálculo sí cuadra. Para eso la
+comprobación es la del despliegue: mandar una cabecera inventada y ver si el 429 llega
+igual.
 
 **La cuenta es de cada instancia.** Con dos réplicas detrás de un balanceador,
 cada una permite el máximo por separado y el límite real se duplica. Es aceptable

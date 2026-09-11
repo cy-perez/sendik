@@ -1028,11 +1028,24 @@ direcciones:
 gcloud logging read   'resource.type="cloud_run_revision" AND resource.labels.service_name="sendik-backend-dev"'   --project sendik-col --limit 200 --format 'value(textPayload)' --freshness=30m   | grep "X-Forwarded-For con"
 ```
 
-Dice cuántas entradas trae, cuál se toma y si esa coincide con la dirección de la
-conexión. Si la que se toma no es la del cliente, la cifra está mal, y **equivocarla
-no falla al arrancar**: quedarse corto deja que quien llama elija su identificador;
-pasarse hace que todos compartan el del proxy y el límite deje fuera a todo el mundo
-a la vez, que desde un solo cliente se ve idéntico a que funcione.
+Dice cuántas entradas trae, cuál se toma, si hay algo delante de las entradas de la
+infraestructura y si la elegida coincide con la de la conexión. **La lectura válida es
+`nada delante de las nuestras: true` en una petición en la que no mandaste la cabecera**;
+si la mandas, ese booleano sale `false` y no significa que la cifra esté mal.
+
+**Y esa línea no basta para decidir la cifra, porque sus números los escribe en parte
+quien llama.** Equivocarla no falla al arrancar, y los dos sentidos no son simétricos:
+
+- **Pasarse es el grave.** Con un salto real y dos declarados, basta que alguien mande una
+  entrada inventada para que el conteo caiga dentro de lo que él escribió y vuelva a
+  elegir su identificador. **No sale ningún WARN**, porque el cálculo cuadra, y la línea de
+  DEBUG dice justo lo que diría una topología sana de dos saltos.
+- **Quedarse corto** señala una entrada de la infraestructura, igual para todos, y el
+  límite deja fuera a todo el mundo a la vez.
+
+Así que lo que decide es el experimento, no el registro: **doce peticiones con un
+`X-Forwarded-For` inventado distinto cada una contra una ruta de credenciales**. Si el 429
+llega en la undécima, la cifra es correcta; si no llega, sobra al menos un salto.
 
 **Y hay una señal que no depende de DEBUG**, que importa porque `prod` corre a INFO:
 cuando el cálculo no cuadra y la dirección acaba saliendo de la conexión, sale un
@@ -1041,14 +1054,31 @@ todas esas peticiones cuentan juntas—, y es lo primero que hay que buscar al
 desplegar a un entorno nuevo:
 
 ```bash
-gcloud logging read   'resource.type="cloud_run_revision" AND severity>=WARNING
-   AND textPayload:"Se usa la direccion de la conexion"'   --project sendik-col --limit 20 --format 'value(resource.labels.service_name,textPayload)'
+gcloud logging read   'resource.type="cloud_run_revision" AND severity>=WARNING AND textPayload:"Se usa la direccion de la conexion"'   --project sendik-col --limit 20   --format 'value(resource.labels.service_name,textPayload)'
 ```
 
-**La cabecera puede llegar repetida, y eso también está cubierto**: se leen todas las
-ocurrencias y se aplanan en orden, porque `getHeader` devuelve solo la primera línea y
-un salto que escribiera lo suyo aparte dejaría a la vista una lista escrita entera por
-quien llama.
+El aviso dice la causa con un nombre —`CERO_SALTOS`, `SIN_CABECERA`, `FALTAN_ENTRADAS`,
+`ENTRADA_INVALIDA`—, una vez por causa y por instancia. `CERO_SALTOS` sale también en
+`local`, donde es correcto: el código no puede distinguir «no hay proxy delante» de «la
+variable llegó en cero».
+
+**La cabecera puede llegar repetida, y de eso queda una comprobación pendiente.** Se leen
+todas las ocurrencias y se aplanan en orden, porque `getHeader` devuelve solo la primera
+línea. Pero contar desde el final supone que lo que añade la plataforma queda al final de
+la lista aplanada, y **eso no se ha medido**: las tres mediciones del 10 de septiembre
+usaron una sola línea. La comprobación es trece peticiones con **dos** cabeceras
+`X-Forwarded-For`, la primera fija:
+
+```bash
+for i in $(seq 1 13); do
+  curl -s -o /dev/null -w "%{http_code}
+" -X POST https://api-dev.sendik.co/api/v1/auth/verify-email     -H 'Content-Type: application/json'     -H 'X-Forwarded-For: 9.9.9.9' -H 'X-Forwarded-For: 9.9.9.9'     -d '{"token":"no-existe"}'
+done
+```
+
+Si el 429 aparece, la plataforma añade lo suyo al final y el aplanado es correcto. Si no
+aparece, lo añade a la primera ocurrencia y hay que caer al respaldo cuando la cabecera
+llegue más de una vez.
 
 ## Volver atrás
 

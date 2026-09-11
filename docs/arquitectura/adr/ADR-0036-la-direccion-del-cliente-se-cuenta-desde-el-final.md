@@ -76,13 +76,25 @@ devuelve una sola línea por contrato del servlet, y contar desde el final solo 
 si lo que añade la infraestructura está en la misma lista: un salto que escribiera lo
 suyo en una línea aparte dejaría a la vista una lista escrita entera por quien llama, y
 la evasión volvería con el arreglo puesto. Aplanarlas en orden es la semántica de lista
-de RFC 9110 y no depende de cómo las emita cada salto.
+de RFC 9110.
 
-**Y la entrada se normaliza antes de usarla**: se le quita el puerto, se le quitan los
-corchetes de IPv6 y se pasa a minúscula. No es cosmético, y falla en los dos sentidos:
-un proxy que escriba `ip:puerto` le da a cada petición un identificador distinto —el
-puerto efímero cambia— y el límite desaparece; y rechazar `[2001:db8::1]` por los
-corchetes manda toda la familia IPv6 al respaldo, que es lo de abajo.
+Eso sí depende de una cosa, y conviene no dejarla implícita: de que lo que añade la
+infraestructura quede **al final de la lista aplanada**. Si un salto, ante una cabecera
+que llega repetida, añadiera lo suyo a la **primera** ocurrencia en vez de a la última, la
+última entrada sería la que escribió quien llama. **Las tres mediciones del «Contexto»
+usaron una sola línea, así que eso no está medido**, y queda como la primera comprobación
+del despliegue: dos líneas `X-Forwarded-For` y trece peticiones mirando si aparece el 429.
+
+**Y la entrada se canoniza antes de usarla.** Se le quitan el puerto y los corchetes de
+IPv6, y de la forma canónica se encarga `InetAddress.ofLiteral` —literal y sin resolver
+nombres nunca, que es la razón de usarla y no `getByName`: aquí entra texto de quien
+llama, y una consulta de DNS por petición sería una vía de ataque—. No es cosmético, y
+falla en los dos sentidos: un proxy que escriba `ip:puerto` le da a cada petición un
+identificador distinto —el puerto efímero cambia— y el límite desaparece; y rechazar
+`[2001:db8::1]` por los corchetes manda toda la familia IPv6 al respaldo, que es lo de
+abajo. Canonizar añade la otra mitad: los ceros a la izquierda, la IPv6 expandida, la
+escrita en mayúscula y `::ffff:190.85.12.7` acaban en **una sola clave**, y no en un mismo
+cliente contando dos veces con medio cupo cada una.
 
 ## Motivo
 
@@ -118,12 +130,27 @@ WARN**, que es el único nivel que se ve en `prod`, y no a DEBUG.
   a esta decisión y no la cierra: pasar a HMAC con clave arrastra gestión de clave y la
   comparabilidad de las constancias ya guardadas. Queda abierto, y mientras tanto ni la
   clase ni `datos-personales.md` afirman que esto sea anonimato.
-- **Una variable más que puede estar mal**, y equivocarla no falla al arrancar:
-  quedarse corto deja la evasión intacta; pasarse deja fuera a todo el mundo a la
-  vez, y desde un solo cliente eso se ve idéntico a que funcione. Por eso el borde
-  registra a DEBUG la **forma** de la cabecera —cuántas entradas trae, cuál se toma
-  y si coincide con la de la conexión—, con números y booleanos y **nunca con una
-  dirección**: la promesa de `ClientIpHasher` es que la IP en claro no sale de ahí.
+- **Una variable más que puede estar mal**, y equivocarla no falla al arrancar. Los dos
+  sentidos no son simétricos, y el grave es **pasarse**. Con `A` entradas escritas por
+  quien llama, `H` saltos reales y `h` declarados, el índice es `(A+H)−h`:
+  - **`h > H`, declarar más saltos de los que hay: vuelve la evasión entera.** Basta que
+    quien llama mande `h−H` entradas para que el índice caiga **dentro de su propio
+    prefijo**; con `H=1` y `h=2`, una sola entrada inventada es suficiente. Y **no salta
+    ningún aviso**, porque el índice es válido.
+  - **`h < H`, quedarse corto: el índice cae en una entrada de la infraestructura**, que es
+    constante, y entonces cuentan todos juntos.
+
+  Por eso el borde registra a DEBUG la **forma** de la cabecera —cuántas entradas trae,
+  cuál se toma y si coincide con la de la conexión—, con números y booleanos y **nunca con
+  una dirección**: la promesa de `ClientIpHasher` es que la IP en claro no sale de ahí. Con
+  una salvedad que hay que tener delante al medir: **esos números los escribe en parte quien
+  llama**. Con `h=2` y `H=1`, una petición con una entrada inventada produce exactamente la
+  línea de una topología sana. Lo que decide es el experimento del 429, no esa línea.
+- **Caer al respaldo avisa a WARN, y también lo hace declarar cero saltos.** Ese último era
+  el único camino sin ninguna señal: en `local` es correcto, pero el código no puede
+  distinguirlo de una nube con la variable en cero, y eso es la dirección del proxy para
+  todo el mundo y la misma constancia de consentimiento para todas las personas que se
+  registren. Una línea por arranque en la máquina de quien programa es el precio.
 - `ClientIpHasher` deja de ser un `@Component` y pasa a construirse en `bootstrap`,
   que es el único módulo que ve a la vez la configuración tipada de
   `infrastructure` y el tipo de `presentation`. Es el mismo camino que ya siguen
