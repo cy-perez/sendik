@@ -179,9 +179,10 @@ operador móvil entero por lo que hiciera una sola persona —la misma razón po
 que cada ruta lleva su cuenta aparte— y además le regalaría cupo nuevo a quien
 cambie de salida.
 
-`CLIENT_IP_TRUSTED_HOPS` decide **quién es ese origen**, y sin él lo anterior no
-se sostiene: dice cuántas entradas añade la infraestructura al final de
-`X-Forwarded-For`. La dirección de quien llama se cuenta desde el final, tantas
+`CLIENT_IP_TRUSTED_HOPS` decide **quién es ese origen**, y sin él no se sostiene
+ninguno de los dos grupos que cuentan por IP —`CREDENTIALS` y `SESSION` en `auth`, y
+`ANONYMOUS_CART` desde HU-015—: dice cuántas entradas añade la infraestructura al final
+de `X-Forwarded-For`. La dirección de quien llama se cuenta desde el final, tantas
 posiciones como diga esta variable. Vale `1` en Cloud Run —medido contra `dev`: la
 plataforma añade la dirección del cliente y conserva delante lo que haya mandado
 quien llama— y `0` en `local`, donde la conexión es directa y la cabecera entera se
@@ -196,7 +197,7 @@ mande una entrada inventada—, y entonces vuelve a elegir su propio identificad
 que salte ningún aviso**. Quedarse corto lleva al otro fallo: el conteo señala una
 entrada de la infraestructura, que es la misma siempre, y el límite deja fuera a todos a
 la vez. El razonamiento completo, y por qué no se usa `server.forward-headers-strategy`,
-está en ADR-0036.
+está en ADR-0038.
 
 **Equivocarla no falla al arrancar, así que hay una señal en el registro.** Cuando el
 cálculo no cuadra y la dirección acaba saliendo de la conexión, sale un **WARN** —no un

@@ -16,7 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 /**
  * Que el numero de saltos de confianza llegue de la configuracion al borde.
  *
- * <p>Es el unico eslabon de ADR-0036 que no se puede comprobar con una prueba de
+ * <p>Es el unico eslabon de ADR-0038 que no se puede comprobar con una prueba de
  * unidad, y es el que falla en silencio: si la clave no coincide con el prefijo del
  * record, o si el cableado no pasa el valor, {@code trustedHops} queda en {@code 0} y
  * la aplicacion arranca igual. En la nube eso significa ignorar la cabecera entera y
@@ -69,7 +69,7 @@ class ClientIpWiringTest {
     /**
      * <strong>La estrategia de Tomcat se queda sin poner, y eso hay que sostenerlo.</strong>
      *
-     * <p>ADR-0036 la descarta porque su modelo de confianza no es el de Cloud Run:
+     * <p>ADR-0038 la descarta porque su modelo de confianza no es el de Cloud Run:
      * {@code RemoteIpValve} recorre la cabecera desde la derecha saltando rangos privados, y
      * el frontend de Google es publico. Si alguien la enciende, {@code getRemoteAddr()} pasa
      * a derivarse de la cabecera y con cero saltos -{@code local} y el ensayo de integracion

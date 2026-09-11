@@ -109,8 +109,15 @@ Se descarta antes de almacenarse, con una exclusión en el sink `_Default`:
 
 ```bash
 gcloud logging sinks update _Default \
-  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014: el texto que alguien busca no se conserva junto a su IP. Descarta la entrada del registro de peticiones cuando el parametro q viaja en el URL o en la cabecera Referer. Las peticiones sin texto siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND (httpRequest.requestUrl=~"[?&](q|%71|%51)=" OR httpRequest.referer=~"[?&](q|%71|%51)=")'
+  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014 y HU-015: ni el texto que alguien busca ni los identificadores de su carrito se conservan junto a su IP. Descarta la entrada del registro de peticiones cuando el parametro q o el parametro ids viajan en el URL o en la cabecera Referer. Las demas peticiones siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND (httpRequest.requestUrl=~"[?&](q|%71|%51|ids)=" OR httpRequest.referer=~"[?&](q|%71|%51|ids)=")'
 ```
+
+**`ids` entra con HU-015, y por el mismo argumento que `q`.** El carrito de quien no
+ha entrado se lee con `GET /api/v1/carts?ids=…`, así que sin esta exclusión el
+contenido del carrito de una persona queda seis meses en `httpRequest.requestUrl`
+junto a su IP, o sea reidentificable. Eso contradice de frente lo que
+`docs/operacion/datos-personales.md` afirma del carrito anónimo —«Sendik no lo
+tiene»— y una intención de compra pesa más que un texto de búsqueda, no menos.
 
 **Va sin `service_name`, y es a propósito:** al ser del proyecto cubre
 `sendik-backend-dev`, `sendik-web-dev` y los dos servicios de `prod` el día que
@@ -784,7 +791,7 @@ aparezcan tachadas en los registros cuando haga falta leerlas.
 | `STORAGE_PUBLIC_BASE_URL` | `https://storage.googleapis.com/sendik-publico` | el dominio del CDN |
 | `FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING`, `FEATURE_CATALOG` | `true` las tres desde el 5 de septiembre de 2026 | sin definir, que es apagadas |
 | `FEATURE_SEARCH` | `true` desde el 10 de septiembre de 2026, al integrar HU-014 | sin definir, que es apagada. **Se enciende con `FEATURE_CATALOG` o después, nunca al revés**: el frontend no conoce las banderas y pinta la caja de búsqueda igual |
-| `CLIENT_IP_TRUSTED_HOPS` | `1`, **medido** contra `dev` el 10 de septiembre de 2026 | `1` heredado del respaldo del flujo y **sin medir**: `prod` no se ha desplegado nunca y podría no tener la misma topología. ADR-0036 manda remedirlo el día del primer despliegue |
+| `CLIENT_IP_TRUSTED_HOPS` | `1`, **medido** contra `dev` el 10 de septiembre de 2026 | `1` heredado del respaldo del flujo y **sin medir**: `prod` no se ha desplegado nunca y podría no tener la misma topología. ADR-0038 manda remedirlo el día del primer despliegue |
 
 **Las banderas no estaban en esta tabla y ahora sí.** Su efecto se explica en
 `docs/operacion/configuracion.md`; lo que faltaba aquí era su valor por entorno, que
@@ -1017,7 +1024,7 @@ que exige la Ley 1581.
 contra `dev` el 10 de septiembre de 2026: doce peticiones con un `X-Forwarded-For`
 distinto cada una no llegan nunca al 429, y las mismas doce sin tocar la cabecera lo
 dan en la undécima. Por eso la dirección se cuenta **desde el final**, tantas
-posiciones como diga `CLIENT_IP_TRUSTED_HOPS`, que vale `1` aquí (ADR-0036).
+posiciones como diga `CLIENT_IP_TRUSTED_HOPS`, que vale `1` aquí (ADR-0038).
 
 **Cómo volver a medirlo** el día que cambie lo que hay delante —un balanceador, un
 CDN, Firebase Hosting, o el primer despliegue de `prod`—. El borde registra la forma

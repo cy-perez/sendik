@@ -84,10 +84,21 @@ public class RateLimitInterceptor implements HandlerInterceptor {
      */
     private static final String COLECCION_DE_PUBLICACIONES = "/api/v1/listings";
 
+    /**
+     * La lectura publica del carrito. HU-015.
+     *
+     * <p><strong>Se cuenta por origen y no por sujeto</strong>, al reves que los dos grupos
+     * anteriores, y no hay alternativa: esta ruta es {@code permitAll} y no llega con token.
+     * Es la unica de la API sin credencial que dispara mas de una consulta por peticion, asi
+     * que sin tope queda abierta una amplificacion de una a veintiuna.
+     */
+    private static final String CARRITO_ANONIMO = "/api/v1/carts";
+
     private final RateLimiter credenciales;
     private final RateLimiter sesion;
     private final RateLimiter cuenta;
     private final RateLimiter publicaciones;
+    private final RateLimiter carritoAnonimo;
     private final ClientIpHasher hasherDeIp;
     private final Clock reloj;
 
@@ -96,12 +107,14 @@ public class RateLimitInterceptor implements HandlerInterceptor {
             RateLimiter sesion,
             RateLimiter cuenta,
             RateLimiter publicaciones,
+            RateLimiter carritoAnonimo,
             ClientIpHasher hasherDeIp,
             Clock reloj) {
         this.credenciales = credenciales;
         this.sesion = sesion;
         this.cuenta = cuenta;
         this.publicaciones = publicaciones;
+        this.carritoAnonimo = carritoAnonimo;
         this.hasherDeIp = hasherDeIp;
         this.reloj = reloj;
     }
@@ -189,6 +202,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
         if (ruta.startsWith(PREFIJO_DE_CUENTA)) {
             return cuenta;
+        }
+        if (ruta.equals(CARRITO_ANONIMO)) {
+            return carritoAnonimo;
         }
         return ruta.startsWith(PREFIJO_DE_PUBLICACION) || ruta.equals(COLECCION_DE_PUBLICACIONES)
                 ? publicaciones

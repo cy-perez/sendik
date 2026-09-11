@@ -49,11 +49,19 @@ class RateLimitInterceptorTest {
             new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
+            // El quinto es el carrito anonimo de HU-015, contado por origen.
+            new RateLimiter(2, MINUTO, 1000),
             new ClientIpHasher(SIN_PROXY),
             RELOJ);
 
-    /** El mismo interceptor, pero con un proxy delante: es lo que corre en Cloud Run. */
+    /**
+     * El mismo interceptor, pero con un proxy delante: es lo que corre en Cloud Run.
+     *
+     * <p>El carrito anonimo de HU-015 se cuenta por origen, igual que `auth`, asi que
+     * tambien depende de que la direccion no la elija quien llama (ADR-0038).
+     */
     private final RateLimitInterceptor trasProxy = new RateLimitInterceptor(
+            new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
             new RateLimiter(2, MINUTO, 1000),
@@ -327,5 +335,36 @@ class RateLimitInterceptorTest {
         assertThat(dejaPasar(peticion("/api/v1/auth/session", "10.0.0.9")))
                 .as("otra salida, otra cuenta")
                 .isTrue();
+    }
+    /**
+     * El carrito anonimo se cuenta, y se cuenta por origen.
+     *
+     * <p>Es la unica ruta publica de la API que dispara mas de una consulta por peticion —un
+     * {@code IN} de hasta veinte publicaciones con su join de portadas, mas una consulta de
+     * perfil por vendedor distinto—, asi que sin tope queda abierta una amplificacion de una
+     * a veintiuna sin credencial ninguna. Y por origen porque aqui no hay sujeto: la ruta es
+     * {@code permitAll} y no llega con token, que es justo lo contrario de los dos grupos
+     * anteriores.
+     */
+    @Test
+    void deberia_contar_el_carrito_anonimo_por_origen() {
+        HttpServletRequest carrito = peticion("/api/v1/carts", "203.0.113.10");
+
+        assertThat(dejaPasar(carrito)).isTrue();
+        assertThat(dejaPasar(carrito)).isTrue();
+
+        assertThatThrownBy(() -> dejaPasar(carrito)).isInstanceOf(RateLimitExceededException.class);
+    }
+
+    /** Y dos origenes distintos no se estorban: el de al lado no paga lo que hizo el primero. */
+    @Test
+    void no_deberia_mezclar_dos_origenes_en_el_carrito_anonimo() {
+        HttpServletRequest una = peticion("/api/v1/carts", "203.0.113.20");
+        HttpServletRequest otra = peticion("/api/v1/carts", "203.0.113.21");
+
+        dejaPasar(una);
+        dejaPasar(una);
+
+        assertThat(dejaPasar(otra)).isTrue();
     }
 }

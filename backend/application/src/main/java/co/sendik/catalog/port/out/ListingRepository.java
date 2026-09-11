@@ -26,6 +26,28 @@ public interface ListingRepository {
     Optional<Listing> buscar(ListingId id);
 
     /**
+     * Varias publicaciones de una vez, en cualquier estado. HU-015.
+     *
+     * <p><strong>Existe por el carrito, que es la primera pantalla del proyecto que necesita
+     * un punado de publicaciones sueltas y no un tramo de un listado.</strong> Con
+     * {@link #buscar} una a una, leer un carrito lleno serian veinte viajes a la base para
+     * pintar una sola pantalla.
+     *
+     * <p><strong>No filtra por estado, y quien llama decide.</strong> El carrito de quien
+     * tiene sesion las quiere todas, porque RN-094 conserva a la vista lo que dejo de estar
+     * disponible; la lectura anonima se queda solo con las visibles, porque a quien no ha
+     * entrado no se le puede contar nada de lo que RN-068 protege. Un filtro fijo aqui
+     * serviria a uno de los dos y obligaria al otro a un segundo metodo casi igual.
+     *
+     * <p>Lo que no existe simplemente no viene: la lista devuelta puede ser mas corta que la
+     * pedida y no hay error en ello. Quien llama sabe que pidio.
+     *
+     * <p>El orden de la respuesta no esta definido. Quien necesite uno lo impone: el carrito
+     * ordena por la fecha en que se agrego cada producto, que es dato suyo y no de aqui.
+     */
+    List<Listing> buscarVarias(List<ListingId> ids);
+
+    /**
      * La publicacion, solo si es de ese vendedor.
      *
      * <p>Metodo propio y no un filtro en cada caso de uso: la comprobacion de dueno la

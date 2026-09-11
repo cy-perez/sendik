@@ -272,6 +272,36 @@ arrastra y la descarga de datos las incluye.
 
 ## Fase 3
 
+**cart_items** (`V19`, HU-015)
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| user_id | uuid | FK a `users`. Parte de la clave primaria |
+| listing_id | uuid | FK a `listings`. La otra parte |
+| created_at | timestamptz | Cuándo entró al carrito. Ordena la lista y decide qué se conserva cuando la fusión no cabe entera (RN-095) |
+| added_price | numeric(12,0) | Con cuánto costaba entró. **Solo para avisar de que el precio cambió** (RN-093), nunca para cobrar |
+
+**No hay tabla `carts`.** Un carrito es «las filas de esta persona», igual que los
+favoritos: una tabla de cabecera no guardaría ni un dato que no se deduzca de las filas,
+y obligaría a crearla antes de la primera.
+
+**La clave primaria es el par**, como en `favorites`, y aquí dice algo más: el producto es
+único y su existencia siempre 1, así que no hay cantidad que guardar ni una segunda línea
+posible del mismo producto (RN-091). Esa misma restricción hace idempotente a agregar dos
+veces, con `ON CONFLICT DO NOTHING`.
+
+**`DO NOTHING` y no `DO UPDATE`, y aquí protege dos columnas.** Si la segunda escritura
+pisara `added_price`, volver a pulsar sobre algo que subió de precio borraría justo el
+aviso de que subió.
+
+**La lectura no filtra por estado**, al revés que la de `favorites`. Es la diferencia que
+RN-094 obliga a que exista: lo que dejó de estar disponible sigue a la vista, apagado y
+fuera del subtotal. Filtrar aquí sería el defecto, no la optimización.
+
+Lo que sí borra estas filas es **cerrar la cuenta**: son dato personal por la misma razón
+que los favoritos y por una más —no dicen solo que algo le interesa a alguien, dicen que
+estuvo a punto de comprarlo—.
+
 **orders**: `id`, `buyer_id`, `seller_id`, `status`, `product_amount`,
 `shipping_amount`, `commission_amount`, `total_amount`, `shipping_address`
 (`jsonb`, cifrado), `created_at`, `expires_at`.
@@ -338,6 +368,10 @@ desde un día y no desde otro cuando el agregador reporta con retraso.
 - `listings(submitted_at)` parcial sobre `status = 'PENDING_REVIEW'`, para la
   bandeja de moderación de publicaciones. Parcial porque la cola solo mira uno de
   los siete estados, así que el índice no crece con el catálogo publicado.
+- `cart_items(user_id, created_at desc, listing_id desc)` para el carrito. Las tres
+  columnas en el orden de la consulta: filtra por persona, ordena por el gesto y
+  desempata por publicación. El desempate no es de adorno —`created_at` se repite— y
+  sin él dos lecturas del mismo carrito podrían barajar los grupos.
 - `favorites(user_id, created_at desc, listing_id desc)` para la lista propia. Es
   el criterio 11 de HU-011 escrito como índice: ordena por el gesto y desempata por
   publicación, que es lo que el cursor compara.

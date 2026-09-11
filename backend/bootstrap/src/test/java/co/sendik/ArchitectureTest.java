@@ -165,7 +165,7 @@ class ArchitectureTest {
      * de backend/CLAUDE.md -todo valor externo en una clase tipada y validada- se queda
      * escrita y nada la comprueba.
      *
-     * <p>Llego con ADR-0036, donde la configuracion entra por {@code bootstrap} y la
+     * <p>Llego con ADR-0038, donde la configuracion entra por {@code bootstrap} y la
      * correccion entera depende de que siga entrando por ahi.
      *
      * <p><strong>Cubre el parametro y no solo el campo, y esa es la mitad que importa.</strong>

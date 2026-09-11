@@ -1,0 +1,251 @@
+<!--
+  Con `tabindex="-1"` para poder recibir el foco cuando una fila desaparece al quitarla. No
+  entra en el orden de tabulacion: -1 permite enfocarlo por codigo y no con el teclado.
+-->
+<h1 class="tipo-h1" tabindex="-1" #titulo>{{ 'catalog.cart.title' | transloco }}</h1>
+
+<!--
+  La region viva se pinta siempre y fuera de las ramas del @if. Una region que aparece con
+  texto dentro se comporta distinto segun el lector, y una que desaparece al terminar no
+  llega a anunciar nada. Es la leccion que dejo la lista de favoritos.
+-->
+<p class="solo-lectores" role="status">
+  @if (cargando()) {
+    {{ 'catalog.cart.loading' | transloco }}
+  } @else if (seQuito()) {
+    <!--
+      Quitar hace desaparecer la fila -y el grupo entero, si era la ultima-. Sin esto, quien
+      usa lector de pantalla no oia absolutamente nada: el boton que acababa de pulsar ya no
+      existe y no queda rastro de que la accion surtiera efecto.
+    -->
+    {{ 'catalog.cart.removed' | transloco }}
+  }
+</p>
+
+<!--
+  La pregunta de la fusion. Criterios 9 y 12, ADR-0037.
+
+  **Se pregunta y no se hace solo**, y no es una cortesia: el criterio 9 pide union al entrar
+  y el 12 pide que otra persona no herede el carrito de este navegador. Siendo anonimo, nadie
+  puede distinguir «vuelve el mismo» de «llega otro», asi que preguntar una vez es lo unico
+  que cumple los dos.
+
+  Va antes del carrito y no en un dialogo: un dialogo atrapa el foco y obliga a decidir para
+  poder mirar, y aqui lo razonable es poder ver el carrito antes de contestar.
+-->
+@if (hayQueFusionar()) {
+  <!--
+    <section> con su propio h2 y no un <div role="region"> etiquetado con el titulo de la
+    pagina. Dos correcciones en una: el elemento nativo hace ese papel sin ARIA -«HTML
+    semantico antes que ARIA»- y la etiqueta anterior hacia que la lista de regiones de un
+    lector anunciara «Tu carrito» para un bloque que pregunta por la fusion.
+  -->
+  <section class="carrito__fusion" aria-labelledby="fusion-titulo">
+    <h2 class="tipo-titulo-tarjeta" id="fusion-titulo">
+      {{ 'catalog.cart.merge.title' | transloco }}
+    </h2>
+    <p class="tipo-cuerpo">
+      {{ 'catalog.cart.merge.question' | transloco: { cuantos: cuantosGuardados() } }}
+    </p>
+    <div class="carrito__fusion-acciones">
+      <button
+        type="button"
+        class="btn btn-primario"
+        [attr.aria-busy]="fusionando() ? 'true' : null"
+        (click)="aceptarLaFusion()"
+      >
+        {{ 'catalog.cart.merge.accept' | transloco }}
+      </button>
+      <button type="button" class="btn btn-secundario" (click)="descartarLaFusion()">
+        {{ 'catalog.cart.merge.discard' | transloco }}
+      </button>
+    </div>
+  </section>
+}
+
+<!--
+  Que la fusion fallo. Antes no se pintaba nada: la peticion caia, el carrito local se
+  vaciaba igual -eso tambien se corrigio- y quien miraba no se enteraba de nada.
+-->
+@if (falloLaFusion()) {
+  <p class="carrito__aviso tipo-secundario" role="alert">
+    {{ 'catalog.cart.mergeFailed' | transloco }}
+  </p>
+}
+
+<!--
+  Lo que no entro en la fusion. Criterio 10: se dice cuantos, no por que.
+  Distinguir «no cupo» de «es tuyo» de «se vendio» seria decir sobre esos identificadores lo
+  que RN-068 no deja decir en ninguna otra parte.
+-->
+@if (noEntraron().length > 0) {
+  <p class="carrito__aviso tipo-secundario" role="status">
+    {{ 'catalog.cart.notMerged' | transloco: { cuantos: noEntraron().length } }}
+  </p>
+}
+
+<!--
+  El fallo al quitar. La mutacion se comparte con el control de la ficha, y su mensaje solo
+  se pintaba alli: un DELETE que fallaba desde esta pantalla dejaba la fila puesta, sin decir
+  nada, y el aviso aparecia despues en la ficha del primer producto que alguien abriera.
+-->
+@if (errorDeAccion(); as clave) {
+  <p class="carrito__aviso tipo-secundario" role="alert">
+    {{ clave | transloco: { tope: tope } }}
+  </p>
+}
+
+@if (sinAlmacenamiento()) {
+  <p class="carrito__aviso tipo-secundario" role="status">
+    {{ 'catalog.cart.noStorage' | transloco }}
+  </p>
+}
+
+@if (cargando()) {
+  <div class="carrito__esqueleto" aria-hidden="true">
+    <p class="esqueleto carrito__esqueleto-linea"></p>
+    <p class="esqueleto carrito__esqueleto-linea"></p>
+  </div>
+} @else if (fallo()) {
+  <div role="alert">
+    <p class="tipo-cuerpo">{{ 'catalog.cart.error' | transloco }}</p>
+    <button type="button" class="btn btn-secundario" (click)="reintentar()">
+      {{ 'catalog.cart.retry' | transloco }}
+    </button>
+  </div>
+} @else if (vacio()) {
+  <!--
+    Criterio 19: el vacio es una pantalla y no una linea. Es lo primero que ve todo el mundo,
+    y dice ademas lo que RN-089 obliga a decir: agregar no aparta nada.
+  -->
+  <div class="vacio carrito__vacio">
+    <h2 class="tipo-titulo-tarjeta">{{ 'catalog.cart.empty.title' | transloco }}</h2>
+    <p class="tipo-cuerpo">{{ 'catalog.cart.empty.body' | transloco }}</p>
+    <p>
+      <a class="btn btn-primario" routerLink="/catalogo">
+        {{ 'catalog.cart.empty.cta' | transloco }}
+      </a>
+    </p>
+  </div>
+} @else {
+  <p class="tipo-cuerpo carrito__intro">{{ 'catalog.cart.intro' | transloco }}</p>
+
+  <!--
+    Criterio 15: que seran dos pedidos se dice antes de que sorprenda, no al pagar.
+  -->
+  @if (seDividira()) {
+    <p class="carrito__aviso tipo-cuerpo">{{ 'catalog.cart.perSellerNotice' | transloco }}</p>
+  }
+
+  <!--
+    El grupo por vendedor es la unidad visual y no la fila (criterio 14). Cada uno es una
+    seccion con su encabezado y su subtotal cerrandola.
+  -->
+  @for (grupo of grupos(); track grupo.sellerId) {
+    <section class="carrito__grupo">
+      <h2 class="tipo-titulo-tarjeta carrito__vendedor">
+        @if (grupo.sellerName) {
+          {{ 'catalog.cart.seller' | transloco: { nombre: grupo.sellerName } }}
+        } @else {
+          {{ 'catalog.cart.sellerUnknown' | transloco }}
+        }
+      </h2>
+
+      <ul class="carrito__lineas">
+        @for (linea of grupo.lines; track linea.listing.id) {
+          <!--
+            **La fila apagada baja de contraste, tacha el precio y lo dice con palabras.**
+            Tres senales y solo una es visual: el criterio 25 exige que el estado no dependa
+            del color, y un lector de pantalla tiene que oir «ya no esta disponible» como
+            parte de la fila y no como un adorno.
+          -->
+          <li class="carrito__linea" [class.carrito__linea--apagada]="!linea.available">
+            <p class="tipo-titulo-tarjeta carrito__titulo">{{ linea.listing.product.title }}</p>
+
+            @if (linea.available) {
+              <p class="precio">{{ formatear(linea.listing.product.price!) }}</p>
+            } @else {
+              <p class="precio">
+                <s>{{ formatear(linea.listing.product.price!) }}</s>
+              </p>
+              <p class="carrito__no-disponible tipo-secundario">
+                {{ 'catalog.cart.unavailable' | transloco }}
+              </p>
+            }
+
+            @if (linea.priceChanged && linea.available) {
+              <p class="carrito__aviso-precio tipo-secundario">
+                {{ 'catalog.cart.priceChanged' | transloco }}
+              </p>
+            }
+
+            <!--
+              El texto visible sigue siendo «Quitar», que es lo que cabe en la fila; el nombre
+              accesible nombra el producto. Con el tope de veinte, un lector de pantalla
+              recorria una lista de veinte botones llamados todos igual.
+            -->
+            <button
+              type="button"
+              class="btn btn-secundario carrito__quitar"
+              [attr.aria-label]="
+                'catalog.cart.removeNamed' | transloco: { titulo: linea.listing.product.title }
+              "
+              (click)="quitar(linea.listing.id)"
+            >
+              {{ 'catalog.cart.remove' | transloco }}
+            </button>
+          </li>
+        }
+      </ul>
+
+      <!--
+        Criterio 16: subtotal, nunca total. Y la frase del envio va pegada a el, porque es lo
+        que impide leer esa cifra como lo que se va a pagar (RN-076, RN-096).
+      -->
+      <p class="carrito__subtotal">
+        <span class="tipo-cuerpo">{{ 'catalog.cart.subtotal' | transloco }}</span>
+        <span class="precio">{{ formatear(grupo.subtotal) }}</span>
+      </p>
+      <p class="carrito__envio tipo-secundario">{{ 'catalog.cart.shippingLater' | transloco }}</p>
+    </section>
+  }
+
+  <!--
+    Lo que el servidor no devolvio y el navegador si guarda. Criterio 21, sin sesion.
+
+    Quien no ha entrado pide por identificador y lo que dejo de estar publicado no vuelve
+    (RN-068), asi que la unica forma de enseñarlo apagado es la copia local. Va en su propia
+    seccion porque no se sabe de que vendedor era: esa informacion estaba en la publicacion
+    que ya no responde.
+  -->
+  @if (noDisponibles().length > 0) {
+    <section class="carrito__grupo" aria-labelledby="no-disponibles-titulo">
+      <!--
+        Con encabezado, como todos los demas grupos. Sin el era una seccion cerrada con borde
+        y sin nombre accesible: aparecia detras de los grupos con vendedor sin decir que es.
+      -->
+      <h2 class="tipo-titulo-tarjeta carrito__vendedor" id="no-disponibles-titulo">
+        {{ 'catalog.cart.unavailableGroup' | transloco }}
+      </h2>
+
+      <ul class="carrito__lineas">
+        @for (producto of noDisponibles(); track producto.listingId) {
+          <li class="carrito__linea carrito__linea--apagada">
+            <p class="tipo-titulo-tarjeta carrito__titulo">{{ producto.title }}</p>
+            <p class="carrito__no-disponible tipo-secundario">
+              {{ 'catalog.cart.unavailable' | transloco }}
+            </p>
+            <button
+              type="button"
+              class="btn btn-secundario carrito__quitar"
+              [attr.aria-label]="'catalog.cart.removeNamed' | transloco: { titulo: producto.title }"
+              (click)="quitar(producto.listingId)"
+            >
+              {{ 'catalog.cart.remove' | transloco }}
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}

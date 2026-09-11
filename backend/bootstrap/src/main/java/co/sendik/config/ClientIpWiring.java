@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * otro modulo ve los dos.
  *
  * <p>Dejo de ser un {@code @Component} el 10 de septiembre de 2026, cuando la
- * direccion de quien llama paso a depender de la topologia (ADR-0036). Antes no
+ * direccion de quien llama paso a depender de la topologia (ADR-0038). Antes no
  * dependia de nada configurable, y por eso podia construirse solo.
  */
 @Configuration

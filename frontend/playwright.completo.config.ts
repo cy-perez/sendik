@@ -225,6 +225,11 @@ export default defineConfig({
         // escribiendo- no tendria contra que correr.
         FEATURE_SEARCH: 'true',
 
+        // HU-015. Sin ella el carrito no existe: sus seis rutas responden 404 y el recorrido
+        // -armarlo sin sesion, fusionarlo al entrar y ver apagado lo que dejo de estar
+        // disponible- no tendria contra que correr.
+        FEATURE_CHECKOUT: 'true',
+
         COMPANY_NAME: 'Sendik S.A.S.',
         COMPANY_TAX_ID: '000000000-0',
         COMPANY_ADDRESS: 'Medellin, Colombia',

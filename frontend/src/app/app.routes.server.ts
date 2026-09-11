@@ -69,6 +69,11 @@ export const serverRoutes: ServerRoute[] = [
   // natural, por lo mismo que anota `role.guard.ts`: APP_CONFIG llega por el estado
   // transferido y una ruta que no se renderiza en servidor arranca sin configuracion.
   { path: 'mis-favoritos', renderMode: RenderMode.Server },
+  // HU-015, el carrito. Mismo razonamiento: es dato de una persona -o de un navegador- asi
+  // que el HTML servido no lo lleva dentro; sale el esqueleto y el carrito llega al hidratar.
+  // Sin esta linea la pagina se pinta entera y se sirve con 404, que es lo que `rutas.spec.ts`
+  // ya cazo en /mis-favoritos, en /ingresar y en las tres rutas de HU-007.
+  { path: 'carrito', renderMode: RenderMode.Server },
   // HU-003, el asistente de captura. Cuelga del formulario y se renderiza en servidor por
   // lo mismo que el: APP_CONFIG llega por el estado transferido y sin el no arranca.
   { path: 'publicar/:id/capturar', renderMode: RenderMode.Server },

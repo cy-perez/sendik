@@ -10,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>Es el unico dato que decide de donde se saca la direccion de quien llama, y
  * es de topologia y no de negocio: depende de cuantos saltos hay entre el cliente
  * y la aplicacion, no de lo que haga Sendik. Por eso es configuracion y no una
- * constante (ADR-0036).
+ * constante (ADR-0038).
  *
  * <p>La cabecera la puede escribir cualquiera. Lo que no puede es borrar lo que el
  * ultimo salto anade <em>despues</em> de lo suyo, asi que la unica entrada que no

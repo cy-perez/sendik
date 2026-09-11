@@ -14,6 +14,8 @@ import java.time.Duration;
  * @param maxDeSesion peticiones en las rutas que el navegador dispara solo
  * @param maxDeCuenta peticiones en las rutas de cuenta que exigen sesion
  * @param maxDePublicacion peticiones en las rutas de publicacion, todas juntas
+ * @param maxDeCarritoAnonimo peticiones en la lectura publica del carrito, por origen: es la
+ *     unica ruta de la API sin credencial que dispara mas de una consulta
  * @param maxDeOrigenes techo de origenes vivos en memoria
  */
 public record RateLimitSettings(
@@ -25,4 +27,6 @@ public record RateLimitSettings(
         Duration ventanaDeCuenta,
         int maxDePublicacion,
         Duration ventanaDePublicacion,
+        int maxDeCarritoAnonimo,
+        Duration ventanaDeCarritoAnonimo,
         int maxDeOrigenes) {}

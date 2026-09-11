@@ -1,4 +1,4 @@
-# ADR-0036 — La dirección del cliente se cuenta desde el final de `X-Forwarded-For`
+# ADR-0038 — La dirección del cliente se cuenta desde el final de `X-Forwarded-For`
 
 **Fecha:** 2026-09-10
 **Estado:** aceptada
@@ -29,7 +29,9 @@ está comprobado contra `dev`, no deducido:
 
 Dos defensas quedaban vacías: `CREDENTIALS`, que existe para que cinco intentos
 por cuenta (RN-006) no permitan probar una contraseña común contra todas las
-cuentas que se quiera, y `SESSION`. Y una evidencia legal dejaba de probar nada,
+cuentas que se quiera, y `SESSION`. **Y desde HU-015 son tres**: el carrito anónimo
+también se cuenta por origen, porque sin sesión no hay sujeto al que atribuir la
+petición, así que dependía de lo mismo. Y una evidencia legal dejaba de probar nada,
 que es de las primeras cosas que revisa una autoridad.
 
 `prod` no se ha desplegado nunca, así que **ninguna constancia de consentimiento

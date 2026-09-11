@@ -1,0 +1,67 @@
+<!--
+  Un <button> de verdad y no un div con rol: el teclado lo alcanza y lo activa sin que nadie
+  escriba un manejador de tecla (criterio 25).
+
+  **Sin aria-pressed, y a proposito.** El nombre accesible cambia con el estado -«Agregar al
+  carrito» cuando no esta, «Quitar del carrito» cuando si-, y la APG de ARIA es explicita: un
+  boton cuyo nombre cambia con el estado no lleva ademas aria-pressed. Con los dos, un lector
+  lee «Quitar del carrito, boton de alternancia, pulsado», que se entiende al reves.
+
+  **Sin disabled mientras la peticion viaja.** Es la leccion que dejo HU-011: el boton se
+  deshabilitaria en el mismo tick del clic, con el foco dentro, y el navegador manda el foco
+  a <body>. El doble pulsado ya lo bloquea el almacen contando peticiones. aria-busy dice lo
+  mismo sin sacar el elemento del orden de foco.
+
+  **El boton principal va en tinta.** Es .btn-primario porque agregar al carrito es la accion
+  principal de la ficha; el bronce de esta pantalla ya lo tiene la insignia de vendedor
+  verificado, y aparece una sola vez.
+-->
+<div class="carrito-control">
+  @if (seOfrece()) {
+    <button
+      type="button"
+      class="btn btn-primario carrito-control__boton"
+      [attr.aria-busy]="enCurso() ? 'true' : null"
+      (click)="pulsar()"
+    >
+      <!--
+        Contorno o relleno. Es la senal visual del estado que no depende del color, junto con
+        el propio texto del boton, que tambien cambia.
+      -->
+      <svg class="icono" [class.icono-relleno]="dentro()" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 5h3l2.4 9.6h9L20 8H7" />
+        <path d="M9 19h.01M17 19h.01" />
+      </svg>
+
+      {{ etiqueta() | transloco }}
+    </button>
+  }
+
+  <!--
+    La region viva se pinta siempre y nace vacia, por lo mismo que en el control de favorito:
+    una region que aparece con texto dentro suelta en algunos lectores un anuncio que nadie
+    pidio en cada carga de ficha.
+
+    role="status" y no "alert": el resultado del gesto es informacion, no interrupcion.
+  -->
+  <p class="solo-lectores" role="status">
+    @if (anuncio(); as clave) {
+      {{ clave | transloco }}
+    }
+  </p>
+
+  <!--
+    **Fuera del @if del control**, que es la correccion que HU-011 tuvo que hacer sobre su
+    propio criterio 10: dentro, el camino en que el servidor responde eligible:false deja de
+    pintar el control y se lleva por delante el mensaje que explica por que no se agrego.
+
+    El mensaje del tope nombra el numero, que es lo que pide el criterio 7. El cuerpo de error
+    del backend no lo trae -lleva code y traceId y nada mas- asi que lo pone Transloco con el
+    tope que el propio navegador conoce, porque sin sesion es el unico que lo hace cumplir.
+  -->
+  @if (error(); as clave) {
+    <p class="carrito-control__error tipo-secundario" role="alert">
+      {{ clave | transloco: { tope: tope } }}
+    </p>
+  }
+</div>

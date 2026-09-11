@@ -32,7 +32,8 @@ public record UserDataExport(
         Cuenta cuenta,
         List<Consentimiento> consentimientos,
         List<Sesion> sesiones,
-        List<Favorito> favoritos) {
+        List<Favorito> favoritos,
+        List<ProductoEnCarrito> carrito) {
 
     /**
      * @param ciudad nula si nunca se puso o si se quito. Se emite igual con valor
@@ -75,4 +76,26 @@ public record UserDataExport(
      * es de esta persona es que guardo eso, y cuando.
      */
     public record Favorito(String publicacion, Instant marcadoEl) {}
+
+    /**
+     * Un producto que esta en el carrito, y cuando entro. HU-015.
+     *
+     * <p><strong>El carrito es dato personal por la misma razon que los favoritos, y por
+     * una mas.</strong> Aquel dice que le interesa a una persona identificada; este dice
+     * ademas que estuvo a punto de comprarlo, que es una intencion de compra y no solo un
+     * gusto. Entra en la descarga y el cierre de cuenta se lo lleva.
+     *
+     * <p>Va el identificador y no el titulo, por lo mismo que en {@link Favorito}: el titulo
+     * es del vendedor y puede cambiar. Lo que es de esta persona es que lo puso en su
+     * carrito, y cuando.
+     *
+     * <p><strong>No sale el precio con el que entro.</strong> Es dato de la publicacion en
+     * un instante, no de quien la agrego, y ademas es el unico campo de la fila que no
+     * responde a ninguna pregunta que esta persona pueda hacerse sobre sus propios datos.
+     *
+     * <p>El carrito que vive en el navegador de alguien no entra aqui y no puede entrar:
+     * Sendik no lo tiene. Mientras no se fusione con una cuenta no es dato de nadie
+     * identificado, y en cuanto se fusiona pasa a ser estas filas.
+     */
+    public record ProductoEnCarrito(String publicacion, Instant agregadoEl) {}
 }

@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -151,6 +152,34 @@ public class ApiExceptionHandler {
 
         ProblemDetail problema = construir(HttpStatus.BAD_REQUEST, ErrorCode.COMMON_VALIDATION_FAILED, traceId);
         problema.setProperty("errors", errores);
+
+        return ResponseEntity.badRequest().body(problema);
+    }
+
+    /**
+     * Falta un parametro de consulta obligatorio. 400, no 500.
+     *
+     * <p><strong>Es el mismo defecto que el de arriba, en su otra forma, y aparecio con el
+     * carrito de HU-015.</strong> Hasta ahora ningun parametro de consulta era obligatorio
+     * —{@code limit}, {@code cursor} y los filtros del catalogo tienen valor por omision o son
+     * opcionales— asi que esta excepcion no la lanzaba nadie y caia en el manejador de
+     * {@code Exception}: 500 con la traza entera en nivel error, para cualquiera que pidiera
+     * {@code GET /api/v1/carts} sin {@code ids}.
+     *
+     * <p>El {@code ids} del carrito anonimo es el primero que no puede tener omision: sin
+     * identificadores no hay carrito que armar, y devolver uno vacio seria contestar que su
+     * carrito esta vacio a quien no ha preguntado eso.
+     *
+     * <p>Va en {@code errors} con el nombre del parametro que falta, en el mismo formato que
+     * sus dos gemelos. Un 400 que no dice cual falta obliga a adivinar.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ProblemDetail> deParametroQueFalta(MissingServletRequestParameterException e) {
+        String traceId = nuevoTraceId();
+        LOG.info("Falta un parametro obligatorio traceId={}: {}", traceId, e.getParameterName());
+
+        ProblemDetail problema = construir(HttpStatus.BAD_REQUEST, ErrorCode.COMMON_VALIDATION_FAILED, traceId);
+        problema.setProperty("errors", List.of(Map.of("field", e.getParameterName(), "code", "NotNull")));
 
         return ResponseEntity.badRequest().body(problema);
     }
@@ -305,7 +334,13 @@ public class ApiExceptionHandler {
                     // de esta historia: con el generico, quien vuelve del ingreso con una
                     // intencion pendiente (criterio 10) no tendria como saber si le falta
                     // sesion o si es que esa publicacion no se puede guardar.
-                    CATALOG_SELF_FAVORITE_FORBIDDEN -> HttpStatus.FORBIDDEN;
+                    CATALOG_SELF_FAVORITE_FORBIDDEN,
+                    // RN-092: el producto que intenta agregar al carrito es suyo. Codigo
+                    // propio por lo mismo que su gemelo de favoritos, y por una razon mas
+                    // fuerte: comprarse a si mismo moveria dinero y comision en circulo, asi
+                    // que quien lo intenta tiene que entender que lo que sobra es el producto
+                    // y no su sesion.
+                    CATALOG_SELF_CART_FORBIDDEN -> HttpStatus.FORBIDDEN;
             // 409: la peticion es correcta y choca con el estado actual del
             // sistema, que es lo que significa un conflicto.
             //
@@ -365,7 +400,11 @@ public class ApiExceptionHandler {
                     // Criterio 19: el estado actual no admite editar. 422 y no 409 porque
                     // lo que sobra no es la peticion sino el momento, y el cliente no
                     // tiene que reintentar: tiene que esperar la decision.
-                    CATALOG_LISTING_NOT_EDITABLE -> HttpStatus.UNPROCESSABLE_CONTENT;
+                    CATALOG_LISTING_NOT_EDITABLE,
+                    // RN-097: el carrito ya lleva veinte productos. 422 y no 403 porque la
+                    // peticion es legitima y quien la manda tiene derecho a hacerla: lo que
+                    // pasa es que no cabe. Un 403 hablaria de permisos que aqui no faltan.
+                    CATALOG_CART_FULL -> HttpStatus.UNPROCESSABLE_CONTENT;
             // 415: el contenido no es de un tipo que el servidor sepa manejar. Es
             // exactamente lo que significa, y le dice al cliente que el problema es
             // el formato y no lo que hay dentro. Se decide por los bytes de

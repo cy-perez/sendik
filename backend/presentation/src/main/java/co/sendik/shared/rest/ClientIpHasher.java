@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p><strong>La direccion se cuenta desde el final de {@code X-Forwarded-For} y
  * nunca desde el principio</strong>, y de eso depende que el hash valga para algo.
- * El razonamiento entero esta en ADR-0036 y se resume en una frase: el principio de
+ * El razonamiento entero esta en ADR-0038 y se resume en una frase: el principio de
  * la cabecera lo escribe quien llama y el final lo escribe la infraestructura.
  */
 public class ClientIpHasher {
@@ -287,7 +287,7 @@ public class ClientIpHasher {
         log.warn(
                 "Se usa la direccion de la conexion y no {}: {}, con {} entradas y {} saltos de"
                         + " confianza declarados. Detras de un proxy esto cuenta a todo el mundo junto:"
-                        + " revisar sendik.client-ip.trusted-hops (ADR-0036)",
+                        + " revisar sendik.client-ip.trusted-hops (ADR-0038)",
                 CABECERA_REENVIADA,
                 causa,
                 entradas,

@@ -424,7 +424,28 @@ publicado.
   PostgreSQL si el catálogo seguía siendo pequeño. Lo es: `prod` no se ha
   desplegado nunca. La marca queda fuera de los filtros y dentro del texto
   buscable, porque es texto libre (RN-085).
-- Carrito y proceso de compra.
+- **El carrito. Hecho: HU-015, implementada el 10 de septiembre de 2026.** Reunir
+  productos, agruparlos por vendedor y ver cuánto suman, con sesión y sin ella.
+  Con él nacieron nueve reglas que no existían, RN-089 a RN-097: hasta hoy
+  `reglas-negocio.md` no mencionaba siquiera la palabra carrito.
+
+  **Se implementó partido, y esa fue la decisión que abrió la línea.** La línea
+  decía «carrito y proceso de compra» y las dos mitades parecían una sola cosa;
+  no lo son. El pago espera a Wompi y el envío espera a Skydropx, pero reunir
+  productos y sumar su precio base no espera a nadie. Lo que queda para cuando
+  esos lleguen está en la línea siguiente.
+
+  **No muestra total, y eso no es una carencia sino RN-096.** El total son las
+  tres cifras de RN-076 y el costo de envío todavía no existe: se dice subtotal
+  por vendedor y se dice que el envío se calcula al comprar.
+
+  El carrito **no reserva nada** (RN-089), no tiene cantidades porque el producto
+  es único (RN-091), y lo que deja de estar disponible sigue a la vista y apagado
+  en vez de desaparecer (RN-094), que es la excepción deliberada a lo que RN-071
+  hace en los favoritos.
+
+- **El proceso de compra**: crear el pedido, la dirección de entrega y el paso a
+  pagar. Es la otra mitad de la línea anterior y espera a las dos integraciones.
 - Pago con Wompi: PSE, Nequi, tarjetas, Bancolombia a la mano y Addi.
 - División del pago y retención de la comisión del 5%.
 - Cotización de envíos con **Skydropx Colombia**, el agregador (ADR-0034, RN-038).

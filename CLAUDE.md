@@ -152,9 +152,18 @@ detrás del mismo puerto (ADR-0035). Abrirla fue una decisión y no una
 consecuencia de cerrar la anterior. **HU-014 quedó integrada el 10 de septiembre
 de 2026**, con `FEATURE_SEARCH` sumada a las tres de la Fase 2 en `dev` y apagada
 en `prod`: allí son cuatro banderas, no tres. Dentro de la fase el orden lo mandan las
-dependencias: el pago espera a Wompi y el envío espera las cuatro respuestas de
-Skydropx, así que nada de carrito, pagos ni envíos se implementa todavía. La
-Fase 4 sigue sin abrir. El alcance por fase está en `docs/producto/alcance.md`.
+dependencias: **el pago espera a Wompi y el envío espera las cuatro respuestas de
+Skydropx, así que nada de pagos ni de envíos se implementa todavía**.
+
+**HU-015, el carrito, quedó integrada el 10 de septiembre de 2026**, y con ella
+`FEATURE_CHECKOUT` —que estaba declarada y apagada desde la Fase 1— pasa a tener
+algo detrás. Se implementó **partido**: reunir productos y sumar su precio base no
+depende de Wompi ni de Skydropx; el proceso de compra sí, y espera. El carrito
+termina donde empieza el pedido, **no reserva nada** (RN-089) y **no muestra
+total**, porque el total son las tres cifras de RN-076 y el envío todavía no
+existe (RN-096). Trajo nueve reglas nuevas, RN-089 a RN-097, y dos decisiones:
+ADR-0036 y ADR-0037. La Fase 4 sigue sin abrir. El alcance por fase está en
+`docs/producto/alcance.md`.
 
 Lo que bloqueaba el lanzamiento dejó de hacerlo: los **textos legales** están
 publicados y vigentes en `dev` desde el 8 de septiembre —versión `2026-09-08b`—

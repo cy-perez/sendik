@@ -1,6 +1,7 @@
 package co.sendik.config;
 
 import co.sendik.catalog.port.out.BuyerAccounts;
+import co.sendik.catalog.port.out.CartItems;
 import co.sendik.catalog.port.out.Categories;
 import co.sendik.catalog.port.out.Favorites;
 import co.sendik.catalog.port.out.ListingNotifier;
@@ -10,12 +11,15 @@ import co.sendik.catalog.port.out.SearchEngine;
 import co.sendik.catalog.port.out.SellerEligibility;
 import co.sendik.catalog.port.out.SellerProfiles;
 import co.sendik.catalog.usecase.AddFavoriteUseCase;
+import co.sendik.catalog.usecase.AddToCartUseCase;
 import co.sendik.catalog.usecase.ApproveListingUseCase;
 import co.sendik.catalog.usecase.ArchiveListingUseCase;
 import co.sendik.catalog.usecase.ChangeListingPriceUseCase;
 import co.sendik.catalog.usecase.ChangeListingShippingUseCase;
 import co.sendik.catalog.usecase.CreateListingUseCase;
+import co.sendik.catalog.usecase.EraseCartUseCase;
 import co.sendik.catalog.usecase.EraseFavoritesUseCase;
+import co.sendik.catalog.usecase.ExportCartUseCase;
 import co.sendik.catalog.usecase.ExportFavoritesUseCase;
 import co.sendik.catalog.usecase.ListCatalogUseCase;
 import co.sendik.catalog.usecase.ListCategoriesUseCase;
@@ -23,13 +27,18 @@ import co.sendik.catalog.usecase.ListFavoritesUseCase;
 import co.sendik.catalog.usecase.ListPendingListingsUseCase;
 import co.sendik.catalog.usecase.ListSellerCatalogUseCase;
 import co.sendik.catalog.usecase.ListSellerListingsUseCase;
+import co.sendik.catalog.usecase.MergeCartUseCase;
 import co.sendik.catalog.usecase.PauseListingUseCase;
+import co.sendik.catalog.usecase.PreviewCartUseCase;
+import co.sendik.catalog.usecase.ReadCartItemStateUseCase;
+import co.sendik.catalog.usecase.ReadCartUseCase;
 import co.sendik.catalog.usecase.ReadFavoriteStateUseCase;
 import co.sendik.catalog.usecase.ReadListingUseCase;
 import co.sendik.catalog.usecase.ReadModerationHistoryUseCase;
 import co.sendik.catalog.usecase.ReadSellerProfileUseCase;
 import co.sendik.catalog.usecase.RejectListingUseCase;
 import co.sendik.catalog.usecase.RemoveFavoriteUseCase;
+import co.sendik.catalog.usecase.RemoveFromCartUseCase;
 import co.sendik.catalog.usecase.RemoveListingImageUseCase;
 import co.sendik.catalog.usecase.ReopenListingUseCase;
 import co.sendik.catalog.usecase.ResumeListingUseCase;
@@ -89,7 +98,8 @@ public class CatalogWiring {
      */
     @Bean
     ExposedFeatures expuestas(FeatureFlags banderas) {
-        return new ExposedFeatures(banderas.sellerVerification(), banderas.publishing(), banderas.catalog());
+        return new ExposedFeatures(
+                banderas.sellerVerification(), banderas.publishing(), banderas.catalog(), banderas.checkout());
     }
 
     @Bean
@@ -309,5 +319,70 @@ public class CatalogWiring {
     @Bean
     EraseFavoritesUseCase eraseFavoritesUseCase(Favorites favoritos) {
         return new EraseFavoritesUseCase(favoritos);
+    }
+
+    // --- El carrito. HU-015 ---------------------------------------------------
+
+    /**
+     * Agregar necesita el reloj porque la fecha en que entro ordena el carrito y decide que
+     * se conserva cuando una fusion no cabe entera (criterio 10). Quitar no lo necesita.
+     */
+    @Bean
+    AddToCartUseCase addToCartUseCase(
+            CartItems carrito, ListingRepository publicaciones, BuyerAccounts cuentas, Clock reloj) {
+        return new AddToCartUseCase(carrito, publicaciones, cuentas, reloj);
+    }
+
+    @Bean
+    RemoveFromCartUseCase removeFromCartUseCase(CartItems carrito) {
+        return new RemoveFromCartUseCase(carrito);
+    }
+
+    @Bean
+    ReadCartItemStateUseCase readCartItemStateUseCase(CartItems carrito, ListingRepository publicaciones) {
+        return new ReadCartItemStateUseCase(carrito, publicaciones);
+    }
+
+    @Bean
+    ReadCartUseCase readCartUseCase(CartItems carrito, ListingRepository publicaciones, SellerProfiles vendedores) {
+        return new ReadCartUseCase(carrito, publicaciones, vendedores);
+    }
+
+    /**
+     * La lectura de quien no ha entrado. Necesita el reloj para respetar el orden en que el
+     * navegador trae los identificadores, que es el unico orden que existe sin filas en la
+     * base: no hay fecha de cuando se agrego porque nadie la anoto.
+     */
+    @Bean
+    PreviewCartUseCase previewCartUseCase(ListingRepository publicaciones, SellerProfiles vendedores, Clock reloj) {
+        return new PreviewCartUseCase(publicaciones, vendedores, reloj);
+    }
+
+    /**
+     * La fusion depende de la lectura y no la repite.
+     *
+     * <p>Devuelve el carrito ya armado, y armarlo es exactamente lo que hace
+     * {@link ReadCartUseCase}. Pasarselo en vez de reescribir el cruce es lo que garantiza
+     * que el carrito que se ve tras entrar sea el mismo que se ve al recargar.
+     */
+    @Bean
+    MergeCartUseCase mergeCartUseCase(
+            CartItems carrito,
+            ListingRepository publicaciones,
+            BuyerAccounts cuentas,
+            ReadCartUseCase lectura,
+            Clock reloj) {
+        return new MergeCartUseCase(carrito, publicaciones, cuentas, lectura, reloj);
+    }
+
+    /** Los dos que llama {@code identity} por el puerto {@code UserCart}. */
+    @Bean
+    ExportCartUseCase exportCartUseCase(CartItems carrito) {
+        return new ExportCartUseCase(carrito);
+    }
+
+    @Bean
+    EraseCartUseCase eraseCartUseCase(CartItems carrito) {
+        return new EraseCartUseCase(carrito);
     }
 }

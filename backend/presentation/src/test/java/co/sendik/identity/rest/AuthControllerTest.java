@@ -80,7 +80,7 @@ class AuthControllerTest {
     /** MockMvc llama sin proxy delante: la direccion sale de la conexion. */
     private static final int SIN_PROXY = 0;
 
-    /** Lo que corre en la nube: un salto de confianza delante (ADR-0036). */
+    /** Lo que corre en la nube: un salto de confianza delante (ADR-0038). */
     private static final int TRAS_CLOUD_RUN = 1;
 
     /**
@@ -133,6 +133,8 @@ class AuthControllerTest {
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
+                        new RateLimiter(1000, Duration.ofMinutes(1), 1000),
+                        // El quinto es el carrito anonimo de HU-015.
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new ClientIpHasher(SIN_PROXY),
                         RELOJ))
@@ -563,6 +565,7 @@ class AuthControllerTest {
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
+                        new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new ClientIpHasher(SIN_PROXY),
                         RELOJ))
                 .build();
@@ -581,7 +584,7 @@ class AuthControllerTest {
      * rompia.</strong>
      *
      * <p>La cabecera trae las tres cosas que fallaban: una direccion inventada delante, un
-     * hueco -la forma exacta del fallo de produccion de ADR-0036, que dejaba el hash nulo y
+     * hueco -la forma exacta del fallo de produccion de ADR-0038, que dejaba el hash nulo y
      * la constancia sin direccion- y al final la que anade el proxy. El criterio pide la IP
      * entre la evidencia de cada consentimiento, asi que esto es la mitad legal del arreglo
      * y no una variante mas del limite de peticiones.

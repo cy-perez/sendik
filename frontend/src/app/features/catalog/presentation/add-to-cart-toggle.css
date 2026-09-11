@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+/* El destino tactil de 44px, el relleno, el gap y la caja los pone .btn. Aqui no se repiten.
+
+   **No hay estilo propio para el estado dentro**, y es deliberado: es la leccion que dejo
+   HU-011, donde el borde y el peso que marcaban el estado eran declaraciones inertes
+   -en modo claro --color-texto y --color-primario son el mismo valor, y .btn ya trae el peso
+   fuerte-. El estado se distingue por el relleno del icono y por el texto del boton, que son
+   dos senales reales y ninguna de color (criterio 25). */
+
+.carrito-control__error {
+  margin-top: var(--esp-8);
+  color: var(--color-error);
+}

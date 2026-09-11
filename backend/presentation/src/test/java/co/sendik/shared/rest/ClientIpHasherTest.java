@@ -26,7 +26,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
  * interior (docs/operacion/datos-personales.md). Pero antes de hashearla hay que
  * acertar con cual es: hasta el 10 de septiembre de 2026 se tomaba la primera
  * entrada de {@code X-Forwarded-For}, que la escribe quien llama, y eso dejaba que
- * cada quien eligiera su propio identificador (ADR-0036).
+ * cada quien eligiera su propio identificador (ADR-0038).
  *
  * <p>Los dos sentidos del error importan. Una correccion que dejara a quien llama
  * elegir su entrada es no tener limite; una que juntara a clientes distintos en una
@@ -34,7 +34,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
  *
  * <p><strong>El hash esperado se calcula aqui y no con la clase que se prueba.</strong>
  * Comparar su salida contra si misma deja pasar cualquier cambio del digest -una sal,
- * un prefijo, el HMAC que ADR-0036 deja abierto-, y {@code ip_hash} es evidencia legal
+ * un prefijo, el HMAC que ADR-0038 deja abierto-, y {@code ip_hash} es evidencia legal
  * que tiene que seguir siendo comparable entre despliegues.
  */
 class ClientIpHasherTest {
@@ -197,7 +197,7 @@ class ClientIpHasherTest {
      * <strong>La que prueba que el numero se usa de verdad.</strong>
      *
      * <p>Con un solo salto, «contar desde el final» y «tomar la ultima» son
-     * indistinguibles, asi que sin este caso la promesa de ADR-0036 —que el dia que haya un
+     * indistinguibles, asi que sin este caso la promesa de ADR-0038 —que el dia que haya un
      * balanceador delante basta con subir la cifra— no la comprueba nada. Y lo que quien
      * llama anada por delante no puede mover el indice.
      */

@@ -321,7 +321,7 @@ jobs:
       # `CLIENT_IP_TRUSTED_HOPS` va con `0` y no con el `1` del despliegue, y a propósito:
       # aquí el navegador llega al contenedor sin proxy de por medio, así que la topología
       # real es de cero saltos. Declarar el `1` de Cloud Run sería decirle al borde que
-      # confíe en una cabecera que nadie está reescribiendo (ADR-0036).
+      # confíe en una cabecera que nadie está reescribiendo (ADR-0038).
       - name: Arrancar el backend y esperar a que responda
         run: |
           docker run -d --name backend --network host \
