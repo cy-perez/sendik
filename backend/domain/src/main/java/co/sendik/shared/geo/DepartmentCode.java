@@ -15,6 +15,16 @@ import java.util.regex.Pattern;
  */
 public record DepartmentCode(String value) {
 
+    /**
+     * Sin el valor dentro, y no es cosmetica.
+     *
+     * <p>{@code ApiExceptionHandler} registra el mensaje de esta excepcion, y este
+     * codigo llega de un segmento de la ruta: seria entrada elegida por quien llama,
+     * reflejada literalmente en el registro. Es la misma decision que ya se tomo en
+     * {@code PostalCode}, y se extendio aqui tras la revision de seguridad.
+     */
+    private static final String MAL_FORMADO = "El codigo de departamento son dos digitos";
+
     private static final Pattern VALIDO = Pattern.compile("\\d{2}");
 
     public DepartmentCode {
@@ -22,7 +32,7 @@ public record DepartmentCode(String value) {
         value = value.trim();
 
         if (!VALIDO.matcher(value).matches()) {
-            throw new IllegalArgumentException("El codigo de departamento son dos digitos, y llego: " + value);
+            throw new IllegalArgumentException(MAL_FORMADO);
         }
     }
 

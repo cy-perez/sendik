@@ -1,7 +1,13 @@
 <form class="formulario-direccion" [formGroup]="form" (ngSubmit)="guardar()">
-  <h2 class="tipo-titulo-tarjeta">
+  <!-- Recoge el foco al abrirse: el boton que abrio el formulario deja de existir. -->
+  <h2 class="tipo-titulo-tarjeta" tabindex="-1" #titulo>
     {{ (editando() ? 'addresses.form.editTitle' : 'addresses.form.newTitle') | transloco }}
   </h2>
+
+  <!-- El aviso va arriba y no al final: el regimen colombiano pide informar la finalidad
+       ANTES de recoger, y este es el unico formulario del producto donde se piden el nombre
+       y el telefono de otra persona (RN-104). La variante `entrega` existe por eso. -->
+  <sendik-privacy-notice variante="entrega" />
 
   <!--
     Los dos selectores van primero y en este orden porque el segundo depende del primero:
@@ -16,8 +22,17 @@
     [errorKey]="departmentError()"
   />
 
+  <!-- Criterio 27: al cambiar de departamento el selector se vacia y se repuebla, y eso
+       hay que anunciarlo. Sin esto, quien no lo ve pierde el municipio elegido en silencio. -->
+  <p class="solo-lectores" role="status">
+    @if (anuncioDeMunicipios(); as anuncio) {
+      {{ anuncio | transloco: { cuantos: municipios().length } }}
+    }
+  </p>
+
   <sendik-select-field
     fieldId="direccion-municipio"
+    [disabled]="!municipioDisponible()"
     labelKey="addresses.form.municipality.label"
     [placeholderKey]="municipioPlaceholder()"
     [control]="form.controls.municipalityCode"
@@ -85,6 +100,12 @@
     [control]="form.controls.postalCode"
     [errorKey]="postalCodeError()"
   />
+
+  @if (divisionFallo()) {
+    <p class="error tipo-leyenda" role="alert">
+      {{ 'addresses.form.divisionFailed' | transloco }}
+    </p>
+  }
 
   @if (fallo(); as mensaje) {
     <!-- El tope va como parametro: la clave generica de `errors.byCode` no lo lleva, y

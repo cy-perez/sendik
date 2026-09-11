@@ -249,11 +249,41 @@ class DireccionesDeEntregaTest {
                     .isInstanceOf(AddressNotFoundException.class);
         }
 
+        /**
+         * El adaptador real no toca `is_default` al reescribir los campos, y el doble tampoco:
+         * si lo pisara, esta prueba pasaria en verde y editar moveria la predeterminada en
+         * produccion sin que nadie lo pidiera.
+         */
+        @Test
+        void deberia_no_mover_la_predeterminada_al_editar_otra() {
+            ShippingAddressView predeterminada =
+                    agregar.execute(new AddShippingAddressCommand(alguien, completa(BOGOTA)));
+            avanzarUnDia();
+            ShippingAddressView otra = agregar.execute(new AddShippingAddressCommand(alguien, completa(MEDELLIN)));
+
+            editar.execute(new EditShippingAddressCommand(alguien, ShippingAddressId.de(otra.id()), completa(BOGOTA)));
+
+            assertThat(listar.execute(alguien))
+                    .filteredOn(ShippingAddressView::predeterminada)
+                    .extracting(ShippingAddressView::id)
+                    .containsExactly(predeterminada.id());
+        }
+
         @Test
         void deberia_no_encontrar_una_direccion_inventada() {
             assertThatThrownBy(() -> editar.execute(
                             new EditShippingAddressCommand(alguien, ShippingAddressId.nuevo(), completa(BOGOTA))))
                     .isInstanceOf(AddressNotFoundException.class);
+        }
+
+        @Test
+        void deberia_rechazar_a_una_cuenta_que_ya_se_cerro() {
+            ShippingAddressView guardada = agregar.execute(new AddShippingAddressCommand(alguien, completa(BOGOTA)));
+            conCuentaCerrada(alguien);
+
+            assertThatThrownBy(() -> editar.execute(new EditShippingAddressCommand(
+                            alguien, ShippingAddressId.de(guardada.id()), completa(MEDELLIN))))
+                    .isInstanceOf(AccountNoLongerExistsException.class);
         }
 
         /** Criterio 23: se puede leer con el municipio suprimido, pero no volver a guardarlo. */
@@ -369,6 +399,16 @@ class DireccionesDeEntregaTest {
         }
 
         @Test
+        void deberia_rechazar_a_una_cuenta_que_ya_se_cerro() {
+            ShippingAddressView unica = agregar.execute(new AddShippingAddressCommand(alguien, completa(BOGOTA)));
+            conCuentaCerrada(alguien);
+
+            assertThatThrownBy(() ->
+                            marcar.execute(new SetDefaultAddressCommand(alguien, ShippingAddressId.de(unica.id()))))
+                    .isInstanceOf(AccountNoLongerExistsException.class);
+        }
+
+        @Test
         void deberia_no_cambiar_nada_al_marcar_la_que_ya_lo_era() {
             ShippingAddressView unica = agregar.execute(new AddShippingAddressCommand(alguien, completa(BOGOTA)));
 
@@ -423,7 +463,7 @@ class DireccionesDeEntregaTest {
         @Test
         void deberia_seguir_leyendo_una_direccion_sobre_un_municipio_suprimido() {
             ShippingAddressView guardada = agregar.execute(new AddShippingAddressCommand(alguien, completa(BOGOTA)));
-            libreta.guardar(libreta.buscar(ShippingAddressId.de(guardada.id()))
+            libreta.guardar(libreta.buscar(ShippingAddressId.de(guardada.id()), alguien)
                     .orElseThrow()
                     .con(
                             new RecipientName("Ana María Ruiz"),

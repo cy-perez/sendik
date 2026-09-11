@@ -40,16 +40,10 @@
   margin: 0;
 }
 
-/* La etiqueta de predeterminada es texto dentro de una caja, y no un color: el estado no
-   se comunica solo por color (criterio 27). Va sobre --color-fondo, que es el gris del
-   sistema y ya se usa asi en otras piezas; no en bronce, que esta reservado a lo
-   verificado y aqui no hay nada verificado. */
-.direcciones__etiqueta {
-  padding: var(--esp-4) var(--esp-8);
-  border-radius: var(--radio-sm);
-  background: var(--color-fondo);
-  color: var(--color-texto-suave);
-}
+/* La etiqueta de predeterminada usa `.chip`, que ya existe en marca.css. La primera version
+   la reinventaba con --color-fondo sobre --color-superficie: 1.05:1 en modo claro, asi que
+   la caja no se veia y la etiqueta parecia texto suelto, mientras que en oscuro quedaba un
+   hueco bien marcado. El mismo componente se leia como dos cosas distintas segun el tema. */
 
 .direcciones__indicaciones {
   color: var(--color-texto-suave);
@@ -70,6 +64,12 @@
   margin-top: var(--esp-12);
 }
 
+/* «predeterminada» son catorce caracteres indivisibles y `.btn` anade sangria horizontal
+   fija, que no encoge con el texto ampliado. A 360px y al 200% eso desborda la tarjeta. */
+.direcciones__acciones .btn {
+  overflow-wrap: anywhere;
+}
+
 /* Separado del resto de acciones: no se pone al lado de la principal. */
 .direcciones__quitar {
   margin-inline-start: auto;
@@ -84,8 +84,12 @@
   margin-top: var(--esp-16);
 }
 
+/* Con token propio y no con uno de espaciado usado de alto: marca.css lo dice por escrito
+   -`--esp-*` es la escala de separacion, y usarla como altura hace que el hueco deje de
+   medir lo que sustituye en cuanto el texto crece-. El valor es el de una tarjeta real:
+   nombre, linea, municipio, telefono y la fila de tres botones de 44px. */
 .direcciones__esqueleto {
-  height: var(--esp-96);
+  height: var(--alto-esqueleto-direccion);
   width: 100%;
 }
 

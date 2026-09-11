@@ -53,9 +53,10 @@ public class EditShippingAddressUseCase {
             throw new AccountNoLongerExistsException();
         }
 
+        // El dueno va en la consulta y no en un filtro de despues: asi la fila ajena no
+        // llega a descifrarse, y el 404 sale por el mismo camino que el de una inventada.
         ShippingAddress actual = direcciones
-                .buscar(comando.direccion())
-                .filter(direccion -> direccion.esDe(comando.usuario()))
+                .buscar(comando.direccion(), comando.usuario())
                 .orElseThrow(() -> new AddressNotFoundException(comando.direccion()));
 
         ShippingAddress editada = comando.datos().aplicadaA(actual, reloj.instant());
@@ -64,7 +65,7 @@ public class EditShippingAddressUseCase {
 
         direcciones.guardar(editada);
 
-        return ShippingAddressView.de(editada, division);
+        return ListShippingAddressesUseCase.conLaDivision(editada, division);
     }
 
     /**

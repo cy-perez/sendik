@@ -17,7 +17,20 @@ import org.jspecify.annotations.Nullable;
  * <p><strong>No hay campo de departamento, y esa ausencia es la regla.</strong> El codigo del
  * municipio lleva dentro el de su departamento (RN-100), asi que un par incoherente no puede
  * existir porque no hay par: el criterio 5 de la historia se cumple por construccion. Lo que
- * este DTO no tenga es lo que nadie puede contradecir.
+ * este DTO no tenga es lo que nadie puede contradecir, y hay una prueba que manda
+ * {@code departmentCode} de mas para fijar que el servidor no lo mira.
+ *
+ * <p><strong>El telefono y el codigo postal viajan ya normalizados: solo digitos.</strong> Se
+ * corrigio el 11 de septiembre de 2026, despues de la revision de pruebas, y el defecto valia
+ * la pena: el borde media el telefono en <strong>caracteres</strong> —de 7 a 30— y el dominio
+ * en <strong>digitos</strong> —de 7 a 15—, asi que un numero de dieciseis digitos atravesaba
+ * la validacion del borde y reventaba en {@code Phone} como {@code IllegalArgumentException},
+ * que sale como 400 <strong>sin {@code errors}</strong>: sin campo que marcar, que es lo
+ * contrario del criterio 7. Y el codigo postal era peor todavia: el dominio normaliza
+ * «110 111» a «110111» y el borde lo rechazaba, asi que escribirlo como lo escribe la gente
+ * daba un 400 con las tres suites en verde. Ahora los dos patrones son exactamente los del
+ * dominio y quien normaliza es el cliente, que es de quien es el trabajo de hablar el
+ * formato del contrato.
  *
  * <p><strong>Aqui se comprueba la forma y no el contenido.</strong> Que el municipio exista
  * de verdad lo decide el caso de uso contra la division sembrada; que la linea de direccion
@@ -25,15 +38,31 @@ import org.jspecify.annotations.Nullable;
  * almohadilla y guion y se escribe de quince maneras, asi que cualquier patron rechazaria
  * direcciones reales.
  *
- * @param predeterminada no existe. Cambiar cual es la predeterminada es otra operacion y otro
- *     endpoint, {@code PUT /users/me/default-address}: si estuviera aqui, editar una
- *     direccion podria mover la predeterminada sin que nadie lo pidiera
+ * @param phone solo digitos, con un mas opcional delante. Los separadores que la gente
+ *     escribe los quita el cliente antes de mandarlo
+ * @param postalCode lo mismo, y la cadena vacia se admite como ausencia
  */
 public record ShippingAddressRequest(
         @NotBlank @Size(min = 2, max = 80) String recipientName,
-        @NotBlank @Size(min = 7, max = 30) String phone,
+        @NotBlank @Pattern(regexp = "\\+?\\d{7,15}") String phone,
         @NotBlank @Pattern(regexp = "\\d{5}") String municipalityCode,
         @NotBlank @Size(min = 5, max = 120) String line,
         @Nullable @Size(max = 60) String complement,
         @Nullable @Size(max = 200) String instructions,
-        @Nullable @Pattern(regexp = "\\d{6}|") String postalCode) {}
+        @Nullable @Pattern(regexp = "\\d{6}|") String postalCode) {
+
+    /**
+     * No imprime nada de lo que hay dentro.
+     *
+     * <p>Un {@code record} imprime todos sus campos por omision, y estos llevan donde vive
+     * una persona, su telefono y el nombre de quien recibe. El criterio 19 no puede depender
+     * de que nadie escriba nunca un {@code LOG.debug} con el objeto entero —{@code co.sendik}
+     * esta en {@code DEBUG} en {@code dev} y en {@code local}—, asi que lo que se imprime es
+     * lo que no identifica a nadie. Es la misma decision que {@code ShippingAddress} y
+     * {@code EncryptedValue}, extendida tras la revision de seguridad.
+     */
+    @Override
+    public String toString() {
+        return "ShippingAddressRequest[municipalityCode=" + municipalityCode + "]";
+    }
+}

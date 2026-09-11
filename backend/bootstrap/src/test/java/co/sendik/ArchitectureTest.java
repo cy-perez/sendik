@@ -266,7 +266,7 @@ class ArchitectureTest {
                 .resideInAPackage("co.sendik..rest.dto..")
                 .should()
                 .dependOnClassesThat()
-                .resideInAnyPackage("co.sendik..model..", "co.sendik.shared.file..")
+                .resideInAnyPackage("co.sendik..model..", "co.sendik.shared.geo..", "co.sendik.shared.file..")
                 .because("la API tiene sus propios DTO aunque al principio parezcan identicos:"
                         + " asi el dominio puede cambiar sin romper el contrato publico")
                 .allowEmptyShould(true);

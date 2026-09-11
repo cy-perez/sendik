@@ -288,7 +288,8 @@
       "controllerAddress": "Address: {{direccion}}.",
       "purpose": {
         "account": "We use this data to create and manage your account, confirm your email, keep your session secure and help you when you write to us. We do not sell it or pass it on for advertising.",
-        "verification": "We use your identity document, the photograph of your face and your bank account for one thing only: to confirm you are who you say you are before letting you list, and to be able to pay you for what you sell. They are not shown to anyone else and are not used for anything else."
+        "verification": "We use your identity document, the photograph of your face and your bank account for one thing only: to confirm you are who you say you are before letting you list, and to be able to pay you for what you sell. They are not shown to anyone else and are not used for anything else.",
+        "delivery": "We use your address, the name of whoever receives the parcel and their phone number for one thing only: getting what you buy to that place. When you place an order we hand those details to the shipping company and to the carrier delivering the parcel, because there is no delivery without them. They don't leave Sendik before that, and the seller only sees your address once the payment is approved."
       },
       "sensitive": "You are not required to provide this data. You can hold an account, browse and buy without it; it is only needed if you decide to sell, because without knowing who is selling, Sendik's backing would mean nothing.",
       "rights": "You can access, update, correct and delete your data, and withdraw this authorisation, by writing to {{correo}}.",
@@ -1494,12 +1495,15 @@
       "delete": "Remove",
       "makeDefault": "Use as default",
       "save": "Save address",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "editNamed": "Edit {{nombre}}'s address",
+      "deleteNamed": "Remove {{nombre}}'s address",
+      "makeDefaultNamed": "Use {{nombre}}'s address as default"
     },
     "notices": {
       "saved": "Address saved.",
       "removed": "Address removed.",
-      "defaultChanged": "Your default address changed."
+      "defaultChanged": "Your default address is now {{nombre}}'s."
     },
     "form": {
       "newTitle": "New address",
@@ -1515,7 +1519,9 @@
         "choose": "Choose a municipality",
         "chooseDepartmentFirst": "Choose a department first",
         "loading": "Loading municipalities…",
-        "error": "Choose a municipality."
+        "error": "Choose a municipality.",
+        "failed": "We couldn't load the municipalities",
+        "updated": "{{cuantos}} municipalities available"
       },
       "line": {
         "label": "Address",
@@ -1546,7 +1552,8 @@
         "label": "Postal code (optional)",
         "hint": "Six digits, if you know it",
         "error": "Colombian postal codes have six digits."
-      }
+      },
+      "divisionFailed": "We couldn't load the list of departments and municipalities. Reload the page."
     },
     "errors": {
       "full": "You already have {{tope}} saved addresses, which is the maximum. Remove one to add another."

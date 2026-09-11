@@ -64,20 +64,27 @@ public class JdbcShippingAddressRepository implements ShippingAddressRepository 
     }
 
     /**
-     * Una por identificador, sea de quien sea.
+     * Una de esa cuenta, por identificador.
      *
-     * <p>No filtra por dueno a proposito: quien comprueba de quien es, es el caso de uso, y
-     * lo hace para responder 404 y no 403 (criterio 15). Filtrar aqui dejaria esa
-     * comprobacion invisible y sin prueba propia.
+     * <p><strong>El filtro por dueno va en el {@code WHERE} y no despues</strong>, y no es
+     * una optimizacion: {@link #armar} descifra la fila y reconstruye seis objetos de valor,
+     * asi que hacerlo antes de saber de quien es descifraria la direccion ajena en cada
+     * sondeo y convertiria cualquier fallo de esa fila —una version de clave retirada, un
+     * valor que ya no pasa la validacion del dominio— en un 500 o un 400 alli donde el
+     * criterio 15 exige un 404 indistinguible.
      */
     @Override
-    public Optional<ShippingAddress> buscar(ShippingAddressId id) {
+    public Optional<ShippingAddress> buscar(ShippingAddressId id, UserId cuenta) {
         return jdbc.sql("""
                         SELECT id, user_id, municipality_code, details_cipher, details_key_version,
                                is_default, created_at, updated_at
                         FROM shipping_addresses
-                        WHERE id = :id
-                        """).param("id", id.value()).query(this::armar).optional();
+                        WHERE id = :id AND user_id = :cuenta
+                        """)
+                .param("id", id.value())
+                .param("cuenta", cuenta.value())
+                .query(this::armar)
+                .optional();
     }
 
     /**

@@ -1,6 +1,5 @@
 package co.sendik.identity.usecase;
 
-import co.sendik.identity.dto.ShippingAddressView;
 import co.sendik.identity.dto.UserDataExport;
 import co.sendik.identity.exception.AccountNoLongerExistsException;
 import co.sendik.identity.model.Role;
@@ -113,7 +112,7 @@ public class ExportUserDataUseCase {
                 // puerto (HU-016, ADR-0039). Sale entera y con los nombres del municipio y
                 // del departamento, no con sus codigos: un «11001» no responde ninguna
                 // pregunta que alguien pueda hacerse sobre sus propios datos.
-                ShippingAddressView.de(direcciones.deCuenta(usuario), division).stream()
+                ListShippingAddressesUseCase.conLaDivision(direcciones.deCuenta(usuario), division).stream()
                         .map(direccion -> new UserDataExport.Direccion(
                                 direccion.quienRecibe(),
                                 direccion.telefono(),

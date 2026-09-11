@@ -1,4 +1,7 @@
-<h1 class="tipo-h1">{{ 'addresses.title' | transloco }}</h1>
+<!-- `tabindex="-1"` para que pueda recibir el foco cuando se destruye lo que se acaba de
+     pulsar: quitar una direccion, marcar otra como predeterminada o cerrar el formulario.
+     Es lo que hace `cart-page`, y por lo mismo. -->
+<h1 class="tipo-h1" tabindex="-1" #titulo>{{ 'addresses.title' | transloco }}</h1>
 
 <!--
   La region viva se pinta siempre y fuera de las ramas del @if, como en favoritos: una
@@ -8,13 +11,11 @@
 <p class="solo-lectores" role="status">
   @if (cargando()) {
     {{ 'addresses.loading' | transloco }}
-  } @else if (aviso(); as mensaje) {
-    {{ mensaje | transloco }}
   }
 </p>
 
 @if (cargando()) {
-  <ul class="direcciones__lista" aria-hidden="true">
+  <ul class="direcciones__lista" role="list" aria-hidden="true">
     @for (hueco of huecos; track hueco) {
       <li><p class="esqueleto direcciones__esqueleto"></p></li>
     }
@@ -35,8 +36,17 @@
     </button>
   </div>
 } @else {
+  <!-- El aviso se anuncia por ser una region viva, y se lee una sola vez al recorrer la
+       pagina: antes estaba tambien dentro de la region de arriba y el lector lo leia dos
+       veces. -->
   @if (aviso(); as mensaje) {
-    <p class="direcciones__aviso tipo-cuerpo">{{ mensaje | transloco }}</p>
+    <p class="direcciones__aviso tipo-cuerpo" role="status">
+      {{ mensaje | transloco: { nombre: avisoNombre() } }}
+    </p>
+  }
+
+  @if (falloDeAccion(); as fallo) {
+    <p class="error tipo-cuerpo" role="alert">{{ fallo | transloco }}</p>
   }
 
   @if (vacia() && !formularioAbierto()) {
@@ -55,7 +65,7 @@
     </div>
   } @else {
     @if (!vacia()) {
-      <ul class="direcciones__lista">
+      <ul class="direcciones__lista" role="list">
         @for (direccion of direcciones(); track direccion.id) {
           <li class="direcciones__tarjeta">
             <!--
@@ -65,7 +75,7 @@
             <p class="direcciones__quien tipo-titulo-tarjeta">
               {{ direccion.recipientName }}
               @if (direccion.isDefault) {
-                <span class="direcciones__etiqueta tipo-leyenda">
+                <span class="chip tipo-leyenda">
                   {{ 'addresses.list.default' | transloco }}
                 </span>
               }
@@ -94,7 +104,17 @@
             }
 
             <div class="direcciones__acciones">
-              <button type="button" class="btn btn-secundario" (click)="abrirEdicion(direccion)">
+              <!-- El texto visible se queda corto y el nombre accesible lleva de quien es:
+                   con el tope de RN-101 son hasta treinta botones llamados igual en la lista
+                   de un lector de pantalla. Es lo que `cart-page` ya resolvio con sus veinte. -->
+              <button
+                type="button"
+                class="btn btn-secundario"
+                [attr.aria-label]="
+                  'addresses.actions.editNamed' | transloco: { nombre: direccion.recipientName }
+                "
+                (click)="abrirEdicion(direccion)"
+              >
                 {{ 'addresses.actions.edit' | transloco }}
               </button>
 
@@ -102,6 +122,10 @@
                 <button
                   type="button"
                   class="btn btn-secundario"
+                  [attr.aria-label]="
+                    'addresses.actions.makeDefaultNamed'
+                      | transloco: { nombre: direccion.recipientName }
+                  "
                   (click)="marcarPredeterminada(direccion)"
                 >
                   {{ 'addresses.actions.makeDefault' | transloco }}
@@ -116,6 +140,9 @@
               <button
                 type="button"
                 class="btn btn-texto direcciones__quitar"
+                [attr.aria-label]="
+                  'addresses.actions.deleteNamed' | transloco: { nombre: direccion.recipientName }
+                "
                 (click)="quitar(direccion)"
               >
                 {{ 'addresses.actions.delete' | transloco }}

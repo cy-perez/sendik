@@ -288,7 +288,8 @@
       "controllerAddress": "Dirección: {{direccion}}.",
       "purpose": {
         "account": "Usamos estos datos para crear y administrar tu cuenta, confirmar tu correo, mantener tu sesión segura y atenderte cuando escribas. No los vendemos ni los cedemos con fines publicitarios.",
-        "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más."
+        "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más.",
+        "delivery": "Usamos tu dirección, el nombre de quien recibe y su teléfono para una sola cosa: llevarte hasta allí lo que compres. Cuando hagas un pedido, esos datos se los entregamos a la empresa de envíos y a la transportadora que lleve el paquete, porque sin ellos no hay entrega. No salen de Sendik antes de eso, y el vendedor solo ve tu dirección cuando el pago está aprobado."
       },
       "sensitive": "No estás obligado a entregar estos datos. Puedes tener cuenta, navegar y comprar sin ellos; solo hacen falta si decides vender, porque sin saber quién vende el respaldo no significaría nada.",
       "rights": "Puedes conocer, actualizar, rectificar y suprimir tus datos, y retirar esta autorización, escribiendo a {{correo}}.",
@@ -1494,12 +1495,15 @@
       "delete": "Quitar",
       "makeDefault": "Usar como predeterminada",
       "save": "Guardar dirección",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "editNamed": "Editar la dirección de {{nombre}}",
+      "deleteNamed": "Quitar la dirección de {{nombre}}",
+      "makeDefaultNamed": "Usar como predeterminada la dirección de {{nombre}}"
     },
     "notices": {
       "saved": "Dirección guardada.",
       "removed": "Dirección quitada.",
-      "defaultChanged": "Cambió cuál es tu dirección predeterminada."
+      "defaultChanged": "Tu dirección predeterminada es ahora la de {{nombre}}."
     },
     "form": {
       "newTitle": "Nueva dirección",
@@ -1515,7 +1519,9 @@
         "choose": "Elige un municipio",
         "chooseDepartmentFirst": "Elige primero un departamento",
         "loading": "Cargando municipios…",
-        "error": "Elige un municipio."
+        "error": "Elige un municipio.",
+        "failed": "No pudimos cargar los municipios",
+        "updated": "{{cuantos}} municipios disponibles"
       },
       "line": {
         "label": "Dirección",
@@ -1546,7 +1552,8 @@
         "label": "Código postal (opcional)",
         "hint": "Seis dígitos, si lo sabes",
         "error": "El código postal colombiano son seis dígitos."
-      }
+      },
+      "divisionFailed": "No pudimos cargar la lista de departamentos y municipios. Vuelve a cargar la página."
     },
     "errors": {
       "full": "Ya tienes {{tope}} direcciones guardadas, que es el máximo. Quita una para agregar otra."

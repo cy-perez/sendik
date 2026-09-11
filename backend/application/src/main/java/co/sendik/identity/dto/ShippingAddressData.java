@@ -25,10 +25,18 @@ import org.jspecify.annotations.Nullable;
  * Cada objeto de valor rechaza lo suyo, y de {@link #comoNueva} o sale una direccion valida
  * o sale una excepcion.
  *
- * <p>La conversion vive aqui y no en una clase aparte del paquete {@code usecase} porque
- * alli solo viven casos de uso, y {@code ArchitectureTest} lo comprueba. Un DTO que sabe
- * convertirse en lo que representa es el sitio que queda, y no es mal sitio: crear y editar
- * comparten esto entero porque los campos son los mismos.
+ * <p>La conversion vive aqui y no en el caso de uso porque crear y editar la comparten
+ * entera —los campos son los mismos— y porque es mapeo y no orquestacion: no habla con
+ * ningun puerto. El precedente del proyecto es {@code SearchHit.de(Listing)}, que tambien
+ * convierte dentro de un DTO.
+ *
+ * <p><strong>El primer intento la puso aqui por un motivo equivocado</strong>, y conviene
+ * que quede escrito para que nadie lo repita: se leyo que {@code ArchitectureTest} prohibia
+ * clases auxiliares en {@code usecase} y se concluyo que alli no cabia nada mas. La regla
+ * lleva {@code .areTopLevelClasses()}, asi que nunca prohibio un metodo estatico, y el
+ * proyecto ya tenia la respuesta escrita una historia antes:
+ * {@code ReadCartUseCase.conVendedores}. Lo que si tuvo que salir de aqui por ese motivo es
+ * el cruce con la division politico-administrativa, que hablaba con un puerto.
  *
  * <p><strong>No hay campo de departamento</strong>, y esa ausencia es la regla. El codigo del
  * municipio lleva dentro el de su departamento (RN-100), asi que mandar los dos abriria la
@@ -89,5 +97,20 @@ public record ShippingAddressData(
             return null;
         }
         return constructor.apply(valor);
+    }
+
+    /**
+     * No imprime nada de lo que hay dentro.
+     *
+     * <p>Un {@code record} imprime todos sus campos por omision, y estos llevan donde vive
+     * una persona, su telefono y el nombre de quien recibe. El criterio 19 no puede depender
+     * de que nadie escriba nunca un {@code LOG.debug} con el objeto entero —{@code co.sendik}
+     * esta en {@code DEBUG} en {@code dev} y en {@code local}—, asi que lo que se imprime es
+     * lo que no identifica a nadie. Es la misma decision que {@code ShippingAddress} y
+     * {@code EncryptedValue}, extendida tras la revision de seguridad.
+     */
+    @Override
+    public String toString() {
+        return "ShippingAddressData[municipio=" + municipio + "]";
     }
 }

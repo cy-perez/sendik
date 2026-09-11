@@ -73,7 +73,7 @@ public class AddShippingAddressUseCase {
         ShippingAddress guardada = direccion.comoPredeterminada(libreta.laSiguienteSeriaPredeterminada());
         direcciones.guardar(guardada);
 
-        return ShippingAddressView.de(guardada, division);
+        return ListShippingAddressesUseCase.conLaDivision(guardada, division);
     }
 
     /**

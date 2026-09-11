@@ -32,13 +32,22 @@ public interface ShippingAddressRepository {
     List<ShippingAddress> deCuenta(UserId cuenta);
 
     /**
-     * Una por su identificador, sea de quien sea.
+     * Una direccion <strong>de esa cuenta</strong>, por su identificador.
      *
-     * <p>Devuelve la de cualquiera a proposito: quien comprueba de quien es, es el caso de
-     * uso, y lo hace para responder 404 y no 403 (criterio 15). Un metodo que filtrara por
-     * dueno aqui dejaria esa comprobacion invisible y sin prueba propia.
+     * <p><strong>El dueno va en la firma, y se corrigio despues de la revision de
+     * seguridad.</strong> Antes devolvia la de cualquiera y el caso de uso filtraba despues,
+     * con la idea de dejar la comprobacion del criterio 15 a la vista. El problema es cuando
+     * ocurria: el adaptador ya habia descifrado la fila ajena y reconstruido sus seis objetos
+     * de valor <strong>antes</strong> de que nadie decidiera el 404. Eso descifra la direccion
+     * de otra persona en cada sondeo, y —peor— convierte cualquier fallo de esa fila en un
+     * oraculo: una version de clave retirada o un valor que ya no pasa la validacion del
+     * dominio saldria como 500 o 400 en vez de 404, distinguiendo «existe y es de alguien» de
+     * «no existe», que es justo lo que el criterio 15 prohibe.
+     *
+     * <p>Filtrar aqui no esconde la regla: el 404 lo sigue lanzando el caso de uso, con su
+     * prueba propia. Lo que cambia es que la fila ajena no llega a descifrarse.
      */
-    Optional<ShippingAddress> buscar(ShippingAddressId id);
+    Optional<ShippingAddress> buscar(ShippingAddressId id, UserId cuenta);
 
     /** Inserta si no estaba y reemplaza si estaba. */
     void guardar(ShippingAddress direccion);

@@ -29,9 +29,15 @@
 --
 -- LO QUE SE ESCRIBE VA CIFRADO, y en un solo campo. Dentro de `details_cipher`
 -- va un documento JSON con el nombre de quien recibe, el telefono, la linea de
--- direccion, el complemento, las indicaciones y el codigo postal. Fuera quedan
--- el municipio, la marca de predeterminada y las fechas, que son lo unico por lo
--- que esta tabla se consulta.
+-- direccion, el complemento, las indicaciones y el codigo postal.
+--
+-- FUERA DEL CIFRADO QUEDAN el municipio, la marca de predeterminada y las fechas.
+-- El motivo del municipio no es que se consulte por el -- ninguna consulta de este
+-- adaptador filtra ni ordena por municipio -- sino que es CLAVE FORANEA a
+-- `municipalities`, y una clave foranea no puede colgar de un criptograma. La
+-- consecuencia hay que decirla en vez de esconderla: en un volcado de esta tabla,
+-- en que municipio vive cada cuenta se lee sin ninguna clave. Es lo mismo que ya
+-- pasa con la ciudad del perfil, que es publica, y mucho menos que la calle.
 --
 -- Uno y no seis pares de columnas `_cipher`/`_key_version` como en V8: alli cada
 -- dato sensible se lee por separado --el numero de documento tiene ademas su

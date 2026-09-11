@@ -84,14 +84,37 @@ el titular, ahí hay el nombre y el teléfono de un tercero que nunca abrió una
 - **No nace ningún puerto entre contextos.** El cierre de cuenta y la descarga de datos
   llaman al repositorio directamente, sin el rodeo que `UserFavorites` y `UserCart`
   necesitan.
-- **Fuera del cifrado quedan el municipio, la marca de predeterminada y las fechas**, que
-  es lo único por lo que la tabla se consulta. Si algún día hiciera falta buscar por
-  calle o por teléfono, no se podrá sin descifrar la tabla entera; hoy ninguna pantalla lo
-  pide y ninguna regla lo sugiere.
+- **Fuera del cifrado quedan el municipio, la marca de predeterminada y las fechas.** El
+  municipio queda fuera **porque es clave foránea** y una clave foránea no puede colgar de
+  un criptograma; no porque se consulte por él, que no se consulta —ninguna consulta del
+  adaptador filtra ni ordena por municipio—. La consecuencia se dice en vez de esconderse:
+  en un volcado de la tabla, en qué municipio vive cada cuenta se lee sin ninguna clave. Es
+  el mismo dato que la ciudad del perfil, que además es pública.
+
+  Si algún día hiciera falta buscar por calle o por teléfono, no se podrá sin descifrar la
+  tabla entera; hoy ninguna pantalla lo pide y ninguna regla lo sugiere.
 - **Un mapeador más**, entre el documento JSON y los objetos de valor del dominio. Es el
   mismo patrón de `MeasurementsJson` y cuesta lo mismo: un archivo.
 - `shipping` **sigue vacío**, y nacerá cuando exista Skydropx. Lo que irá allí es la
   cotización, la guía y el seguimiento: cosas con ciclo de vida.
+
+## Un riesgo que se acepta, y queda escrito
+
+**El criptograma no está atado a su fila.** `AesGcmSensitiveDataCipher` no usa datos
+autenticados adicionales, así que quien consiga **escritura** en la base —no lectura— puede
+copiar el `details_cipher` y su versión de clave de otra fila a una suya y leer por la API el
+nombre, el teléfono y la dirección de esa persona. GCM autentica el contenido, no dónde
+estaba.
+
+Es una propiedad heredada de ADR-0020 y no la estrena esta historia, pero sí la completa: la
+dirección de entrega es **el primer dato cifrado que se devuelve entero por una ruta de
+lectura del propio usuario**, que es lo que cierra el ciclo del ataque. Con la cédula no
+ocurría: nunca sale en una respuesta.
+
+Se acepta por ahora y no se cierra, porque cerrarlo exige pasar `id + user_id` como AAD y eso
+cambia la firma del puerto `SensitiveDataCipher`, que hoy usan también la cédula y la cuenta
+bancaria. Lo que no se hace es dejarlo sin mencionar: quien tenga escritura en la base tiene
+problemas más grandes, pero eso es un argumento para anotarlo, no para no escribirlo.
 
 ## Cuándo revisar
 

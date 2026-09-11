@@ -19,13 +19,19 @@ import { RUTAS_LEGALES } from '../../../core/routes/legal-routes';
  * <p>De ahi que sea un componente y no una pagina: se pone junto al formulario, no en
  * un sitio al que haya que ir.
  *
- * <p><strong>Dos variantes, porque los datos no son los mismos.</strong> En el
+ * <p><strong>Tres variantes, porque los datos no son los mismos.</strong> En el
  * registro se piden datos de contacto; en la verificacion de vendedor se piden
  * documento de identidad, fotografia del rostro y cuenta bancaria, que el regimen
  * trata como sensibles y exigen decir dos cosas mas: que nadie esta obligado a
  * darlos, y para que sirven exactamente. Es lo que
  * `docs/operacion/datos-personales.md` pide cuando dice que la finalidad de la
  * verificacion se explica en el momento de pedirla y no solo en la politica.
+ *
+ * <p>La tercera, `entrega`, llego con HU-016 y tiene algo que las otras dos no: es
+ * el unico formulario del producto donde se recogen el nombre y el telefono de
+ * **otra persona** —quien recibe el paquete, que puede no ser quien compra
+ * (RN-104)—. Alguien que nunca abrio una cuenta ni acepto nada. Por eso su texto
+ * dice a donde va a ir ese dato y de quien depende que llegue.
  *
  * <p>El responsable, su identificacion, su direccion y el canal salen de la
  * configuracion y nunca del texto: son datos de negocio y no pueden quedar quemados
@@ -43,14 +49,16 @@ import { RUTAS_LEGALES } from '../../../core/routes/legal-routes';
 })
 export class PrivacyNotice {
   /**
-   * `cuenta` para el registro; `verificacion` donde se piden datos sensibles.
+   * `cuenta` para el registro; `verificacion` donde se piden datos sensibles;
+   * `entrega` donde se recoge una direccion y, con ella, datos de un tercero.
    *
    * <p>Se elige a mano y no se deduce de la ruta a proposito: quien anada una
-   * pantalla nueva que pida datos tiene que pararse a decidir cual de las dos le
-   * toca, y equivocarse por omision seria dar el aviso mas flojo justo donde hace
-   * falta el otro.
+   * pantalla nueva que pida datos tiene que pararse a decidir cual le toca, y
+   * equivocarse por omision seria dar el aviso mas flojo justo donde hace falta el
+   * otro. HU-016 se dejo primero **sin ninguna**, que es el caso de omision que ese
+   * comentario anticipaba; lo cazo la revision de seguridad.
    */
-  readonly variante = input<'cuenta' | 'verificacion'>('cuenta');
+  readonly variante = input<'cuenta' | 'verificacion' | 'entrega'>('cuenta');
 
   private readonly empresa = inject(APP_CONFIG).company;
 
@@ -64,9 +72,14 @@ export class PrivacyNotice {
   /** Sin responsable ni identificacion, la primera linea no dice nada y sobra. */
   protected readonly hayResponsable = this.responsable !== null || this.identificacion !== null;
 
-  protected readonly claveDeFinalidad = computed(() =>
-    this.variante() === 'verificacion'
-      ? 'legal.notice.purpose.verification'
-      : 'legal.notice.purpose.account',
-  );
+  protected readonly claveDeFinalidad = computed(() => {
+    switch (this.variante()) {
+      case 'verificacion':
+        return 'legal.notice.purpose.verification';
+      case 'entrega':
+        return 'legal.notice.purpose.delivery';
+      default:
+        return 'legal.notice.purpose.account';
+    }
+  });
 }

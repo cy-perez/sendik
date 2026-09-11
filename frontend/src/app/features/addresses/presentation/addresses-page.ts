@@ -1,16 +1,21 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
+  ElementRef,
   inject,
+  Injector,
   signal,
+  viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
+import { ApiError } from '../../../core/http/api-error';
 import { AddressesStore } from '../application/addresses.store';
-import { comoSeLee, type ShippingAddress } from '../domain/shipping-address';
+import { comoSeLee, laPredeterminada, type ShippingAddress } from '../domain/shipping-address';
 import { AddressForm } from './address-form';
 
 /**
@@ -41,6 +46,18 @@ import { AddressForm } from './address-form';
 })
 export class AddressesPage {
   private readonly store = inject(AddressesStore);
+  private readonly injector = inject(Injector);
+
+  /**
+   * El encabezado, que recoge el foco cuando se destruye lo que se acaba de pulsar.
+   *
+   * <p>Quitar una dirección destruye su propio botón; marcar otra como predeterminada
+   * destruye el botón «Usar como predeterminada» de esa tarjeta, porque está bajo un `@if`;
+   * cerrar el formulario destruye el formulario con el foco dentro. En los tres casos el
+   * navegador manda el foco a `<body>` y quien navega con teclado vuelve al principio del
+   * documento. Es el patrón que `cart-page` ya usaba, y lo cazó la revisión de accesibilidad.
+   */
+  private readonly titulo = viewChild<ElementRef<HTMLElement>>('titulo');
 
   constructor() {
     // La consulta se habilita porque alguien está mirando esta pantalla, no por haber
@@ -59,6 +76,19 @@ export class AddressesPage {
    * se dice después, y la región viva de arriba lo anuncia a quien no lo ve.
    */
   protected readonly aviso = signal<string | null>(null);
+
+  /** Con qué quedó la predeterminada tras el relevo, para poder decir cuál (criterio 11). */
+  protected readonly avisoNombre = signal('');
+
+  /**
+   * Lo que falló al quitar o al marcar.
+   *
+   * <p>Las dos mutaciones no tenían ningún estado de error: si la petición fallaba —otra
+   * pestaña ya borró la dirección, la sesión venció, la bandera está apagada— la promesa
+   * quedaba rechazada sin capturar, la tarjeta seguía en pantalla y no se decía nada. La
+   * pantalla tenía sus tres estados para la lectura y ninguno para las escrituras.
+   */
+  protected readonly falloDeAccion = signal<string | null>(null);
 
   protected readonly haySesion = computed(() => this.store.haySesion());
 
@@ -94,22 +124,25 @@ export class AddressesPage {
   }
 
   protected abrirNueva(): void {
-    this.aviso.set(null);
+    this.limpiarAvisos();
     this.abierto.set('nueva');
   }
 
   protected abrirEdicion(direccion: ShippingAddress): void {
-    this.aviso.set(null);
+    this.limpiarAvisos();
     this.abierto.set(direccion);
   }
 
+  /** Al cerrar, el foco vuelve arriba: el formulario que lo tenía deja de existir. */
   protected cerrarFormulario(): void {
     this.abierto.set(null);
+    this.devolverElFoco();
   }
 
   protected alGuardar(): void {
     this.abierto.set(null);
-    this.aviso.set('addresses.notices.saved');
+    this.anunciar('addresses.notices.saved');
+    this.devolverElFoco();
   }
 
   /**
@@ -127,27 +160,82 @@ export class AddressesPage {
     if (this.ocupada()) {
       return;
     }
+    this.limpiarAvisos();
 
     const eraLaPredeterminada = direccion.isDefault;
-    await this.store.borrado.mutateAsync(direccion.id);
+    let libreta: readonly ShippingAddress[];
 
-    if (eraLaPredeterminada && this.direcciones().length > 0) {
-      this.aviso.set('addresses.notices.defaultChanged');
-    } else {
-      this.aviso.set('addresses.notices.removed');
+    try {
+      await this.store.borrado.mutateAsync(direccion.id);
+      libreta = await this.store.refrescarLibreta();
+    } catch (error) {
+      this.falloDeAccion.set(claveDelError(error));
+      this.devolverElFoco();
+      return;
     }
+
+    // Cuál quedó se lee de la libreta recién refrescada y no se adivina aquí: la regla del
+    // relevo vive en el servidor (RN-099).
+    const releva = eraLaPredeterminada ? laPredeterminada(libreta) : null;
+    if (releva !== null) {
+      this.anunciar('addresses.notices.defaultChanged', releva.recipientName);
+    } else {
+      this.anunciar('addresses.notices.removed');
+    }
+    this.devolverElFoco();
   }
 
   protected async marcarPredeterminada(direccion: ShippingAddress): Promise<void> {
     if (this.ocupada()) {
       return;
     }
+    this.limpiarAvisos();
 
-    await this.store.marcado.mutateAsync(direccion.id);
-    this.aviso.set('addresses.notices.defaultChanged');
+    try {
+      await this.store.marcado.mutateAsync(direccion.id);
+      await this.store.refrescarLibreta();
+    } catch (error) {
+      this.falloDeAccion.set(claveDelError(error));
+      this.devolverElFoco();
+      return;
+    }
+
+    this.anunciar('addresses.notices.defaultChanged', direccion.recipientName);
+    this.devolverElFoco();
   }
 
   protected reintentar(): void {
+    this.limpiarAvisos();
     void this.store.libreta.refetch();
   }
+
+  private anunciar(clave: string, nombre = ''): void {
+    this.avisoNombre.set(nombre);
+    this.aviso.set(clave);
+  }
+
+  private limpiarAvisos(): void {
+    this.aviso.set(null);
+    this.falloDeAccion.set(null);
+  }
+
+  /**
+   * El foco vuelve al encabezado, que es lo más cerca que hay de «donde estabas».
+   *
+   * <p>`afterNextRender` porque el elemento al que se devuelve tiene que existir ya: la
+   * libreta se acaba de repintar.
+   */
+  private devolverElFoco(): void {
+    afterNextRender(() => this.titulo()?.nativeElement.focus(), { injector: this.injector });
+  }
+}
+
+/**
+ * El código del error, traducido a clave de Transloco.
+ *
+ * <p>La misma función que el formulario, y por lo mismo: `ApiError` ya sabe convertirse en su
+ * clave y los dos códigos de esta historia viven en `errors.byCode` con todos los demás.
+ */
+function claveDelError(error: unknown): string {
+  return error instanceof ApiError ? error.translationKey : 'errors.fallback';
 }

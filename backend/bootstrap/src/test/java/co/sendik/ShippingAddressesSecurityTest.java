@@ -1,5 +1,7 @@
 package co.sendik;
 
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -8,6 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import co.sendik.identity.model.BirthDate;
 import co.sendik.identity.model.DisplayName;
 import co.sendik.identity.model.Email;
@@ -25,6 +31,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -183,15 +190,49 @@ class ShippingAddressesSecurityTest {
                             .header("Authorization", tokenNuevo())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
-                                    {"recipientName":"Ana María Ruiz","phone":"300 123 4567",
+                                    {"recipientName":"Ana María Ruiz","phone":"3001234567",
                                      "municipalityCode":"11001","line":"Calle 45 # 12-34"}
                                     """))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.complement").doesNotExist())
                     .andExpect(jsonPath("$.instructions").doesNotExist())
                     .andExpect(jsonPath("$.postalCode").doesNotExist())
-                    // El telefono se normaliza en el dominio: entra con espacios y sale sin ellos.
                     .andExpect(jsonPath("$.phone").value("3001234567"));
+        }
+
+        /**
+         * El contrato pide el telefono y el codigo postal ya normalizados, y aqui queda fijado.
+         *
+         * <p>Antes el borde medía el telefono en caracteres y el dominio en digitos, y el
+         * codigo postal se rechazaba escrito con el espacio con el que se escribe —y eso era
+         * un 400 que nadie podia evitar desde la pantalla—. Ahora los dos patrones son los del
+         * dominio y quien normaliza es el cliente; lo que esta prueba impide es que alguien
+         * vuelva a aflojar el borde y reabra la grieta entre las dos mitades.
+         */
+        @Test
+        void deberia_rechazar_el_telefono_y_el_codigo_postal_con_separadores() throws Exception {
+            String token = tokenNuevo();
+
+            mvc.perform(post("/api/v1/users/me/addresses")
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"recipientName":"Ana María Ruiz","phone":"300 123 4567",
+                                     "municipalityCode":"11001","line":"Calle 45 # 12-34"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[*].field").value(Matchers.hasItem("phone")));
+
+            mvc.perform(post("/api/v1/users/me/addresses")
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"recipientName":"Ana María Ruiz","phone":"3001234567",
+                                     "municipalityCode":"11001","line":"Calle 45 # 12-34",
+                                     "postalCode":"110 111"}
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[*].field").value(Matchers.hasItem("postalCode")));
         }
 
         @Test
@@ -281,6 +322,76 @@ class ShippingAddressesSecurityTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.addresses").isEmpty());
         }
+    }
+
+    /**
+     * Criterio 5, y esto es lo que de verdad lo respalda.
+     *
+     * <p>La historia lo declara cumplido «por construccion» porque el cuerpo no tiene campo
+     * de departamento. Eso es cierto y no lo fijaba nada: la unica asercion sobre esa
+     * ausencia estaba en el frontend, y prueba lo que el cliente manda, no lo que el servidor
+     * acepta —que es justo el escenario que el criterio describe, «un cliente hecho a mano»—.
+     */
+    @Test
+    void deberia_ignorar_un_departamento_que_el_cliente_mande_de_mas() throws Exception {
+        mvc.perform(post("/api/v1/users/me/addresses")
+                        .header("Authorization", tokenNuevo())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"departmentCode":"05","recipientName":"Ana María Ruiz",
+                                 "phone":"3001234567","municipalityCode":"11001",
+                                 "line":"Calle 45 # 12-34"}
+                                """))
+                .andExpect(status().isCreated())
+                // El 11 y no el 05: el departamento sale del municipio, no de lo que mandaron.
+                .andExpect(jsonPath("$.departmentCode").value("11"))
+                .andExpect(jsonPath("$.departmentName").value("Bogotá, D.C."));
+    }
+
+    /**
+     * Criterio 19, probado asi de literal porque la historia decia que convenia.
+     *
+     * <p>Hasta ahora lo unico que lo sostenia era la costumbre de no meter el valor en el
+     * mensaje de cinco constructores. El dia que alguien escriba
+     * {@code new IllegalArgumentException("La direccion '" + value + "' no vale")} o un
+     * {@code LOG.debug} con el objeto entero, esto se pone rojo.
+     */
+    @Test
+    void deberia_no_escribir_ningun_dato_de_la_direccion_en_los_registros() throws Exception {
+        Logger raiz = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        ListAppender<ILoggingEvent> capturadas = new ListAppender<>();
+        capturadas.start();
+        Level nivelAnterior = raiz.getLevel();
+        raiz.setLevel(Level.DEBUG);
+        raiz.addAppender(capturadas);
+
+        try {
+            String token = tokenNuevo();
+            mvc.perform(post("/api/v1/users/me/addresses")
+                    .header("Authorization", token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(cuerpo("11001")));
+            // Y tambien por el camino del rechazo, que es el que pasa por el manejador.
+            mvc.perform(post("/api/v1/users/me/addresses")
+                    .header("Authorization", token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(cuerpo("99999")));
+            mvc.perform(get("/api/v1/users/me/addresses").header("Authorization", token));
+        } finally {
+            raiz.detachAppender(capturadas);
+            raiz.setLevel(nivelAnterior);
+        }
+
+        String todo =
+                capturadas.list.stream().map(ILoggingEvent::getFormattedMessage).collect(joining("\n"));
+
+        assertThat(todo)
+                .doesNotContain("Ana María Ruiz")
+                .doesNotContain("3001234567")
+                .doesNotContain("Calle 45")
+                .doesNotContain("Apto 802")
+                .doesNotContain("El timbre no sirve")
+                .doesNotContain("110111");
     }
 
     @Nested

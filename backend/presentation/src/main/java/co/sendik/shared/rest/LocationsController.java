@@ -8,7 +8,9 @@ import co.sendik.shared.rest.dto.MunicipalitiesResponse;
 import co.sendik.shared.rest.dto.PlaceResponse;
 import co.sendik.shared.usecase.ListDepartmentsUseCase;
 import co.sendik.shared.usecase.ListMunicipalitiesUseCase;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * (criterio 26).
  */
 @RestController
+@Validated
 @RequestMapping("/api/v1/locations")
 @ConditionalOnProperty(prefix = "sendik.features", name = "checkout", havingValue = "true")
 public class LocationsController {
@@ -58,9 +61,14 @@ public class LocationsController {
      * <p>Un codigo que no existe devuelve una lista vacia y no un 404: el codigo viene de la
      * lista de arriba, que la pantalla acaba de pedir, y un error aqui obligaria a tratar como
      * excepcional algo que no lo es.
+     *
+     * <p><strong>La forma si se valida aqui, y no solo en el objeto de valor</strong>, que es
+     * lo que backend/CLAUDE.md pide —las dos y no una—. Se agrego tras la revision de
+     * seguridad: sin esto, quien valida es {@code new DepartmentCode(...)}, cuyo mensaje
+     * acaba en el registro por {@code ApiExceptionHandler}.
      */
     @GetMapping("/departments/{departmentCode}/municipalities")
-    public MunicipalitiesResponse municipios(@PathVariable String departmentCode) {
+    public MunicipalitiesResponse municipios(@PathVariable @Pattern(regexp = "\\d{2}") String departmentCode) {
         return new MunicipalitiesResponse(casoDeMunicipios.execute(new DepartmentCode(departmentCode)).stream()
                 .map(LocationsController::de)
                 .toList());

@@ -60,13 +60,25 @@ final class LibretaEnMemoria implements ShippingAddressRepository, GeographicDiv
     }
 
     @Override
-    public Optional<ShippingAddress> buscar(ShippingAddressId id) {
-        return Optional.ofNullable(filas.get(id));
+    public Optional<ShippingAddress> buscar(ShippingAddressId id, UserId cuenta) {
+        return Optional.ofNullable(filas.get(id)).filter(direccion -> direccion.esDe(cuenta));
     }
 
+    /**
+     * Inserta si no estaba y reescribe los campos si estaba.
+     *
+     * <p><strong>Conserva la marca de predeterminada y la fecha de creacion</strong>, que es
+     * lo que hace el {@code ON CONFLICT DO UPDATE} del adaptador real: alli las dos columnas
+     * quedan fuera del {@code SET} a proposito. Un doble que las pisara seria mas permisivo
+     * que lo real, y un futuro {@code guardar(x.comoPredeterminada(true))} pasaria aqui en
+     * verde sin hacer nada en produccion. Se corrigio tras la revision de pruebas.
+     */
     @Override
     public void guardar(ShippingAddress direccion) {
-        filas.put(direccion.id(), direccion);
+        ShippingAddress anterior = filas.get(direccion.id());
+        filas.put(
+                direccion.id(),
+                anterior == null ? direccion : direccion.comoPredeterminada(anterior.esPredeterminada()));
     }
 
     @Override

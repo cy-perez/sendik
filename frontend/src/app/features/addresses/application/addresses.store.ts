@@ -92,31 +92,41 @@ export class AddressesStore {
     onSuccess: () => this.refrescarLaLibreta(),
   }));
 
+  /**
+   * Las dos de la lista no refrescan solas, y quien las llama espera el refresco.
+   *
+   * <p>Es la diferencia con las dos del formulario. La pantalla necesita **leer la libreta
+   * ya refrescada** para poder decir cuál quedó de predeterminada (criterio 11), y con una
+   * invalidación en `onSuccess` eso no está garantizado: la mutación resuelve y la lectura
+   * siguiente todavía ve la libreta vieja. Se vio en la prueba, que anunciaba el nombre de
+   * la dirección recién borrada.
+   */
   readonly borrado = injectMutation(() => ({
     mutationFn: (id: string) => this.api.quitar(id),
-    onSuccess: () => this.refrescarLaLibreta(),
   }));
 
   readonly marcado = injectMutation(() => ({
     mutationFn: (id: string) => this.api.marcarPredeterminada(id),
-    onSuccess: () => this.refrescarLaLibreta(),
   }));
 
   readonly direcciones = computed<readonly ShippingAddress[]>(() => this.libreta.data() ?? []);
 
   /**
-   * Si hay una operación en curso, para no dejar pulsar dos veces.
+   * Si hay una operación de la **lista** en curso, para no dejar pulsar dos veces.
    *
-   * <p>No se usa para deshabilitar el botón en el mismo tic del clic: HU-011 enseñó que eso
+   * <p>No se usa para deshabilitar un botón en el mismo tic del clic: HU-011 enseñó que eso
    * mata el foco. Se usa para no mandar la segunda petición.
    */
-  readonly ocupada = computed(
-    () =>
-      this.agregado.isPending() ||
-      this.edicion.isPending() ||
-      this.borrado.isPending() ||
-      this.marcado.isPending(),
-  );
+  readonly ocupada = computed(() => this.borrado.isPending() || this.marcado.isPending());
+
+  /**
+   * Y si hay una del **formulario**.
+   *
+   * <p>Separadas, y se corrigió tras la revisión de accesibilidad: con una sola, borrar una
+   * dirección desde la lista deshabilitaba el botón de envío del formulario —que sí usa
+   * `[disabled]`— por una mutación que no era suya.
+   */
+  readonly guardando = computed(() => this.agregado.isPending() || this.edicion.isPending());
 
   abrirLibreta(mirando: boolean): void {
     this.mirando.set(mirando);
@@ -146,5 +156,21 @@ export class AddressesStore {
    */
   private async refrescarLaLibreta(): Promise<void> {
     await this.consultas.invalidateQueries({ queryKey: queryKeys.book });
+  }
+
+  /**
+   * Vuelve a pedir la libreta y **devuelve lo que llegó**.
+   *
+   * <p>La usa la pantalla después de quitar o de marcar, porque lo que dice a continuación
+   * depende de lo que quedó guardado y no de lo que había antes.
+   *
+   * <p><strong>Devuelve la lista en vez de dejar que la lea la señal</strong>, y esa es la
+   * parte que costó: `refetch()` resuelve antes de que `data()` se haya propagado, así que
+   * leer la señal justo después seguía dando la libreta vieja —la pantalla anunciaba el
+   * nombre de la dirección recién borrada—.
+   */
+  async refrescarLibreta(): Promise<readonly ShippingAddress[]> {
+    const resultado = await this.libreta.refetch();
+    return resultado.data ?? [];
   }
 }

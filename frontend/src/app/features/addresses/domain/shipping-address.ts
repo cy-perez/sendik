@@ -140,15 +140,53 @@ export function departamentoDe(municipio: string): string {
 }
 
 /**
- * Si la libreta ya no admite una más.
+ * Cuántas direcciones hay.
  *
- * <p><strong>No compara contra un número escrito aquí: compara contra el rechazo del
- * servidor.</strong> Cuando la API responde que está llena, cuántas hay es exactamente el
- * tope, así que el mensaje puede nombrarlo sin que el tope viva en dos sitios. Es la deuda
- * que HU-015 dejó anotada con el veinte del carrito, y aquí no hace falta contraerla.
+ * <p>Existe con nombre propio por lo que significa **cuando el servidor acaba de rechazar
+ * por tope**: en ese instante, cuántas hay es exactamente el máximo, así que el mensaje
+ * puede nombrarlo sin que el número viva en dos sitios. Es la deuda que HU-015 dejó anotada
+ * con el veinte del carrito, y aquí no hace falta contraerla.
+ *
+ * <p>Se llamaba `laLibretaEstaLlena`, que prometía un predicado y devolvía un número. Lo
+ * cazó la revisión de pruebas.
  */
-export function laLibretaEstaLlena(direcciones: readonly ShippingAddress[]): number {
+export function cuantasHay(direcciones: readonly ShippingAddress[]): number {
   return direcciones.length;
+}
+
+/**
+ * El teléfono tal como viaja: solo dígitos, con un más opcional delante.
+ *
+ * <p><strong>Normalizar antes de mandar es del cliente.</strong> El contrato dice dígitos y
+ * la gente escribe «300 123 4567»; el dominio del servidor también normaliza, pero el borde
+ * valida la forma antes y rechazaría lo que llegue con separadores.
+ */
+export function comoViajaElTelefono(valor: string): string {
+  return valor.trim().replace(SEPARADORES, '');
+}
+
+/**
+ * El código postal tal como viaja, o nulo si no hay.
+ *
+ * <p><strong>Esto era un fallo de verdad y lo encontró la revisión de pruebas.</strong> El
+ * formulario aceptaba «110 111» —que es como se escribe—, lo mandaba tal cual, y el borde lo
+ * rechazaba con un 400 genérico: las tres suites en verde y nadie podía guardar su código
+ * postal con un espacio. El servidor normaliza en el dominio, pero el borde valida antes.
+ */
+export function comoViajaElCodigoPostal(valor: string): string | null {
+  const opcional = comoDatoOpcional(valor);
+  return opcional === null ? null : opcional.replace(SEPARADORES, '');
+}
+
+/**
+ * La predeterminada, si hay alguna. Exactamente una mientras la libreta no esté vacía.
+ *
+ * <p>La usa la pantalla después de borrar, para poder decir **cuál** quedó (criterio 11)
+ * leyéndolo de la libreta refrescada en vez de adivinarlo: la regla del relevo vive en el
+ * servidor.
+ */
+export function laPredeterminada(direcciones: readonly ShippingAddress[]): ShippingAddress | null {
+  return direcciones.find((direccion) => direccion.isDefault) ?? null;
 }
 
 /**

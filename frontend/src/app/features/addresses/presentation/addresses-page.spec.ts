@@ -245,8 +245,89 @@ describe('AddressesPage', () => {
       .flush({ addresses: [direccion({ isDefault: true })] });
     await bombear(fixture);
 
+    expect(fixture.nativeElement.textContent).toContain('Tu dirección predeterminada es ahora');
+  });
+
+  /**
+   * Criterio 11: al borrar la predeterminada, la releva otra y **se dice cuál**.
+   *
+   * <p>La rama del relevo no se ejecutaba en ninguna prueba: la única de borrado usaba una
+   * dirección que no era la predeterminada. Lo cazó la revisión de pruebas, y de paso salió
+   * que el mensaje no decía cuál quedaba, que es literalmente lo que el criterio pide.
+   */
+  it('dice cuál quedó de predeterminada al borrar la que lo era', async () => {
+    const { fixture, backend } = await montar(true);
+    await responder(fixture, backend, [
+      direccion({ id: 'la-predeterminada', isDefault: true }),
+      direccion({ id: 'la-otra', recipientName: 'Carlos Pérez', isDefault: false }),
+    ]);
+
+    botonLlamado(fixture, 'Quitar')?.click();
+    await bombear(fixture);
+
+    backend
+      .expectOne(
+        (llamada) =>
+          llamada.url === `${API}/users/me/addresses/la-predeterminada` &&
+          llamada.method === 'DELETE',
+      )
+      .flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+
+    backend
+      .expectOne((llamada) => llamada.url === `${API}/users/me/addresses`)
+      .flush({
+        addresses: [direccion({ id: 'la-otra', recipientName: 'Carlos Pérez', isDefault: true })],
+      });
+    await bombear(fixture);
+
     expect(fixture.nativeElement.textContent).toContain(
-      'Cambió cuál es tu dirección predeterminada',
+      'Tu dirección predeterminada es ahora la de Carlos Pérez',
     );
+  });
+
+  /**
+   * Las mutaciones tienen estado de error, y antes no lo tenían.
+   *
+   * <p>Sin `try/catch`, un `DELETE` que fallaba —otra pestaña ya la borró, la sesión venció,
+   * la bandera está apagada— dejaba la promesa rechazada sin capturar, la tarjeta en pantalla
+   * y ni una palabra. Lo cazó la revisión de accesibilidad.
+   */
+  it('dice que algo falló cuando no se puede quitar', async () => {
+    const { fixture, backend } = await montar(true);
+    await responder(fixture, backend, [direccion({ isDefault: false })]);
+
+    botonLlamado(fixture, 'Quitar')?.click();
+    await bombear(fixture);
+
+    backend
+      .expectOne(
+        (llamada) => llamada.url === `${API}/users/me/addresses/una` && llamada.method === 'DELETE',
+      )
+      .flush({ code: 'COMMON_NOT_FOUND' }, { status: 404, statusText: 'Not Found' });
+    await bombear(fixture);
+
+    const alerta = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alerta).not.toBeNull();
+    // Y la tarjeta sigue ahi: no se finge que se borro.
+    expect(fixture.nativeElement.textContent).toContain('Calle 45 # 12-34');
+  });
+
+  /**
+   * Criterio 15 visto desde la pantalla: los botones de cada tarjeta se distinguen entre sí.
+   *
+   * <p>Con el tope de RN-101 son hasta treinta botones llamados igual en la lista de un
+   * lector de pantalla.
+   */
+  it('da a cada botón un nombre accesible con de quién es la dirección', async () => {
+    const { fixture, backend } = await montar(true);
+    await responder(fixture, backend, [direccion({ recipientName: 'Ana María Ruiz' })]);
+
+    const etiquetas = Array.from(
+      fixture.nativeElement.querySelectorAll('button[aria-label]') as NodeListOf<HTMLElement>,
+    ).map((boton) => boton.getAttribute('aria-label'));
+
+    expect(etiquetas).toContain('Editar la dirección de Ana María Ruiz');
+    expect(etiquetas).toContain('Quitar la dirección de Ana María Ruiz');
   });
 });

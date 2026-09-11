@@ -71,6 +71,24 @@ describe('AddressForm', () => {
   const campo = (fixture: ComponentFixture<AddressForm>, id: string) =>
     fixture.nativeElement.querySelector(`#${id}`) as HTMLInputElement | HTMLSelectElement;
 
+  /**
+   * El botón de guardar, por su nombre accesible y no por `form.dispatchEvent('submit')`.
+   *
+   * <p>Lo pidió la revisión de pruebas, y con razón: disparando el evento a mano, si
+   * `sendik-submit-button` perdiera su `type="submit"`, quedara deshabilitado o
+   * desapareciera de la plantilla, nadie podría guardar una dirección y las pruebas
+   * seguirían verdes.
+   */
+  const guardar = async (fixture: ComponentFixture<AddressForm>) => {
+    const boton = Array.from(
+      fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
+    ).find((candidato) => candidato.textContent?.includes('Guardar dirección'));
+
+    expect(boton, 'no hay botón de guardar en el formulario').toBeDefined();
+    boton?.click();
+    await bombear(fixture);
+  };
+
   const escribir = async (fixture: ComponentFixture<AddressForm>, id: string, valor: string) => {
     const elemento = campo(fixture, id);
     elemento.value = valor;
@@ -144,8 +162,7 @@ describe('AddressForm', () => {
   it('marca cada campo que falta al intentar guardar en blanco', async () => {
     const { fixture } = await montar();
 
-    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
-    await bombear(fixture);
+    await guardar(fixture);
 
     const texto = fixture.nativeElement.textContent;
     expect(texto).toContain('Elige un departamento');
@@ -164,16 +181,16 @@ describe('AddressForm', () => {
     await escribir(fixture, 'direccion-telefono', '300 123 4567');
     await escribir(fixture, 'direccion-linea', 'Calle 45 # 12-34');
 
-    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
-    await bombear(fixture);
+    await guardar(fixture);
 
     const llamada = backend.expectOne(
       (peticion) => peticion.url === `${API}/users/me/addresses` && peticion.method === 'POST',
     );
 
+    // El telefono viaja sin separadores: el borde valida la forma antes que el dominio.
     expect(llamada.request.body).toEqual({
       recipientName: 'Ana María Ruiz',
-      phone: '300 123 4567',
+      phone: '3001234567',
       municipalityCode: '11001',
       line: 'Calle 45 # 12-34',
       complement: null,
@@ -203,8 +220,7 @@ describe('AddressForm', () => {
     await escribir(fixture, 'direccion-telefono', '3001234567');
     await escribir(fixture, 'direccion-linea', 'Calle 45 # 12-34');
 
-    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
-    await bombear(fixture);
+    await guardar(fixture);
 
     backend
       .expectOne(
@@ -236,8 +252,7 @@ describe('AddressForm', () => {
     await escribir(fixture, 'direccion-telefono', '3001234567');
     await escribir(fixture, 'direccion-linea', 'Calle 45 # 12-34');
 
-    fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
-    await bombear(fixture);
+    await guardar(fixture);
 
     backend
       .expectOne(
@@ -252,6 +267,60 @@ describe('AddressForm', () => {
     // Cero, porque en esta prueba el formulario vive solo y la libreta no se ha pedido.
     // Lo que se comprueba es que el mensaje es el del tope y que lleva el numero dentro.
     expect(fixture.nativeElement.textContent).toContain('direcciones guardadas, que es el máximo');
+  });
+
+  /**
+   * El fallo que encontró la revisión de pruebas, fijado donde se rompía.
+   *
+   * <p>«110 111» es como se escribe un código postal, el dominio del servidor lo normaliza
+   * y el borde lo rechazaba. Ahora lo normaliza el cliente, que es de quien es el trabajo de
+   * hablar el formato del contrato.
+   */
+  it('manda el código postal sin el espacio con el que se escribe', async () => {
+    const { fixture, backend } = await montar();
+
+    await escribir(fixture, 'direccion-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+    await escribir(fixture, 'direccion-municipio', '11001');
+    await escribir(fixture, 'direccion-quien-recibe', 'Ana María Ruiz');
+    await escribir(fixture, 'direccion-telefono', '3001234567');
+    await escribir(fixture, 'direccion-linea', 'Calle 45 # 12-34');
+    await escribir(fixture, 'direccion-codigo-postal', '110 111');
+
+    await guardar(fixture);
+
+    const llamada = backend.expectOne(
+      (peticion) => peticion.url === `${API}/users/me/addresses` && peticion.method === 'POST',
+    );
+    expect((llamada.request.body as { postalCode: string }).postalCode).toBe('110111');
+
+    llamada.flush(guardada);
+    await bombear(fixture);
+    backend
+      .match((peticion) => peticion.url === `${API}/users/me/addresses`)
+      .forEach((peticion) => peticion.flush({ addresses: [guardada] }));
+    await bombear(fixture);
+  });
+
+  /**
+   * Criterio 7: el foco va al primer campo con error, en el orden en que se leen.
+   *
+   * <p>Sin esta prueba, `enfocarElPrimerError` era código que nadie ejecutaba — y su arreglo
+   * estaba en el orden equivocado, así que con «Dirección» y «Quién recibe» vacíos a la vez
+   * el foco saltaba al quinto campo.
+   */
+  it('lleva el foco al primer campo con error en el orden del formulario', async () => {
+    const { fixture, backend } = await montar();
+
+    await escribir(fixture, 'direccion-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+    await escribir(fixture, 'direccion-municipio', '11001');
+    // Se deja «Direccion» vacia, que en el DOM va antes que «Quien recibe».
+    await escribir(fixture, 'direccion-telefono', '3001234567');
+
+    await guardar(fixture);
+
+    expect(document.activeElement?.id).toBe('direccion-linea');
   });
 
   /**

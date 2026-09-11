@@ -11,6 +11,7 @@ import {
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,18 +22,21 @@ import { ApiError } from '../../../core/http/api-error';
 import { AddressesStore } from '../application/addresses.store';
 import {
   comoDatoOpcional,
+  comoViajaElCodigoPostal,
+  comoViajaElTelefono,
+  cuantasHay,
   departamentoDe,
   elCodigoPostalEsValido,
   elComplementoEsValido,
   elMunicipioEsValido,
   elNombreDeQuienRecibeEsValido,
   elTelefonoEsValido,
-  laLibretaEstaLlena,
   laLineaEsValida,
   lasIndicacionesSonValidas,
   type AddressDraft,
   type ShippingAddress,
 } from '../domain/shipping-address';
+import { PrivacyNotice } from '../../../shared/ui/form/privacy-notice';
 import { SelectField } from '../../../shared/ui/form/select-field';
 import { SubmitButton } from '../../../shared/ui/form/submit-button';
 import { TextField } from '../../../shared/ui/form/text-field';
@@ -58,7 +62,14 @@ import { TextField } from '../../../shared/ui/form/text-field';
  */
 @Component({
   selector: 'sendik-address-form',
-  imports: [ReactiveFormsModule, TranslocoPipe, TextField, SelectField, SubmitButton],
+  imports: [
+    ReactiveFormsModule,
+    TranslocoPipe,
+    TextField,
+    SelectField,
+    SubmitButton,
+    PrivacyNotice,
+  ],
   templateUrl: './address-form.html',
   styleUrl: './address-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,6 +84,15 @@ export class AddressForm {
   private readonly store = inject(AddressesStore);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+
+  /**
+   * El encabezado del formulario, que recoge el foco al abrirlo.
+   *
+   * <p>Abrir el formulario destruye el botón que lo abrió —está en la rama `@else` de la
+   * plantilla— así que sin esto el foco cae a `<body>` y quien navega con teclado vuelve al
+   * principio del documento. Es el patrón de `cart-page`.
+   */
+  private readonly titulo = viewChild<ElementRef<HTMLElement>>('titulo');
 
   protected readonly form = new FormGroup({
     departmentCode: new FormControl('', { nonNullable: true }),
@@ -106,7 +126,7 @@ export class AddressForm {
   protected readonly municipios = computed(() => this.store.municipios.data() ?? []);
 
   protected readonly editando = computed(() => this.direccion() !== null);
-  protected readonly guardando = computed(() => this.store.ocupada());
+  protected readonly guardando = computed(() => this.store.guardando());
 
   /**
    * Si el selector de municipio se puede usar.
@@ -115,12 +135,42 @@ export class AddressForm {
    * camino: ofrecer una lista vacía que se llena sola es peor que decir que está cargando.
    */
   protected readonly municipioDisponible = computed(
-    () => (this.valores().departmentCode ?? '') !== '' && !this.store.municipios.isPending(),
+    () =>
+      (this.valores().departmentCode ?? '') !== '' &&
+      !this.store.municipios.isPending() &&
+      !this.store.municipios.isError(),
   );
+
+  /**
+   * Si la división no se pudo cargar, el formulario no sirve y hay que decirlo.
+   *
+   * <p>Las dos consultas van con `retry: false`, así que un fallo deja `isPending()` en falso
+   * y `data()` sin definir: el selector quedaba habilitado, vacío y sin mensaje. Lo cazó la
+   * revisión de accesibilidad.
+   */
+  protected readonly divisionFallo = computed(
+    () => this.store.departamentos.isError() || this.store.municipios.isError(),
+  );
+
+  /** Lo que se anuncia al cambiar de departamento. Criterio 27. */
+  protected readonly anuncioDeMunicipios = computed(() => {
+    if ((this.valores().departmentCode ?? '') === '') {
+      return null;
+    }
+    if (this.store.municipios.isPending()) {
+      return 'addresses.form.municipality.loading';
+    }
+    return this.store.municipios.isError()
+      ? 'addresses.form.municipality.failed'
+      : 'addresses.form.municipality.updated';
+  });
 
   protected readonly municipioPlaceholder = computed(() => {
     if ((this.valores().departmentCode ?? '') === '') {
       return 'addresses.form.municipality.chooseDepartmentFirst';
+    }
+    if (this.store.municipios.isError()) {
+      return 'addresses.form.municipality.failed';
     }
     return this.store.municipios.isPending()
       ? 'addresses.form.municipality.loading'
@@ -132,6 +182,8 @@ export class AddressForm {
     // no necesita treinta y tres opciones que no va a usar.
     this.store.abrirFormulario(true);
     inject(DestroyRef).onDestroy(() => this.store.abrirFormulario(false));
+
+    afterNextRender(() => this.titulo()?.nativeElement.focus(), { injector: this.injector });
 
     // Rellena el formulario cuando llega la direccion que se va a editar, y solo mientras
     // nadie lo haya tocado: una respuesta que llegue tarde no puede borrar lo que la
@@ -257,7 +309,7 @@ export class AddressForm {
       // Lo escrito se queda. El mensaje sale del codigo del error, que es lo unico que el
       // cuerpo de un ProblemDetail trae ademas del traceId.
       if (error instanceof ApiError && error.code === 'USER_ADDRESS_BOOK_FULL') {
-        this.tope.set(laLibretaEstaLlena(this.store.direcciones()));
+        this.tope.set(cuantasHay(this.store.direcciones()));
         this.fallo.set('addresses.errors.full');
       } else {
         this.fallo.set(claveDelError(error));
@@ -274,12 +326,14 @@ export class AddressForm {
 
     return {
       recipientName: valores.recipientName.trim(),
-      phone: valores.phone.trim(),
+      // Los dos viajan normalizados: el borde valida la forma antes que el dominio, y la
+      // gente escribe «300 123 4567» y «110 111».
+      phone: comoViajaElTelefono(valores.phone),
       municipalityCode: valores.municipalityCode,
       line: valores.line.trim(),
       complement: comoDatoOpcional(valores.complement),
       instructions: comoDatoOpcional(valores.instructions),
-      postalCode: comoDatoOpcional(valores.postalCode),
+      postalCode: comoViajaElCodigoPostal(valores.postalCode),
     };
   }
 
@@ -290,13 +344,17 @@ export class AddressForm {
    * la persona va a seguir bajando.
    */
   private enfocarElPrimerError(): void {
+    // En el orden del DOM, que es lo que el comentario de arriba promete y lo que este
+    // arreglo NO hacia: estaba en el orden en que se declararon los campos, asi que con
+    // «Direccion» y «Quien recibe» vacios a la vez el foco saltaba al quinto campo y dejaba
+    // dos errores por encima sin visitar. Lo cazo la revision de accesibilidad.
     const primero = [
       ['direccion-departamento', this.departmentError()],
       ['direccion-municipio', this.municipalityError()],
-      ['direccion-quien-recibe', this.recipientNameError()],
-      ['direccion-telefono', this.phoneError()],
       ['direccion-linea', this.lineError()],
       ['direccion-complemento', this.complementError()],
+      ['direccion-quien-recibe', this.recipientNameError()],
+      ['direccion-telefono', this.phoneError()],
       ['direccion-indicaciones', this.instructionsError()],
       ['direccion-codigo-postal', this.postalCodeError()],
     ].find(([, error]) => error !== null);

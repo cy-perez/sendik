@@ -3,14 +3,17 @@ import { describe, expect, it } from 'vitest';
 import {
   comoDatoOpcional,
   comoSeLee,
+  comoViajaElCodigoPostal,
+  comoViajaElTelefono,
+  cuantasHay,
   departamentoDe,
   elCodigoPostalEsValido,
   elComplementoEsValido,
   elMunicipioEsValido,
   elNombreDeQuienRecibeEsValido,
   elTelefonoEsValido,
-  laLibretaEstaLlena,
   laLineaEsValida,
+  laPredeterminada,
   lasIndicacionesSonValidas,
   type ShippingAddress,
 } from './shipping-address';
@@ -149,14 +152,42 @@ describe('la dirección de entrega', () => {
       ).toBe('Santa María, Huila');
     });
 
+    it('encuentra la predeterminada, y ninguna cuando no la hay', () => {
+      const marcada = direccion({ id: 'dos', isDefault: true });
+
+      expect(laPredeterminada([direccion(), marcada])).toBe(marcada);
+      expect(laPredeterminada([direccion()])).toBeNull();
+      expect(laPredeterminada([])).toBeNull();
+    });
+
     /**
      * El tope no vive aquí: cuando el servidor rechaza, cuántas hay es exactamente el tope.
      * Es lo que permite que el mensaje lo nombre sin duplicar el número, que es la deuda
      * que HU-015 dejó anotada con el veinte del carrito.
      */
-    it('sabe cuántas hay para poder nombrar el tope sin conocerlo', () => {
-      expect(laLibretaEstaLlena([direccion(), direccion()])).toBe(2);
-      expect(laLibretaEstaLlena([])).toBe(0);
+    it('sabe cuántas hay, para poder nombrar el tope sin conocerlo', () => {
+      expect(cuantasHay([direccion(), direccion()])).toBe(2);
+    });
+  });
+
+  /**
+   * Lo que viaja va normalizado, y esto es la prueba del fallo que encontró la revisión.
+   *
+   * <p>El formulario aceptaba «110 111» —que es como se escribe—, lo mandaba tal cual y el
+   * borde lo rechazaba con un 400 genérico, con las tres suites en verde.
+   */
+  describe('lo que se manda', () => {
+    it('quita los separadores del teléfono', () => {
+      expect(comoViajaElTelefono('300 123 4567')).toBe('3001234567');
+      expect(comoViajaElTelefono('(601) 555-1234')).toBe('6015551234');
+      expect(comoViajaElTelefono('+57 300 123 4567')).toBe('+573001234567');
+    });
+
+    it('quita los espacios del código postal y deja nulo lo vacío', () => {
+      expect(comoViajaElCodigoPostal('110 111')).toBe('110111');
+      expect(comoViajaElCodigoPostal('110111')).toBe('110111');
+      expect(comoViajaElCodigoPostal('   ')).toBeNull();
+      expect(comoViajaElCodigoPostal('')).toBeNull();
     });
   });
 });

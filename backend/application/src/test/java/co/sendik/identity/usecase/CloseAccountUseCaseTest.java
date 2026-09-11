@@ -118,6 +118,36 @@ class CloseAccountUseCaseTest {
     }
 
     /**
+     * RN-102: el cierre se lleva las direcciones, y **antes** de anonimizar.
+     *
+     * <p>El orden importa y por eso hay un {@code InOrder}: si {@code borrarDe} ocurriera
+     * despues, un fallo intermedio dejaria la cuenta sin dueno y con las direcciones puestas.
+     * Es ademas lo que sostiene lo que {@code datos-personales.md} afirma sobre la ventana de
+     * quince minutos del token de acceso.
+     */
+    @Test
+    void deberia_borrar_las_direcciones_antes_de_anonimizar() {
+        conCuenta();
+
+        caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
+
+        InOrder orden = inOrder(direcciones, usuarios);
+        orden.verify(direcciones).borrarDe(usuario.id());
+        orden.verify(usuarios).cerrarYAnonimizar(usuario.id(), AHORA);
+    }
+
+    /** Si la confirmacion no coincide no se cierra nada, y las direcciones se quedan. */
+    @Test
+    void no_deberia_tocar_las_direcciones_si_la_confirmacion_no_coincide() {
+        conCuenta();
+
+        assertThatThrownBy(() -> caso.execute(new CloseAccountCommand(usuario.id(), "otra@correo.co")))
+                .isInstanceOf(CloseConfirmationMismatchException.class);
+
+        verifyNoInteractions(direcciones);
+    }
+
+    /**
      * Cerrar no se deshace: la confirmacion escrita es lo unico que separa un clic
      * mal dado de perder el acceso.
      */

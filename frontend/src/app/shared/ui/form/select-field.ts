@@ -43,6 +43,16 @@ export class SelectField {
   readonly options = input.required<readonly SelectOption[]>();
   /** El texto de la opción vacía. Dice qué hay que elegir, o por qué todavía no se puede. */
   readonly placeholderKey = input.required<string>();
+  /**
+   * Si el selector no se puede usar todavia.
+   *
+   * <p>Existe porque un selector dependiente tiene que poder decir «primero elige lo de
+   * arriba» sin dejar que lo intenten. La opcion vacia explica el motivo; esto impide el
+   * gesto. Se agrego tras la revision de accesibilidad, que noto que el criterio 4 pedia
+   * deshabilitarlo y el componente no sabia.
+   */
+  readonly disabled = input(false);
+
   readonly hintKey = input<string | null>(null);
   readonly errorKey = input<string | null>(null);
 

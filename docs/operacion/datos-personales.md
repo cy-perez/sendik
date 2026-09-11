@@ -56,9 +56,14 @@ Si alguna no tiene respuesta, el campo no se crea.
   que la copia que el pedido hara de ella -`orders.shipping_address`- va cifrada, y
   cifrar la copia dejando la fuente en claro no protege nada. Van cifrados los seis
   campos libres -quien recibe, telefono, linea, complemento, indicaciones y codigo
-  postal- en un solo documento; quedan en claro el municipio, la marca de
-  predeterminada y las fechas, que es lo unico por lo que la tabla se consulta
-  (HU-016, V21).
+  postal- en un solo documento. Quedan en claro el municipio, la marca de
+  predeterminada y las fechas (HU-016, V21).
+
+  **El municipio queda en claro porque es clave foranea** a la division
+  politico-administrativa, y una clave foranea no puede colgar de un criptograma;
+  no porque se consulte por el, que no se consulta. La consecuencia conviene
+  decirla: en un volcado de esa tabla, en que municipio vive cada cuenta se lee sin
+  ninguna clave. Es el mismo dato que la ciudad del perfil, que ademas es publica.
 - Las respuestas de la API devuelven solo los campos que la pantalla necesita.
   Un endpoint de perfil publico no incluye correo ni telefono.
 - Los datos de verificacion no viajan al frontend una vez aprobada la

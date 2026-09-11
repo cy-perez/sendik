@@ -157,7 +157,7 @@ class ShippingAddressPersistenceTest {
 
             direcciones.guardar(guardada);
 
-            ShippingAddress leida = direcciones.buscar(guardada.id()).orElseThrow();
+            ShippingAddress leida = direcciones.buscar(guardada.id(), alguien).orElseThrow();
             assertThat(leida.quienRecibe().value()).isEqualTo("Ana María Ruiz");
             assertThat(leida.telefono().value()).isEqualTo("3001234567");
             assertThat(leida.linea().value()).isEqualTo("Calle 45 # 12-34");
@@ -185,7 +185,7 @@ class ShippingAddressPersistenceTest {
 
             direcciones.guardar(minima);
 
-            ShippingAddress leida = direcciones.buscar(minima.id()).orElseThrow();
+            ShippingAddress leida = direcciones.buscar(minima.id(), alguien).orElseThrow();
             assertThat(leida.complemento()).isNull();
             assertThat(leida.indicaciones()).isNull();
             assertThat(leida.codigoPostal()).isNull();
@@ -272,7 +272,7 @@ class ShippingAddressPersistenceTest {
                     AHORA.plus(Duration.ofDays(1))));
 
             assertThat(direcciones.deCuenta(alguien)).hasSize(1);
-            ShippingAddress leida = direcciones.buscar(guardada.id()).orElseThrow();
+            ShippingAddress leida = direcciones.buscar(guardada.id(), alguien).orElseThrow();
             assertThat(leida.quienRecibe().value()).isEqualTo("Carlos Pérez");
             assertThat(leida.municipio()).isEqualTo(MEDELLIN);
             assertThat(leida.complemento()).isNull();
@@ -291,7 +291,7 @@ class ShippingAddressPersistenceTest {
             direcciones.borrar(guardada.id());
 
             assertThatCode(() -> direcciones.borrar(guardada.id())).doesNotThrowAnyException();
-            assertThat(direcciones.buscar(guardada.id())).isEmpty();
+            assertThat(direcciones.buscar(guardada.id(), alguien)).isEmpty();
         }
 
         /** RN-102: el cierre de cuenta se las lleva todas. */
@@ -308,6 +308,24 @@ class ShippingAddressPersistenceTest {
             assertThat(direcciones.deCuenta(alguien)).isEmpty();
             assertThat(direcciones.deCuenta(otra)).hasSize(1);
         }
+    }
+
+    /**
+     * El filtro por dueno vive en el {@code WHERE}, no despues.
+     *
+     * <p>Lo cambio la revision de seguridad: antes devolvia la fila de cualquiera y el caso
+     * de uso filtraba, con lo que la direccion ajena se descifraba en cada sondeo y cualquier
+     * fallo de esa fila salia como 500 o 400 donde el criterio 15 exige un 404 indistinguible.
+     */
+    @Test
+    void deberia_no_devolver_la_direccion_de_otra_cuenta() {
+        UserId alguien = nuevaCuenta();
+        UserId otra = nuevaCuenta();
+        ShippingAddress suya = completa(alguien, BOGOTA, AHORA);
+        direcciones.guardar(suya);
+
+        assertThat(direcciones.buscar(suya.id(), otra)).isEmpty();
+        assertThat(direcciones.buscar(suya.id(), alguien)).isPresent();
     }
 
     @Nested
@@ -377,7 +395,7 @@ class ShippingAddressPersistenceTest {
                     null,
                     AHORA.plus(Duration.ofDays(1))));
 
-            assertThat(direcciones.buscar(marcada.id()).orElseThrow().esPredeterminada())
+            assertThat(direcciones.buscar(marcada.id(), alguien).orElseThrow().esPredeterminada())
                     .isTrue();
         }
     }
@@ -393,6 +411,41 @@ class ShippingAddressPersistenceTest {
 
             assertThatThrownBy(() -> direcciones.guardar(inventada))
                     .isInstanceOf(DataIntegrityViolationException.class);
+        }
+
+        /**
+         * Criterio 23, la otra mitad: el DANE lo suprime y la direccion se sigue leyendo.
+         *
+         * <p>V20 siembra las 1122 filas activas, asi que el {@code AND active} del adaptador
+         * no se ejercitaba nunca con una fila en falso y esta mitad del criterio solo estaba
+         * probada contra el doble en memoria. Lo cazo la revision de pruebas.
+         *
+         * <p>Se restaura al terminar: {@code ShippingAddressesSecurityTest} cuenta los
+         * municipios de Bogota y comparte el contenedor.
+         */
+        @Test
+        void deberia_seguir_leyendo_una_direccion_sobre_un_municipio_suprimido() {
+            UserId alguien = nuevaCuenta();
+            direcciones.guardar(completa(alguien, MEDELLIN, AHORA));
+
+            marcarInactivo(MEDELLIN, true);
+            try {
+                ShippingAddress leida = direcciones.deCuenta(alguien).getFirst();
+                assertThat(leida.municipio()).isEqualTo(MEDELLIN);
+                assertThat(division.buscarMunicipio(MEDELLIN))
+                        .map(Municipality::nombre)
+                        .contains("Medellín");
+                assertThat(division.buscarMunicipio(MEDELLIN))
+                        .map(Municipality::activo)
+                        .contains(false);
+
+                // Y deja de ofrecerse al elegir, que es la otra mitad.
+                assertThat(division.municipiosActivosDe(new DepartmentCode("05")))
+                        .extracting(Municipality::codigo)
+                        .doesNotContain(MEDELLIN);
+            } finally {
+                marcarInactivo(MEDELLIN, false);
+            }
         }
 
         /**
@@ -425,6 +478,13 @@ class ShippingAddressPersistenceTest {
                 new DeliveryInstructions("La casa de la esquina, el timbre no sirve"),
                 new PostalCode("110111"),
                 cuando);
+    }
+
+    private void marcarInactivo(MunicipalityCode codigo, boolean inactivo) {
+        jdbc.sql("UPDATE municipalities SET active = :activo WHERE code = :codigo")
+                .param("activo", !inactivo)
+                .param("codigo", codigo.value())
+                .update();
     }
 
     private UserId nuevaCuenta() {
