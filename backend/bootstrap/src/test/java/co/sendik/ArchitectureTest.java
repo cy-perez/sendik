@@ -3,12 +3,15 @@ package co.sendik;
 import static com.tngtech.archunit.base.DescribedPredicate.not;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.codeUnits;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaCodeUnit;
 import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaParameter;
 import com.tngtech.archunit.core.domain.JavaParameterizedType;
 import com.tngtech.archunit.core.domain.JavaType;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -163,19 +166,47 @@ class ArchitectureTest {
      * escrita y nada la comprueba.
      *
      * <p>Llego con ADR-0036, donde la configuracion entra por {@code bootstrap} y la
-     * correccion entera depende de que siga entrando por ahi. Cubre el campo y no el
-     * parametro de constructor, que ArchUnit no ve.
+     * correccion entera depende de que siga entrando por ahi.
+     *
+     * <p><strong>Cubre el parametro y no solo el campo, y esa es la mitad que importa.</strong>
+     * La inyeccion por campo ya esta prohibida por {@link #no_se_inyectan_dependencias_por_campo},
+     * asi que en este repositorio nadie escribiria un campo con {@code @Value}: la forma que
+     * alguien escribiria de verdad es {@code ClientIpHasher(@Value("...") int saltos)}. Las dos
+     * se comprueban; la del parametro necesita condicion propia porque no hay sintaxis fluida
+     * para ella, no porque ArchUnit no la vea.
      */
     @Test
     void no_se_leen_valores_de_configuracion_con_value() {
-        ArchRule regla = noFields()
+        ArchRule enCampos = noFields()
                 .should()
-                .beAnnotatedWith("org.springframework.beans.factory.annotation.Value")
+                .beAnnotatedWith(VALUE)
                 .because("todo valor externo se declara en una clase @ConfigurationProperties"
-                        + " tipada y validada, en infrastructure (backend/CLAUDE.md)")
-                .allowEmptyShould(true);
+                        + " tipada y validada, en infrastructure (backend/CLAUDE.md)");
 
-        regla.check(todasLasClasesIncluidasLasPruebas());
+        ArchRule enParametros = codeUnits()
+                .should(noRecibirValorPorParametro())
+                .because("todo valor externo se declara en una clase @ConfigurationProperties"
+                        + " tipada y validada, en infrastructure (backend/CLAUDE.md)");
+
+        JavaClasses clases = todasLasClasesIncluidasLasPruebas();
+        enCampos.check(clases);
+        enParametros.check(clases);
+    }
+
+    private static final String VALUE = "org.springframework.beans.factory.annotation.Value";
+
+    private static ArchCondition<JavaCodeUnit> noRecibirValorPorParametro() {
+        return new ArchCondition<>("no recibir ningun parametro anotado con @Value") {
+            @Override
+            public void check(JavaCodeUnit unidad, ConditionEvents eventos) {
+                for (JavaParameter parametro : unidad.getParameters()) {
+                    if (parametro.isAnnotatedWith(VALUE)) {
+                        eventos.add(SimpleConditionEvent.violated(
+                                unidad, unidad.getFullName() + " recibe un parametro anotado con @Value"));
+                    }
+                }
+            }
+        };
     }
 
     @Test

@@ -6,9 +6,16 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -21,15 +28,22 @@ import org.springframework.mock.web.MockHttpServletRequest;
  * entrada de {@code X-Forwarded-For}, que la escribe quien llama, y eso dejaba que
  * cada quien eligiera su propio identificador (ADR-0036).
  *
- * <p>Cada caso de evasion de aqui falla con el codigo anterior puesto. Y los dos
- * sentidos importan: una correccion que juntara a clientes distintos cambiaria la
- * evasion por una negacion de servicio, asi que tambien se prueba que siguen
- * contando por separado.
+ * <p>Los dos sentidos del error importan. Una correccion que dejara a quien llama
+ * elegir su entrada es no tener limite; una que juntara a clientes distintos en una
+ * sola clave lo cambia por una negacion de servicio. Aqui se prueban los dos.
+ *
+ * <p><strong>El hash esperado se calcula aqui y no con la clase que se prueba.</strong>
+ * Comparar su salida contra si misma deja pasar cualquier cambio del digest -una sal,
+ * un prefijo, el HMAC que ADR-0036 deja abierto-, y {@code ip_hash} es evidencia legal
+ * que tiene que seguir siendo comparable entre despliegues.
  */
 class ClientIpHasherTest {
 
     /** La direccion que anade el proxy: la de verdad. */
     private static final String DEL_CLIENTE = "190.85.12.7";
+
+    /** Vector fijo, para que el digest no pueda cambiar sin que falle algo. */
+    private static final String HASH_DEL_CLIENTE = "5851ebff3148209e37ea9ea2cd908b3bb5d539d0628105d8056b610da2dc90fb";
 
     /** Lo que ve la conexion detras de un proxy: el proxy, igual para todo el mundo. */
     private static final String DE_LA_CONEXION = "169.254.1.1";
@@ -88,25 +102,45 @@ class ClientIpHasherTest {
         return peticion;
     }
 
-    /** El hash que le corresponde a una direccion, sin cabecera de por medio. */
-    private String hashDe(String ip) {
-        return sinProxy.hashear(peticionDesde(ip));
+    /**
+     * El hash que le corresponde a una direccion <strong>ya canonica</strong>, calculado
+     * aqui. Si la clase canoniza de otra forma, la comparacion falla, que es la idea.
+     */
+    private static String hashDe(String direccionCanonica) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(direccionCanonica.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
-    private long avisos() {
+    private List<ILoggingEvent> avisos() {
         return registro.list.stream()
                 .filter(evento -> evento.getLevel() == Level.WARN)
-                .count();
+                .toList();
+    }
+
+    private List<ILoggingEvent> formas() {
+        return registro.list.stream()
+                .filter(evento -> evento.getLevel() == Level.DEBUG)
+                .toList();
     }
 
     @Test
     void deberia_devolver_un_hash_y_nunca_la_direccion() {
-        assertThat(hashDe(DEL_CLIENTE)).isNotNull().doesNotContain(DEL_CLIENTE).hasSize(64);
+        assertThat(trasUnProxy.hashear(conCabecera(DEL_CLIENTE)))
+                .isEqualTo(HASH_DEL_CLIENTE)
+                .isEqualTo(hashDe(DEL_CLIENTE))
+                .doesNotContain(DEL_CLIENTE)
+                .hasSize(64);
     }
 
     @Test
     void deberia_dar_el_mismo_hash_para_la_misma_direccion() {
-        assertThat(hashDe(DEL_CLIENTE)).isEqualTo(hashDe(DEL_CLIENTE)).isNotEqualTo(hashDe("190.85.12.8"));
+        assertThat(trasUnProxy.hashear(conCabecera(DEL_CLIENTE)))
+                .isEqualTo(trasUnProxy.hashear(conCabecera(DEL_CLIENTE)))
+                .isNotEqualTo(trasUnProxy.hashear(conCabecera("190.85.12.8")));
     }
 
     /**
@@ -119,9 +153,9 @@ class ClientIpHasherTest {
      */
     @Test
     void deberia_tomar_la_ultima_entrada_y_no_la_primera() {
-        String hash = trasUnProxy.hashear(conCabecera(INVENTADA, DEL_CLIENTE));
-
-        assertThat(hash).isEqualTo(hashDe(DEL_CLIENTE)).isNotEqualTo(hashDe(INVENTADA));
+        assertThat(trasUnProxy.hashear(conCabecera(INVENTADA, DEL_CLIENTE)))
+                .isEqualTo(hashDe(DEL_CLIENTE))
+                .isNotEqualTo(hashDe(INVENTADA));
     }
 
     /** Y mentir distinto no abre un contador nuevo, que es toda la defensa. */
@@ -153,9 +187,7 @@ class ClientIpHasherTest {
      */
     @Test
     void no_deberia_mirar_solo_la_primera_linea_cuando_la_cabecera_llega_repetida() {
-        String enVariasLineas = trasUnProxy.hashear(conVariasLineas(INVENTADA, DEL_CLIENTE));
-
-        assertThat(enVariasLineas)
+        assertThat(trasUnProxy.hashear(conVariasLineas(INVENTADA, DEL_CLIENTE)))
                 .isEqualTo(trasUnProxy.hashear(conCabecera(INVENTADA, DEL_CLIENTE)))
                 .isEqualTo(hashDe(DEL_CLIENTE))
                 .isNotEqualTo(hashDe(INVENTADA));
@@ -171,9 +203,7 @@ class ClientIpHasherTest {
      */
     @Test
     void deberia_contar_dos_saltos_cuando_se_declaran_dos() {
-        String hash = trasDosProxies.hashear(conCabecera(INVENTADA, DEL_CLIENTE, "10.0.0.9"));
-
-        assertThat(hash)
+        assertThat(trasDosProxies.hashear(conCabecera(INVENTADA, DEL_CLIENTE, "10.0.0.9")))
                 .isEqualTo(hashDe(DEL_CLIENTE))
                 .isEqualTo(trasDosProxies.hashear(conCabecera("198.51.100.1", INVENTADA, DEL_CLIENTE, "10.0.0.9")))
                 .isNotEqualTo(hashDe("10.0.0.9"));
@@ -194,6 +224,20 @@ class ClientIpHasherTest {
     }
 
     /**
+     * El hueco que de verdad importa no es el que quien llama escribe delante -contando
+     * desde el final, ese no mueve el indice- sino el que cae en la posicion de confianza:
+     * la coma final que deja un proxy mal configurado. Sin descartar los huecos, esa
+     * peticion se iria al respaldo, que detras de un proxy es una clave compartida.
+     */
+    @Test
+    void deberia_aguantar_la_coma_final_de_un_proxy_mal_configurado() {
+        MockHttpServletRequest peticion = peticionDesde(DE_LA_CONEXION);
+        peticion.addHeader("X-Forwarded-For", INVENTADA + ", " + DEL_CLIENTE + ",");
+
+        assertThat(trasUnProxy.hashear(peticion)).isEqualTo(hashDe(DEL_CLIENTE));
+    }
+
+    /**
      * El puerto se quita, y no hacerlo es un fallo abierto: un proxy que escriba
      * {@code ip:puerto} le da a cada peticion un identificador distinto, porque el puerto
      * efimero cambia, y el limite desaparece sin que nada lo diga.
@@ -206,24 +250,56 @@ class ClientIpHasherTest {
     }
 
     /**
+     * Pero solo un puerto. Con cualquier otra cosa pegada la entrada se descarta: dejarla
+     * pasar con el sufijo dentro seria una clave nueva por peticion, que es el mismo fallo
+     * abierto por otra puerta.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {"190.85.12.7:", "190.85.12.7:123456", "190.85.12.7:abc", "[2001:db8::1]basura"})
+    void no_deberia_aceptar_una_direccion_con_algo_pegado_que_no_sea_un_puerto(String entrada) {
+        assertThat(trasUnProxy.hashear(conCabecera(entrada))).isEqualTo(hashDe(DE_LA_CONEXION));
+    }
+
+    /**
      * IPv6 entra, con corchetes y sin ellos. Rechazarla era un fallo cerrado: toda esa
      * familia caia al respaldo, que detras de un proxy es una sola clave compartida.
      */
     @Test
     void deberia_aceptar_ipv6_con_y_sin_corchetes() {
-        String sinCorchetes = trasUnProxy.hashear(conCabecera("2001:db8::1"));
-
-        assertThat(sinCorchetes)
+        assertThat(trasUnProxy.hashear(conCabecera("2001:db8::1")))
                 .isEqualTo(trasUnProxy.hashear(conCabecera("[2001:db8::1]")))
                 .isEqualTo(trasUnProxy.hashear(conCabecera("[2001:db8::1]:443")))
+                .isEqualTo(hashDe("2001:db8:0:0:0:0:0:1"))
                 .isNotEqualTo(hashDe(DE_LA_CONEXION));
     }
 
-    /** Y la misma IPv6 escrita en mayuscula es la misma, no otro cliente con medio cupo. */
+    /**
+     * <strong>Una direccion, una clave.</strong> Cinco escrituras de lo mismo: en
+     * mayuscula, expandida, con ceros a la izquierda y la forma IPv4 mapeada en IPv6.
+     * Cada variante que no se canonizara seria el mismo cliente contando dos veces con
+     * medio cupo cada una.
+     */
     @Test
-    void deberia_contar_junta_la_misma_ipv6_escrita_distinto() {
+    void deberia_contar_junta_la_misma_direccion_escrita_de_varias_formas() {
         assertThat(trasUnProxy.hashear(conCabecera("2001:DB8::1")))
-                .isEqualTo(trasUnProxy.hashear(conCabecera("2001:db8::1")));
+                .isEqualTo(trasUnProxy.hashear(conCabecera("2001:0db8:0000:0000:0000:0000:0000:0001")))
+                .isEqualTo(hashDe("2001:db8:0:0:0:0:0:1"));
+
+        assertThat(trasUnProxy.hashear(conCabecera("190.085.012.007")))
+                .isEqualTo(trasUnProxy.hashear(conCabecera("::ffff:190.85.12.7")))
+                .isEqualTo(hashDe(DEL_CLIENTE));
+    }
+
+    /**
+     * El borde del octeto, por debajo y no solo por encima. Un tope mal puesto en 254
+     * mandaria al respaldo a cualquier cliente con un 255, y el respaldo detras de un
+     * proxy es la clave compartida de todos.
+     */
+    @Test
+    void deberia_aceptar_un_octeto_de_255() {
+        assertThat(trasUnProxy.hashear(conCabecera("190.85.255.7")))
+                .isEqualTo(hashDe("190.85.255.7"))
+                .isNotEqualTo(hashDe(DE_LA_CONEXION));
     }
 
     /** Sin proxy delante la cabecera es de quien llama y no se mira. */
@@ -254,17 +330,33 @@ class ClientIpHasherTest {
     }
 
     /**
-     * Y si lo que hay en esa posicion no se parece a una direccion, tampoco se usa. Se
-     * prueban varias formas porque la comprobacion anterior era un filtro de caracteres:
-     * dejaba pasar {@code cafe} y {@code ...} por estar escritos con hexadecimal y puntos.
+     * Y si lo que hay en esa posicion no se parece a una direccion, tampoco se usa.
+     *
+     * <p>La mitad de los casos llevan dos puntos a proposito: la comprobacion anterior era
+     * un filtro de caracteres y aceptaba todo lo escrito con hexadecimal, puntos y dos
+     * puntos, asi que una lista de basura sin dos puntos no la habria visto fallar. Un
+     * proxy que escriba el nombre del host y no la direccion es el caso realista.
+     *
+     * <p>Lo que no esta en la lista y podria parecerlo: {@code 0:3}, que Java lee como la
+     * direccion {@code 0} con puerto {@code 3} y canoniza a {@code 0.0.0.0}. Es una de las
+     * formas abreviadas de IPv4 que admite el parser, no basura, y no parte ninguna clave
+     * porque la canonizacion es deterministica.
      */
-    @Test
-    void deberia_caer_a_la_conexion_si_la_entrada_no_parece_una_direccion() {
-        for (String basura : new String[] {"unknown", "cafe", "...", "1.2.3", "256.1.1.1", "-1.1.1.1"}) {
-            assertThat(trasUnProxy.hashear(conCabecera(basura)))
-                    .as("%s no es una direccion", basura)
-                    .isEqualTo(hashDe(DE_LA_CONEXION));
-        }
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "unknown",
+                "cafe",
+                "...",
+                "256.1.1.1",
+                "-1.1.1.1",
+                "unknown:443",
+                "host.example.com:443",
+                "cafe:",
+                "..:.."
+            })
+    void deberia_caer_a_la_conexion_si_la_entrada_no_parece_una_direccion(String basura) {
+        assertThat(trasUnProxy.hashear(conCabecera(basura))).isEqualTo(hashDe(DE_LA_CONEXION));
     }
 
     @Test
@@ -273,6 +365,17 @@ class ClientIpHasherTest {
         peticion.addHeader("X-Forwarded-For", "   ");
 
         assertThat(trasUnProxy.hashear(peticion)).isEqualTo(hashDe(DEL_CLIENTE));
+    }
+
+    /**
+     * La direccion de la conexion se canoniza igual que la de la cabecera. No es un
+     * adorno: con cero saltos -{@code local} y el ensayo de integracion continua- ese es
+     * el camino principal, y sin canonizar, dos escrituras de la misma direccion serian
+     * dos claves.
+     */
+    @Test
+    void deberia_canonizar_tambien_la_direccion_de_la_conexion() {
+        assertThat(sinProxy.hashear(peticionDesde("2001:DB8::1"))).isEqualTo(hashDe("2001:db8:0:0:0:0:0:1"));
     }
 
     // Sin direccion no hay nada que hashear. No es un error: hay llamadas
@@ -297,7 +400,7 @@ class ClientIpHasherTest {
     void deberia_registrar_la_forma_de_la_cabecera_sin_ninguna_direccion() {
         trasUnProxy.hashear(conCabecera(INVENTADA, DEL_CLIENTE));
 
-        assertThat(registro.list).isNotEmpty();
+        assertThat(formas()).isNotEmpty();
         assertThat(registro.list)
                 .allSatisfy(evento -> assertThat(evento.getFormattedMessage())
                         .doesNotContain(DEL_CLIENTE)
@@ -306,17 +409,81 @@ class ClientIpHasherTest {
     }
 
     /**
+     * Y dice si hay algo delante de las entradas de confianza, que es el booleano con el
+     * que {@code despliegue.md} manda ajustar la cifra: sale {@code true} cuando la
+     * peticion no trae nada escrito por quien llama. Invertirlo lleva a poner la cifra mal.
+     *
+     * <p>El fragmento del mensaje tambien se fija aqui, porque el procedimiento del runbook
+     * busca por el: reescribirlo deja ese {@code grep} devolviendo cero lineas con el build
+     * en verde.
+     */
+    @Test
+    void deberia_decir_si_hay_algo_delante_de_las_entradas_de_confianza() {
+        trasUnProxy.hashear(conCabecera(DEL_CLIENTE));
+
+        assertThat(formas())
+                .singleElement()
+                .satisfies(evento -> assertThat(evento.getFormattedMessage())
+                        .contains("X-Forwarded-For con")
+                        .contains("nada delante de las nuestras: true"));
+
+        trasUnProxy.hashear(conCabecera(INVENTADA, DEL_CLIENTE));
+
+        assertThat(formas())
+                .last()
+                .satisfies(evento ->
+                        assertThat(evento.getFormattedMessage()).contains("nada delante de las nuestras: false"));
+    }
+
+    /**
      * Y el respaldo avisa a WARN, no a DEBUG: en produccion el registro corre a INFO, y
-     * detras de un proxy caer al respaldo significa contar a todo el mundo junto.
+     * detras de un proxy caer al respaldo significa contar a todo el mundo junto. El
+     * fragmento es el que busca el runbook.
      */
     @Test
     void deberia_avisar_a_warn_cuando_acaba_usando_la_conexion() {
         trasUnProxy.hashear(peticionDesde(DE_LA_CONEXION));
 
-        assertThat(registro.list).singleElement().satisfies(evento -> {
-            assertThat(evento.getLevel()).isEqualTo(Level.WARN);
-            assertThat(evento.getFormattedMessage()).doesNotContain(DE_LA_CONEXION);
-        });
+        assertThat(avisos())
+                .singleElement()
+                .satisfies(evento -> assertThat(evento.getFormattedMessage())
+                        .contains("Se usa la direccion de la conexion")
+                        .doesNotContain(DE_LA_CONEXION));
+    }
+
+    /**
+     * El aviso es una senal, asi que el camino que cuadra tiene que callar. Si avisara
+     * tambien ahi, el WARN que {@code despliegue.md} manda buscar seria ruido permanente y
+     * no diria nada.
+     */
+    @Test
+    void no_deberia_avisar_cuando_la_cabecera_cuadra() {
+        trasUnProxy.hashear(conCabecera(INVENTADA, DEL_CLIENTE));
+        trasDosProxies.hashear(conCabecera(INVENTADA, DEL_CLIENTE, "10.0.0.9"));
+
+        assertThat(avisos()).isEmpty();
+    }
+
+    /**
+     * Y ninguno de los cuatro caminos de respaldo suelta una direccion. Es la misma
+     * promesa de la Ley 1581 que {@link #deberia_registrar_la_forma_de_la_cabecera_sin_ninguna_direccion}
+     * cubre en el camino feliz: el sitio donde alguien anadiria «una ayudita para depurar»
+     * es precisamente el aviso de que algo va mal.
+     */
+    @Test
+    void no_deberia_soltar_direcciones_en_ningun_aviso_de_respaldo() {
+        sinProxy.hashear(peticionDesde(DEL_CLIENTE));
+        trasUnProxy.hashear(peticionDesde(DE_LA_CONEXION));
+        trasDosProxies.hashear(conCabecera(INVENTADA));
+        trasUnProxy.hashear(conCabecera("unknown"));
+
+        assertThat(avisos()).hasSize(4);
+        assertThat(avisos())
+                .allSatisfy(evento -> assertThat(evento.getFormattedMessage())
+                        .doesNotContain(DEL_CLIENTE)
+                        .doesNotContain(INVENTADA)
+                        .doesNotContain(DE_LA_CONEXION)
+                        .doesNotContain("unknown"));
     }
 
     /**
@@ -333,6 +500,24 @@ class ClientIpHasherTest {
 
         assertThat(avisos())
                 .as("uno por causa: la entrada invalida y la cabecera ausente")
-                .isEqualTo(2);
+                .hasSize(2);
+    }
+
+    /**
+     * <strong>Cero saltos avisa, y era el unico camino sin ninguna senal.</strong>
+     *
+     * <p>En {@code local} es lo correcto y aun asi avisa, porque el codigo no puede
+     * distinguirlo de una nube con la variable en cero, y eso ultimo es la direccion del
+     * proxy para todo el mundo y la misma constancia de consentimiento para todos. Una
+     * linea por arranque en la maquina de quien programa es el precio.
+     */
+    @Test
+    void deberia_avisar_cuando_se_declaran_cero_saltos() {
+        sinProxy.hashear(peticionDesde(DEL_CLIENTE));
+        sinProxy.hashear(peticionDesde(DEL_CLIENTE));
+
+        assertThat(avisos())
+                .singleElement()
+                .satisfies(evento -> assertThat(evento.getFormattedMessage()).contains("CERO_SALTOS"));
     }
 }

@@ -1,14 +1,15 @@
 package co.sendik.shared.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jspecify.annotations.Nullable;
@@ -41,6 +42,7 @@ public class ClientIpHasher {
 
     /** Por que se acabo usando la direccion de la conexion en vez de la cabecera. */
     private enum Respaldo {
+        CERO_SALTOS,
         SIN_CABECERA,
         FALTAN_ENTRADAS,
         ENTRADA_INVALIDA
@@ -54,7 +56,7 @@ public class ClientIpHasher {
      * <p>Ninguna de las dos claves la elige quien llama, y es deliberado: deduplicar por
      * el numero de entradas de la cabecera dejaba que ocho peticiones con ocho formas
      * distintas llenaran el cupo y el diagnostico se quedara mudo para siempre. Con claves
-     * acotadas -tres causas, cuatro formas- no hace falta tope, y sin tope no hay carrera
+     * acotadas -cuatro causas, cuatro formas- no hace falta tope, y sin tope no hay carrera
      * entre comprobarlo y anadir.
      */
     private final Set<Respaldo> respaldosAvisados = ConcurrentHashMap.newKeySet();
@@ -94,10 +96,19 @@ public class ClientIpHasher {
      * por quien llama es no tener limite, y el respaldo detras de un proxy es una sola
      * clave para todo el mundo, porque alli la conexion viene del proxy. Por eso el
      * respaldo avisa, y avisa a WARN: a DEBUG no se veria en produccion.
+     *
+     * <p><strong>Declarar mas saltos de los que hay es el error grave, y no el contrario.</strong>
+     * Con {@code A} entradas escritas por quien llama y {@code H} saltos reales, el indice es
+     * {@code (A + H) - saltosDeConfianza}: si se declaran mas de los que hay, basta que quien
+     * llama mande la diferencia en entradas para que el indice caiga <em>dentro de su propio
+     * prefijo</em>, y ahi vuelve a elegir su identificador sin que salte ningun aviso, porque
+     * el indice es valido. Declarar menos lleva al otro fallo, que es tomar una entrada de la
+     * infraestructura -constante- y contar a todo el mundo junto.
      */
     private @Nullable String direccionDe(HttpServletRequest peticion) {
         String deLaConexion = peticion.getRemoteAddr();
         if (saltosDeConfianza == 0) {
+            avisarDelRespaldo(Respaldo.CERO_SALTOS, 0);
             return respaldo(deLaConexion);
         }
 
@@ -129,12 +140,23 @@ public class ClientIpHasher {
      * Aplanarlas en orden es la semantica de lista de RFC 9110 y no depende de como las
      * emita cada salto.
      *
-     * <p>Los huecos se descartan al aplanar. Una entrada vacia no es de nadie, y contarla
-     * correria el indice una posicion a gusto de quien llama.
+     * <p>Los huecos se descartan al aplanar. Contando desde el final, un hueco que quien
+     * llama escriba <em>delante</em> no mueve el indice -por eso no es una defensa-; el que
+     * importa es el que queda en la posicion de confianza o despues, como la coma final que
+     * deja un proxy mal configurado. Sin descartarlo, esa peticion se iria al respaldo.
+     *
+     * <p>Y la enumeracion puede venir nula: el contrato del servlet lo admite para
+     * contenedores que no dan acceso a las cabeceras por esta via. Con Tomcat no pasa, pero
+     * {@code Collections.list(null)} seria un 500 en cada peticion de cuenta.
      */
     private static List<String> entradasReenviadas(HttpServletRequest peticion) {
+        Enumeration<String> lineas = peticion.getHeaders(CABECERA_REENVIADA);
+        if (lineas == null) {
+            return List.of();
+        }
+
         List<String> entradas = new ArrayList<>();
-        for (String linea : Collections.list(peticion.getHeaders(CABECERA_REENVIADA))) {
+        for (String linea : Collections.list(lineas)) {
             for (String entrada : linea.split(",")) {
                 if (!entrada.isBlank()) {
                     entradas.add(entrada.strip());
@@ -154,76 +176,82 @@ public class ClientIpHasher {
     }
 
     /**
-     * La direccion en forma comparable, o {@code null} si lo que hay no es una direccion.
+     * La direccion en forma canonica, o {@code null} si lo que hay no es una direccion.
      *
-     * <p>Normaliza y no solo valida, porque dos formas de la misma direccion son dos claves
-     * distintas y eso parte en dos el cupo de un mismo cliente. Se quita el puerto, que
-     * algunos proxies escriben y que cambia en cada conexion -sin esto, cada peticion
-     * abriria su propio contador y el limite desapareceria-; se quitan los corchetes de
-     * IPv6, sin los cuales toda esa familia caia al respaldo; y se pasa a minuscula, que es
-     * lo que hace que {@code 2001:DB8::1} y {@code 2001:db8::1} cuenten juntas.
+     * <p>Canoniza y no solo valida, porque dos escrituras de la misma direccion son dos
+     * claves distintas y eso parte en dos el cupo de un mismo cliente. De eso se encarga
+     * {@link #comoLiteral}; aqui solo se quita lo que no es parte de la direccion: el
+     * puerto, que algunos proxies escriben y que cambia en cada conexion -sin quitarlo, cada
+     * peticion abriria su propio contador y el limite desapareceria-, y los corchetes de
+     * IPv6, sin los cuales toda esa familia caia al respaldo.
      *
-     * <p>Comprueba la forma y no la existencia. Lo que no se acepta es lo que abre o cierra
-     * el limite por accidente: texto que no es una direccion, y direcciones con algo pegado
-     * que varie de una peticion a otra.
+     * <p>Lo que no se acepta es lo que abre o cierra el limite por accidente: texto que no es
+     * una direccion, y direcciones con algo pegado que varie de una peticion a otra.
      */
     private static @Nullable String normalizada(String entrada) {
         String valor = entrada.strip();
 
         if (valor.startsWith("[")) {
             int cierre = valor.indexOf(']');
-            if (cierre < 2) {
-                return null;
-            }
-            // Lo que venga despues del corchete es el puerto, y se descarta con el.
-            valor = valor.substring(1, cierre);
-        } else {
-            int separador = valor.indexOf(':');
-            if (separador > 0 && esIpv4(valor.substring(0, separador)) && esPuerto(valor.substring(separador + 1))) {
-                valor = valor.substring(0, separador);
-            }
+            // Tras el corchete solo cabe el puerto. Cualquier otra cosa pegada no es esto.
+            return cierre >= 2 && esSufijoDePuerto(valor.substring(cierre + 1))
+                    ? comoLiteral(valor.substring(1, cierre))
+                    : null;
         }
 
-        return esIpv4(valor) || esIpv6(valor) ? valor.toLowerCase(Locale.ROOT) : null;
-    }
+        String literal = comoLiteral(valor);
+        if (literal != null) {
+            return literal;
+        }
 
-    private static boolean esIpv4(String valor) {
-        String[] octetos = valor.split("\\.", -1);
-        if (octetos.length != 4) {
-            return false;
-        }
-        for (String octeto : octetos) {
-            if (octeto.isEmpty() || octeto.length() > 3 || !esDecimal(octeto) || Integer.parseInt(octeto) > 255) {
-                return false;
-            }
-        }
-        return true;
+        // Sin corchetes, un puerto solo cabe detras de IPv4: en IPv6 los dos puntos son de
+        // la direccion, y por eso la forma con puerto los exige.
+        int separador = valor.indexOf(':');
+        return separador > 0 && esPuerto(valor.substring(separador + 1))
+                ? comoLiteral(valor.substring(0, separador))
+                : null;
     }
 
     /**
-     * IPv6 por su forma: lleva dos puntos y nada que no sea hexadecimal, dos puntos o punto
-     * -el punto admite la forma con IPv4 al final, como {@code ::ffff:190.85.12.7}-.
+     * La forma canonica de una direccion escrita como literal, o {@code null} si no lo es.
+     *
+     * <p>{@link InetAddress#ofLiteral} es, por contrato, <strong>literal y nunca resuelve
+     * nombres</strong>, que es la razon de usarla y no {@code getByName}: aqui entra texto de
+     * quien llama, y una consulta de DNS por peticion seria una via de ataque. Llega con Java
+     * 22 y este proyecto va por 25.
+     *
+     * <p>Lo que da a cambio es la canonizacion que hacia falta y que una comprobacion de
+     * caracteres no puede dar: los ceros a la izquierda, la IPv6 expandida y la escrita en
+     * mayuscula acaban en la misma clave, y {@code ::ffff:190.85.12.7} acaba en la misma que
+     * la forma con puntos. Sin eso, un mismo cliente contaba dos veces con medio cupo cada
+     * una.
+     *
+     * <p>A cambio acepta tambien las formas abreviadas de IPv4 que admite Java -{@code 1.2.3}
+     * es {@code 1.2.0.3} y {@code 0} es {@code 0.0.0.0}-, que ningun proxy escribe. No hace
+     * dano: la canonizacion es deterministica, asi que ninguna de esas escrituras abre una
+     * clave nueva ni parte la de nadie.
      */
-    private static boolean esIpv6(String valor) {
-        if (valor.length() < 2 || valor.length() > 45 || valor.indexOf(':') < 0) {
+    private static @Nullable String comoLiteral(String valor) {
+        try {
+            return InetAddress.ofLiteral(valor).getHostAddress();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /** Vacio, o {@code :puerto}: lo unico que puede seguir al corchete de cierre. */
+    private static boolean esSufijoDePuerto(String resto) {
+        return resto.isEmpty() || (resto.startsWith(":") && esPuerto(resto.substring(1)));
+    }
+
+    /** Digitos ASCII a proposito: {@code Character.isDigit} admite los de otros alfabetos. */
+    private static boolean esPuerto(String valor) {
+        if (valor.isEmpty() || valor.length() > 5) {
             return false;
         }
         for (int i = 0; i < valor.length(); i++) {
             char caracter = valor.charAt(i);
-            if (caracter != ':' && caracter != '.' && Character.digit(caracter, 16) < 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean esPuerto(String valor) {
-        return !valor.isEmpty() && valor.length() <= 5 && esDecimal(valor);
-    }
-
-    private static boolean esDecimal(String valor) {
-        for (int i = 0; i < valor.length(); i++) {
-            if (!Character.isDigit(valor.charAt(i))) {
+            if (caracter < '0' || caracter > '9') {
                 return false;
             }
         }
@@ -242,6 +270,13 @@ public class ClientIpHasher {
      * <p>Una vez por causa y por instancia. Repetirlo en cada peticion seria inundar el
      * registro justo cuando algo va mal; una vez basta para verlo, y las instancias de
      * Cloud Run se reciclan, asi que si la causa sigue ahi vuelve a aparecer.
+     *
+     * <p><strong>{@code CERO_SALTOS} tambien avisa, y en {@code local} es correcto y aun asi
+     * avisa.</strong> Una linea por arranque en la maquina de quien programa es el precio de
+     * que en la nube exista alguna senal: ahi el codigo no puede distinguir «no hay proxy
+     * delante» de «la variable llego en cero», y lo segundo es la direccion del proxy para
+     * todo el mundo y la misma constancia de consentimiento para todos. Era el unico camino
+     * de respaldo sin ninguna senal.
      *
      * <p>Numeros y nunca direcciones, igual que {@link #registrarLaForma}.
      */
