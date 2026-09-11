@@ -17,6 +17,7 @@ import co.sendik.identity.dto.ForgotPasswordCommand;
 import co.sendik.identity.dto.LoginCommand;
 import co.sendik.identity.dto.LogoutCommand;
 import co.sendik.identity.dto.RefreshSessionCommand;
+import co.sendik.identity.dto.RegisterUserCommand;
 import co.sendik.identity.dto.ResendVerificationCommand;
 import co.sendik.identity.dto.ResetPasswordCommand;
 import co.sendik.identity.dto.SessionResult;
@@ -76,6 +77,23 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class AuthControllerTest {
 
     private static final Instant AHORA = Instant.parse("2026-08-17T15:00:00Z");
+    /** MockMvc llama sin proxy delante: la direccion sale de la conexion. */
+    private static final int SIN_PROXY = 0;
+
+    /** Lo que corre en la nube: un salto de confianza delante (ADR-0038). */
+    private static final int TRAS_CLOUD_RUN = 1;
+
+    /**
+     * SHA-256 de `8.8.8.8`, de `127.0.0.1` y de `203.0.113.1`, escritos y no calculados con
+     * la clase que se prueba: comparar su salida contra si misma no fija nada.
+     */
+    private static final String HASH_DE_8888 = "838c4c2573848f58e74332341a7ca6bc5cd86a8aec7d644137d53b4d597f10f5";
+
+    private static final String HASH_DE_LA_CONEXION =
+            "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0";
+
+    private static final String HASH_INVENTADO = "a1ceb3dc7b127ea22d04f67b50908245930cfa9a3f91e1d38c0b266c44669ee7";
+
     private static final Clock RELOJ = Clock.fixed(AHORA, ZoneOffset.UTC);
 
     private final RegisterUserUseCase registro = mock(RegisterUserUseCase.class);
@@ -105,7 +123,7 @@ class AuthControllerTest {
                 new SessionResponses(RELOJ),
                 // Los mismos atributos que arma bootstrap desde la configuracion.
                 new RefreshCookies("sendik_refresh", "/api/v1/auth", true, Duration.ofDays(30)),
-                new ClientIpHasher());
+                new ClientIpHasher(SIN_PROXY));
 
         mvc = MockMvcBuilders.standaloneSetup(controlador)
                 .setControllerAdvice(new ApiExceptionHandler())
@@ -118,7 +136,7 @@ class AuthControllerTest {
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         // El quinto es el carrito anonimo de HU-015.
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
-                        new ClientIpHasher(),
+                        new ClientIpHasher(SIN_PROXY),
                         RELOJ))
                 .build();
     }
@@ -540,7 +558,7 @@ class AuthControllerTest {
                         confirmacionDeCorreo,
                         new SessionResponses(RELOJ),
                         new RefreshCookies("sendik_refresh", "/api/v1/auth", true, Duration.ofDays(30)),
-                        new ClientIpHasher()))
+                        new ClientIpHasher(SIN_PROXY)))
                 .setControllerAdvice(new ApiExceptionHandler())
                 .addInterceptors(new RateLimitInterceptor(
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
@@ -548,7 +566,7 @@ class AuthControllerTest {
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
-                        new ClientIpHasher(),
+                        new ClientIpHasher(SIN_PROXY),
                         RELOJ))
                 .build();
 
@@ -559,5 +577,69 @@ class AuthControllerTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.code").value("COMMON_TOO_MANY_REQUESTS"))
                 .andExpect(header().exists("Retry-After"));
+    }
+
+    /**
+     * <strong>HU-001, criterio 5: la constancia de consentimiento, en el borde donde se
+     * rompia.</strong>
+     *
+     * <p>La cabecera trae las tres cosas que fallaban: una direccion inventada delante, un
+     * hueco -la forma exacta del fallo de produccion de ADR-0038, que dejaba el hash nulo y
+     * la constancia sin direccion- y al final la que anade el proxy. El criterio pide la IP
+     * entre la evidencia de cada consentimiento, asi que esto es la mitad legal del arreglo
+     * y no una variante mas del limite de peticiones.
+     *
+     * <p><strong>Se afirma cual es el hash, no solo que no sea nulo.</strong> Con «no nulo»
+     * la prueba pasaba aunque la constancia guardara la direccion de la conexion, que detras
+     * de un proxy es la misma para todo el mundo: una evidencia que no prueba de donde vino
+     * ninguna aceptacion. Con los tres valores escritos queda fijado ademas que gana la
+     * ultima entrada y no la primera.
+     *
+     * <p>Va con un salto de confianza declarado, que es como corre en la nube y no como
+     * corren las demas pruebas de esta clase.
+     */
+    @Test
+    void deberia_guardar_la_constancia_con_la_direccion_del_cliente_criterio_5() throws Exception {
+        MockMvc trasUnProxy = conSaltosDeConfianza(TRAS_CLOUD_RUN);
+
+        trasUnProxy
+                .perform(post("/api/v1/auth/register")
+                        .contentType("application/json")
+                        .header("X-Forwarded-For", "203.0.113.1, , 8.8.8.8")
+                        .content("""
+                                {"email":"ana@correo.co","password":"una-contrasena-larga",
+                                 "displayName":"Ana Maria","birthDate":"1990-03-04","locale":"es",
+                                 "acceptsTerms":true,"acceptsPrivacy":true}
+                                """))
+                .andExpect(status().isAccepted());
+
+        ArgumentCaptor<RegisterUserCommand> comando = ArgumentCaptor.forClass(RegisterUserCommand.class);
+        verify(registro).execute(comando.capture());
+        assertThat(comando.getValue().ipHash())
+                .as("la del proxy, que es la del cliente")
+                .isEqualTo(HASH_DE_8888)
+                .as("ni la de la conexion, que MockMvc pone en 127.0.0.1")
+                .isNotEqualTo(HASH_DE_LA_CONEXION)
+                .as("ni la que se invento quien llama")
+                .isNotEqualTo(HASH_INVENTADO);
+    }
+
+    /** El mismo borde, con la topologia que se le declare. */
+    private MockMvc conSaltosDeConfianza(int saltos) {
+        return MockMvcBuilders.standaloneSetup(new AuthController(
+                        registro,
+                        verificacion,
+                        reenvio,
+                        ingreso,
+                        refresco,
+                        cierre,
+                        olvido,
+                        restablecimiento,
+                        confirmacionDeCorreo,
+                        new SessionResponses(RELOJ),
+                        new RefreshCookies("sendik_refresh", "/api/v1/auth", true, Duration.ofDays(30)),
+                        new ClientIpHasher(saltos)))
+                .setControllerAdvice(new ApiExceptionHandler())
+                .build();
     }
 }

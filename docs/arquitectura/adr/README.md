@@ -60,3 +60,4 @@ la referencia.
 | 0035 | La búsqueda arranca en PostgreSQL, detrás del puerto de ADR-0008 | Aceptada. Deja Typesense aplazado, no descartado |
 | 0036 | El carrito vive en `catalog` y no en `order` | Aceptada |
 | 0037 | El carrito sin sesión vive en el navegador y se fusiona preguntando | Aceptada |
+| 0038 | La dirección del cliente se cuenta desde el final de `X-Forwarded-For` | Aceptada |

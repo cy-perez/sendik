@@ -33,6 +33,10 @@ sendik:
     name: ${COMPANY_NAME:Sendik}
     tax-id: ${COMPANY_TAX_ID:000000000-0}
     address: ${COMPANY_ADDRESS:Medellin, Colombia}
+  client-ip:
+    # Sin proxy delante: la cabecera se ignora y la direccion sale de la conexion.
+    # Cualquier `X-Forwarded-For` que llegue aqui lo habria puesto quien llama.
+    trusted-hops: ${CLIENT_IP_TRUSTED_HOPS:0}
   commission:
     rate: ${COMMISSION_RATE:0.05}
   session:

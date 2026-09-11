@@ -791,6 +791,7 @@ aparezcan tachadas en los registros cuando haga falta leerlas.
 | `STORAGE_PUBLIC_BASE_URL` | `https://storage.googleapis.com/sendik-publico` | el dominio del CDN |
 | `FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING`, `FEATURE_CATALOG` | `true` las tres desde el 5 de septiembre de 2026 | sin definir, que es apagadas |
 | `FEATURE_SEARCH` | `true` desde el 10 de septiembre de 2026, al integrar HU-014 | sin definir, que es apagada. **Se enciende con `FEATURE_CATALOG` o después, nunca al revés**: el frontend no conoce las banderas y pinta la caja de búsqueda igual |
+| `CLIENT_IP_TRUSTED_HOPS` | `1`, **medido** contra `dev` el 10 de septiembre de 2026 | `1` heredado del respaldo del flujo y **sin medir**: `prod` no se ha desplegado nunca y podría no tener la misma topología. ADR-0038 manda remedirlo el día del primer despliegue |
 
 **Las banderas no estaban en esta tabla y ahora sí.** Su efecto se explica en
 `docs/operacion/configuracion.md`; lo que faltaba aquí era su valor por entorno, que
@@ -1011,6 +1012,80 @@ corrección puesta, esa revisión no aparece en la lista.
 > manda el proxy real no demuestra nada. `frontend/e2e/ssr.spec.ts` las tiene ahora
 > en una constante única, `CABECERAS_DE_CLOUD_RUN`, y prueba el juego completo y
 > cada una por separado.
+
+### La misma cabecera, del otro lado: quién es el cliente para el backend
+
+El frontend solo necesita **confiar** en `x-forwarded-for`. El backend necesita algo
+más difícil: saber **cuál** de sus entradas es la de quien llama, porque de eso
+dependen el límite de peticiones de `/api/v1/auth` y la constancia de consentimiento
+que exige la Ley 1581.
+
+**Cloud Run conserva lo que mande el cliente y añade lo suyo al final.** Medido
+contra `dev` el 10 de septiembre de 2026: doce peticiones con un `X-Forwarded-For`
+distinto cada una no llegan nunca al 429, y las mismas doce sin tocar la cabecera lo
+dan en la undécima. Por eso la dirección se cuenta **desde el final**, tantas
+posiciones como diga `CLIENT_IP_TRUSTED_HOPS`, que vale `1` aquí (ADR-0038).
+
+**Cómo volver a medirlo** el día que cambie lo que hay delante —un balanceador, un
+CDN, Firebase Hosting, o el primer despliegue de `prod`—. El borde registra la forma
+de la cabecera a DEBUG, una línea por forma distinta, con números y nunca con
+direcciones:
+
+```bash
+gcloud logging read   'resource.type="cloud_run_revision" AND resource.labels.service_name="sendik-backend-dev"'   --project sendik-col --limit 200 --format 'value(textPayload)' --freshness=30m   | grep "X-Forwarded-For con"
+```
+
+Dice cuántas entradas trae, cuál se toma, si hay algo delante de las entradas de la
+infraestructura y si la elegida coincide con la de la conexión. **La lectura válida es
+`nada delante de las nuestras: true` en una petición en la que no mandaste la cabecera**;
+si la mandas, ese booleano sale `false` y no significa que la cifra esté mal.
+
+**Y esa línea no basta para decidir la cifra, porque sus números los escribe en parte
+quien llama.** Equivocarla no falla al arrancar, y los dos sentidos no son simétricos:
+
+- **Pasarse es el grave.** Con un salto real y dos declarados, basta que alguien mande una
+  entrada inventada para que el conteo caiga dentro de lo que él escribió y vuelva a
+  elegir su identificador. **No sale ningún WARN**, porque el cálculo cuadra, y la línea de
+  DEBUG dice justo lo que diría una topología sana de dos saltos.
+- **Quedarse corto** señala una entrada de la infraestructura, igual para todos, y el
+  límite deja fuera a todo el mundo a la vez.
+
+Así que lo que decide es el experimento, no el registro: **doce peticiones con un
+`X-Forwarded-For` inventado distinto cada una contra una ruta de credenciales**. Si el 429
+llega en la undécima, la cifra es correcta; si no llega, sobra al menos un salto.
+
+**Y hay una señal que no depende de DEBUG**, que importa porque `prod` corre a INFO:
+cuando el cálculo no cuadra y la dirección acaba saliendo de la conexión, sale un
+WARN. Detrás de un proxy eso no es un detalle —la conexión viene del proxy, así que
+todas esas peticiones cuentan juntas—, y es lo primero que hay que buscar al
+desplegar a un entorno nuevo:
+
+```bash
+gcloud logging read   'resource.type="cloud_run_revision" AND severity>=WARNING AND textPayload:"Se usa la direccion de la conexion"'   --project sendik-col --limit 20   --format 'value(resource.labels.service_name,textPayload)'
+```
+
+El aviso dice la causa con un nombre —`CERO_SALTOS`, `SIN_CABECERA`, `FALTAN_ENTRADAS`,
+`ENTRADA_INVALIDA`—, una vez por causa y por instancia. `CERO_SALTOS` sale también en
+`local`, donde es correcto: el código no puede distinguir «no hay proxy delante» de «la
+variable llegó en cero».
+
+**La cabecera puede llegar repetida, y de eso queda una comprobación pendiente.** Se leen
+todas las ocurrencias y se aplanan en orden, porque `getHeader` devuelve solo la primera
+línea. Pero contar desde el final supone que lo que añade la plataforma queda al final de
+la lista aplanada, y **eso no se ha medido**: las tres mediciones del 10 de septiembre
+usaron una sola línea. La comprobación es trece peticiones con **dos** cabeceras
+`X-Forwarded-For`, la primera fija:
+
+```bash
+for i in $(seq 1 13); do
+  curl -s -o /dev/null -w "%{http_code}
+" -X POST https://api-dev.sendik.co/api/v1/auth/verify-email     -H 'Content-Type: application/json'     -H 'X-Forwarded-For: 9.9.9.9' -H 'X-Forwarded-For: 9.9.9.9'     -d '{"token":"no-existe"}'
+done
+```
+
+Si el 429 aparece, la plataforma añade lo suyo al final y el aplanado es correcto. Si no
+aparece, lo añade a la primera ocurrencia y hay que caer al respaldo cuando la cabecera
+llegue más de una vez.
 
 ## Volver atrás
 

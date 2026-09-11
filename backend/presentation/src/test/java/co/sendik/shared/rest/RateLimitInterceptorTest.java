@@ -34,6 +34,15 @@ class RateLimitInterceptorTest {
     /** Cualquiera sirve: el interceptor decide por prefijo y no mira el identificador. */
     private static final String UUID_DE_PRUEBA = "0199b0f0-0000-7000-8000-000000000001";
 
+    /** Conexion directa: la cabecera reenviada es de quien llama y no se mira. */
+    private static final int SIN_PROXY = 0;
+
+    /** Cloud Run anade una entrada al final de `X-Forwarded-For` y nada mas. */
+    private static final int TRAS_CLOUD_RUN = 1;
+
+    /** La direccion de verdad, la que anade el proxy, cuando la prueba no dice otra. */
+    private static final String DEL_CLIENTE = "190.85.12.7";
+
     /** Uno por grupo, con dos peticiones de margen para que agotarlo quepa en una prueba. */
     private final RateLimitInterceptor interceptor = new RateLimitInterceptor(
             new RateLimiter(2, MINUTO, 1000),
@@ -42,7 +51,22 @@ class RateLimitInterceptorTest {
             new RateLimiter(2, MINUTO, 1000),
             // El quinto es el carrito anonimo de HU-015, contado por origen.
             new RateLimiter(2, MINUTO, 1000),
-            new ClientIpHasher(),
+            new ClientIpHasher(SIN_PROXY),
+            RELOJ);
+
+    /**
+     * El mismo interceptor, pero con un proxy delante: es lo que corre en Cloud Run.
+     *
+     * <p>El carrito anonimo de HU-015 se cuenta por origen, igual que `auth`, asi que
+     * tambien depende de que la direccion no la elija quien llama (ADR-0038).
+     */
+    private final RateLimitInterceptor trasProxy = new RateLimitInterceptor(
+            new RateLimiter(2, MINUTO, 1000),
+            new RateLimiter(2, MINUTO, 1000),
+            new RateLimiter(2, MINUTO, 1000),
+            new RateLimiter(2, MINUTO, 1000),
+            new RateLimiter(2, MINUTO, 1000),
+            new ClientIpHasher(TRAS_CLOUD_RUN),
             RELOJ);
 
     @AfterEach
@@ -54,6 +78,34 @@ class RateLimitInterceptorTest {
         MockHttpServletRequest peticion = new MockHttpServletRequest("GET", ruta);
         peticion.setRemoteAddr(ip);
         return peticion;
+    }
+
+    private boolean trasCloudRun(String loQueMandoElCliente) {
+        return trasCloudRun(loQueMandoElCliente, DEL_CLIENTE);
+    }
+
+    /**
+     * Una peticion de credenciales tal como llega detras de Cloud Run: delante lo que
+     * escribio quien llama -incluso si es un hueco- y al final la direccion que anade el
+     * proxy, que es la unica que quien llama no puede tocar.
+     */
+    private boolean trasCloudRun(String loQueMandoElCliente, String laDeVerdad) {
+        MockHttpServletRequest peticion = new MockHttpServletRequest("POST", "/api/v1/auth/login");
+        peticion.setRemoteAddr("169.254.1.1");
+        peticion.addHeader("X-Forwarded-For", loQueMandoElCliente + ", " + laDeVerdad);
+        return trasProxy.preHandle(peticion, null, null);
+    }
+
+    /**
+     * La misma lista, escrita en dos lineas de cabecera. Es legitimo por RFC 9110 y es la
+     * forma fina de la evasion: {@code getHeader} devuelve solo la primera.
+     */
+    private boolean trasCloudRunEnDosLineas(String loQueMandoElCliente) {
+        MockHttpServletRequest peticion = new MockHttpServletRequest("POST", "/api/v1/auth/login");
+        peticion.setRemoteAddr("169.254.1.1");
+        peticion.addHeader("X-Forwarded-For", loQueMandoElCliente);
+        peticion.addHeader("X-Forwarded-For", DEL_CLIENTE);
+        return trasProxy.preHandle(peticion, null, null);
     }
 
     private static void entrarComo(String sujeto) {
@@ -210,6 +262,65 @@ class RateLimitInterceptorTest {
                     .as("la ficha publica tampoco")
                     .isTrue();
         }
+    }
+
+    /**
+     * <strong>La que faltaba, y por eso la evasion no se vio.</strong>
+     *
+     * <p>Ninguna prueba tocaba {@code X-Forwarded-For}, asi que nada impedia que la
+     * direccion la eligiera quien llama. Detras de Cloud Run la cabecera llega con lo que
+     * mando el cliente delante y la direccion de verdad al final: cambiar lo de delante no
+     * puede abrir un contador nuevo.
+     */
+    @Test
+    void no_deberia_abrir_un_contador_nuevo_al_mandar_x_forwarded_for_a_mano() {
+        assertThat(trasCloudRun("203.0.113.1")).isTrue();
+        assertThat(trasCloudRun("203.0.113.2")).isTrue();
+
+        assertThatThrownBy(() -> trasCloudRun("203.0.113.3"))
+                .as("otra mentira, la misma cuenta")
+                .isInstanceOf(RateLimitExceededException.class);
+    }
+
+    /**
+     * Y una entrada vacia tampoco apaga la cuenta, que era la forma barata de quedarse sin
+     * limite: el hash salia nulo y el interceptor lo leia como «no hay a quien contar».
+     */
+    @Test
+    void no_deberia_dejar_de_contar_por_una_entrada_vacia_del_cliente() {
+        assertThat(trasCloudRun("")).isTrue();
+        assertThat(trasCloudRun("")).isTrue();
+
+        assertThatThrownBy(() -> trasCloudRun("")).isInstanceOf(RateLimitExceededException.class);
+    }
+
+    /**
+     * La otra mitad: dos clientes distintos detras del mismo proxy siguen contando por
+     * separado. Un arreglo que los juntara cambiaria la evasion por una negacion de
+     * servicio, que es peor.
+     */
+    @Test
+    void deberia_seguir_contando_por_separado_a_dos_clientes_tras_el_mismo_proxy() {
+        trasCloudRun("203.0.113.1", "190.85.12.7");
+        trasCloudRun("203.0.113.1", "190.85.12.7");
+        assertThatThrownBy(() -> trasCloudRun("203.0.113.1", "190.85.12.7"))
+                .isInstanceOf(RateLimitExceededException.class);
+
+        assertThat(trasCloudRun("203.0.113.1", "190.85.12.8"))
+                .as("otro cliente, otra cuenta")
+                .isTrue();
+    }
+
+    /**
+     * Y tampoco con la cabecera repetida, que es la misma evasion por otra via: si solo se
+     * mirara la primera linea, la lista entera seria la que escribio quien llama.
+     */
+    @Test
+    void no_deberia_abrir_un_contador_nuevo_con_la_cabecera_repetida() {
+        assertThat(trasCloudRunEnDosLineas("203.0.113.1")).isTrue();
+        assertThat(trasCloudRunEnDosLineas("203.0.113.2")).isTrue();
+
+        assertThatThrownBy(() -> trasCloudRunEnDosLineas("203.0.113.3")).isInstanceOf(RateLimitExceededException.class);
     }
 
     /** En `auth` no cambia nada: ahi se sigue contando por origen, porque no hay cuenta. */
