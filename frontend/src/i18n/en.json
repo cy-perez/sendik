@@ -118,6 +118,10 @@
     "cart": {
       "title": "Your cart · Sendik",
       "description": "What you saved on Sendik to buy."
+    },
+    "addresses": {
+      "title": "My addresses · Sendik",
+      "description": "Save where you want your purchases delivered."
     }
   },
   "layout": {
@@ -245,7 +249,9 @@
       "CATALOG_CONDITION_NOT_ALLOWED": "This category only takes new items.",
       "CATALOG_REFERENCE_IMAGE_NOT_ALLOWED": "Reference images can only be added to sealed technology.",
       "CATALOG_UNKNOWN_CATEGORY": "That category is no longer available. Pick another one.",
-      "CATALOG_SELF_MODERATION_FORBIDDEN": "You cannot decide on your own listing."
+      "CATALOG_SELF_MODERATION_FORBIDDEN": "You cannot decide on your own listing.",
+      "USER_ADDRESS_BOOK_FULL": "No more addresses fit. Remove one to add another.",
+      "USER_UNKNOWN_MUNICIPALITY": "That municipality is no longer on the official list. Choose another one."
     }
   },
   "form": {
@@ -1462,6 +1468,88 @@
         "confirm": "Revoke this person's seal? They stop being able to publish and receive the reason by email.",
         "listingsStayVisible": "What they already published stays visible. To remove it, each listing has to be taken down separately."
       }
+    }
+  },
+  "addresses": {
+    "title": "My addresses",
+    "loading": "Loading your addresses",
+    "error": "We couldn't load your addresses.",
+    "retry": "Try again",
+    "signedOut": {
+      "body": "Sign in to save where you want your purchases delivered.",
+      "action": "Sign in"
+    },
+    "empty": {
+      "title": "You don't have any addresses yet",
+      "body": "Save an address and you won't have to type it every time you buy.",
+      "action": "Add an address"
+    },
+    "list": {
+      "default": "Default",
+      "municipalityGone": "This municipality is no longer on the official list. You'll have to pick another one when you edit this address."
+    },
+    "actions": {
+      "add": "Add an address",
+      "edit": "Edit",
+      "delete": "Remove",
+      "makeDefault": "Use as default",
+      "save": "Save address",
+      "cancel": "Cancel"
+    },
+    "notices": {
+      "saved": "Address saved.",
+      "removed": "Address removed.",
+      "defaultChanged": "Your default address changed."
+    },
+    "form": {
+      "newTitle": "New address",
+      "editTitle": "Edit address",
+      "thirdParty": "If someone else is receiving the parcel, by saving you declare that you have their permission to give us their name and phone number, and that you will tell them we use those for the delivery.",
+      "department": {
+        "label": "Department",
+        "choose": "Choose a department",
+        "error": "Choose a department."
+      },
+      "municipality": {
+        "label": "Municipality",
+        "choose": "Choose a municipality",
+        "chooseDepartmentFirst": "Choose a department first",
+        "loading": "Loading municipalities…",
+        "error": "Choose a municipality."
+      },
+      "line": {
+        "label": "Address",
+        "hint": "For example: Calle 45 # 12-34",
+        "error": "Type the address, between 5 and 120 characters."
+      },
+      "complement": {
+        "label": "Unit (optional)",
+        "hint": "Apartment, tower, office or shop",
+        "error": "The unit can't be longer than 60 characters."
+      },
+      "recipientName": {
+        "label": "Who receives it",
+        "hint": "It can be someone else",
+        "error": "Type who receives it, between 2 and 80 characters."
+      },
+      "phone": {
+        "label": "Phone of who receives it",
+        "hint": "The carrier calls this number",
+        "error": "Type a phone number with 7 to 15 digits."
+      },
+      "instructions": {
+        "label": "Delivery notes (optional)",
+        "hint": "Anything that helps find the place or hand the parcel over",
+        "error": "The notes can't be longer than 200 characters."
+      },
+      "postalCode": {
+        "label": "Postal code (optional)",
+        "hint": "Six digits, if you know it",
+        "error": "Colombian postal codes have six digits."
+      }
+    },
+    "errors": {
+      "full": "You already have {{tope}} saved addresses, which is the maximum. Remove one to add another."
     }
   }
 }

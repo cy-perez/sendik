@@ -74,6 +74,10 @@ export const serverRoutes: ServerRoute[] = [
   // Sin esta linea la pagina se pinta entera y se sirve con 404, que es lo que `rutas.spec.ts`
   // ya cazo en /mis-favoritos, en /ingresar y en las tres rutas de HU-007.
   { path: 'carrito', renderMode: RenderMode.Server },
+  // HU-016, la libreta de direcciones. Mismo razonamiento y con mas motivo: el HTML
+  // servido no puede llevar dentro donde vive alguien, asi que sale el esqueleto y la
+  // libreta llega al hidratar.
+  { path: 'mis-direcciones', renderMode: RenderMode.Server },
   // HU-003, el asistente de captura. Cuelga del formulario y se renderiza en servidor por
   // lo mismo que el: APP_CONFIG llega por el estado transferido y sin el no arranca.
   { path: 'publicar/:id/capturar', renderMode: RenderMode.Server },
