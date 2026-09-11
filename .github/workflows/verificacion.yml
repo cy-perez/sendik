@@ -317,6 +317,11 @@ jobs:
       # No basta con omitir las que no se usan: una variable sin definir y una definida y
       # vacía no significan lo mismo, y el 6 de septiembre de 2026 la revisión murió por
       # una `MAIL_QUEUE_ENABLED` vacía que aquí, al no pasarse, nunca se probó.
+      #
+      # `CLIENT_IP_TRUSTED_HOPS` es la única que va con otro valor que en el despliegue, y
+      # a propósito: aquí el navegador llega al contenedor sin proxy de por medio, así que
+      # la topología real es de cero saltos. Declarar el `1` de Cloud Run sería decirle al
+      # borde que confíe en una cabecera que nadie está reescribiendo (ADR-0036).
       - name: Arrancar el backend y esperar a que responda
         run: |
           docker run -d --name backend --network host \
@@ -333,6 +338,7 @@ jobs:
             -e COMPANY_TAX_ID=000000000-0 \
             -e "COMPANY_ADDRESS=Medellin, Colombia" \
             -e COMMISSION_RATE=0.05 \
+            -e CLIENT_IP_TRUSTED_HOPS=0 \
             -e MAIL_PROVIDER=resend \
             -e MAIL_FROM=no-responder@example.test \
             -e MAIL_PROVIDER_API_KEY=sin-clave-en-el-ensayo \

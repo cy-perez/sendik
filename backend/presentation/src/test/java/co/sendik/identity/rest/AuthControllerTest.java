@@ -17,6 +17,7 @@ import co.sendik.identity.dto.ForgotPasswordCommand;
 import co.sendik.identity.dto.LoginCommand;
 import co.sendik.identity.dto.LogoutCommand;
 import co.sendik.identity.dto.RefreshSessionCommand;
+import co.sendik.identity.dto.RegisterUserCommand;
 import co.sendik.identity.dto.ResendVerificationCommand;
 import co.sendik.identity.dto.ResetPasswordCommand;
 import co.sendik.identity.dto.SessionResult;
@@ -76,6 +77,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class AuthControllerTest {
 
     private static final Instant AHORA = Instant.parse("2026-08-17T15:00:00Z");
+    /** MockMvc llama sin proxy delante: la direccion sale de la conexion. */
+    private static final int SIN_PROXY = 0;
+
+    /** Lo que corre en la nube: un salto de confianza delante (ADR-0036). */
+    private static final int TRAS_CLOUD_RUN = 1;
+
     private static final Clock RELOJ = Clock.fixed(AHORA, ZoneOffset.UTC);
 
     private final RegisterUserUseCase registro = mock(RegisterUserUseCase.class);
@@ -105,7 +112,7 @@ class AuthControllerTest {
                 new SessionResponses(RELOJ),
                 // Los mismos atributos que arma bootstrap desde la configuracion.
                 new RefreshCookies("sendik_refresh", "/api/v1/auth", true, Duration.ofDays(30)),
-                new ClientIpHasher());
+                new ClientIpHasher(SIN_PROXY));
 
         mvc = MockMvcBuilders.standaloneSetup(controlador)
                 .setControllerAdvice(new ApiExceptionHandler())
@@ -116,7 +123,7 @@ class AuthControllerTest {
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
-                        new ClientIpHasher(),
+                        new ClientIpHasher(SIN_PROXY),
                         RELOJ))
                 .build();
     }
@@ -538,14 +545,14 @@ class AuthControllerTest {
                         confirmacionDeCorreo,
                         new SessionResponses(RELOJ),
                         new RefreshCookies("sendik_refresh", "/api/v1/auth", true, Duration.ofDays(30)),
-                        new ClientIpHasher()))
+                        new ClientIpHasher(SIN_PROXY)))
                 .setControllerAdvice(new ApiExceptionHandler())
                 .addInterceptors(new RateLimitInterceptor(
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
-                        new ClientIpHasher(),
+                        new ClientIpHasher(SIN_PROXY),
                         RELOJ))
                 .build();
 
@@ -556,5 +563,56 @@ class AuthControllerTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.code").value("COMMON_TOO_MANY_REQUESTS"))
                 .andExpect(header().exists("Retry-After"));
+    }
+
+    /**
+     * <strong>HU-001, criterio 5: la constancia de consentimiento, en el borde donde se
+     * rompia.</strong>
+     *
+     * <p>Es la forma exacta del fallo de produccion de ADR-0036: con la primera entrada de
+     * la cabecera vacia, el hash salia nulo y la constancia se guardaba sin direccion. El
+     * criterio pide la IP entre la evidencia de cada consentimiento, asi que esto es la
+     * mitad legal del arreglo y no una variante mas del limite de peticiones.
+     *
+     * <p>Va con un salto de confianza declarado, que es como corre en la nube y no como
+     * corren las demas pruebas de esta clase.
+     */
+    @Test
+    void deberia_guardar_la_constancia_con_direccion_aunque_la_cabecera_traiga_un_hueco_criterio_5() throws Exception {
+        MockMvc trasUnProxy = conSaltosDeConfianza(TRAS_CLOUD_RUN);
+
+        trasUnProxy
+                .perform(post("/api/v1/auth/register")
+                        .contentType("application/json")
+                        .header("X-Forwarded-For", ", 8.8.8.8")
+                        .content("""
+                                {"email":"ana@correo.co","password":"una-contrasena-larga",
+                                 "displayName":"Ana Maria","birthDate":"1990-03-04","locale":"es",
+                                 "acceptsTerms":true,"acceptsPrivacy":true}
+                                """))
+                .andExpect(status().isAccepted());
+
+        ArgumentCaptor<RegisterUserCommand> comando = ArgumentCaptor.forClass(RegisterUserCommand.class);
+        verify(registro).execute(comando.capture());
+        assertThat(comando.getValue().ipHash()).isNotNull().doesNotContain("8.8.8.8");
+    }
+
+    /** El mismo borde, con la topologia que se le declare. */
+    private MockMvc conSaltosDeConfianza(int saltos) {
+        return MockMvcBuilders.standaloneSetup(new AuthController(
+                        registro,
+                        verificacion,
+                        reenvio,
+                        ingreso,
+                        refresco,
+                        cierre,
+                        olvido,
+                        restablecimiento,
+                        confirmacionDeCorreo,
+                        new SessionResponses(RELOJ),
+                        new RefreshCookies("sendik_refresh", "/api/v1/auth", true, Duration.ofDays(30)),
+                        new ClientIpHasher(saltos)))
+                .setControllerAdvice(new ApiExceptionHandler())
+                .build();
     }
 }

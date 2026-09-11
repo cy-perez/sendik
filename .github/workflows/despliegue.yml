@@ -166,6 +166,14 @@ jobs:
       # su valor por omisión: la pantalla lo dice y el correo de «recibimos tu solicitud»
       # también, así que podían decir números distintos sin que nada fallara.
       #
+      # `CLIENT_IP_TRUSTED_HOPS` se pasa aunque `1` sea ya el valor por omisión del
+      # `application.yaml`, y con respaldo como todo lo de aquí. Es el número de entradas
+      # que la infraestructura añade al final de `X-Forwarded-For`, o sea quién es el
+      # cliente (ADR-0036): si `prod` acaba con un balanceador o un CDN delante, tiene que
+      # poder corregirse desde las variables del entorno y no con un despliegue de código.
+      # El respaldo es `1` y no `0` porque en un despliegue a Cloud Run siempre hay al menos
+      # un salto delante: lo que puede cambiar es que sean dos, no que no haya ninguno.
+      #
       # `LISTING_REVIEW_DAYS` no está aquí y no es un olvido: hoy solo lo dice la pantalla,
       # porque enviar a revisión no manda ningún correo. Declararlo en el backend sería
       # configuración que nadie lee (docs/operacion/configuracion.md).
@@ -207,6 +215,7 @@ jobs:
             --set-env-vars "STORAGE_PUBLIC_BUCKET=${{ vars.STORAGE_PUBLIC_BUCKET }}" \
             --set-env-vars "STORAGE_RESTRICTED_BUCKET=${{ vars.STORAGE_RESTRICTED_BUCKET }}" \
             --set-env-vars "VERIFICATION_REVIEW_DAYS=${{ vars.VERIFICATION_REVIEW_DAYS || 2 }}" \
+            --set-env-vars "CLIENT_IP_TRUSTED_HOPS=${{ vars.CLIENT_IP_TRUSTED_HOPS || 1 }}" \
             --set-env-vars "^;^SECURITY_BOOTSTRAP_MODERATORS=${{ vars.SECURITY_BOOTSTRAP_MODERATORS }}" \
             --set-env-vars "FEATURE_SELLER_VERIFICATION=${{ vars.FEATURE_SELLER_VERIFICATION || 'false' }}" \
             --set-env-vars "FEATURE_PUBLISHING=${{ vars.FEATURE_PUBLISHING || 'false' }}" \
