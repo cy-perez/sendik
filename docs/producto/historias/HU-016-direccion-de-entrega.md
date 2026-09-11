@@ -533,6 +533,70 @@ obligaba a escribir, RN-098 a RN-104, están en `reglas-negocio.md`; el glosario
   `/mi-cuenta`, y entra cuando la bandera se encienda.
 - **Elegir la dirección al comprar.** No hay dónde: no existe el proceso de compra.
 
+### Lo que encontraron los cuatro revisores, y que estaba mal de verdad
+
+Se lanzaron los cuatro: `arquitecto`, `revisor-pruebas`, `revisor-seguridad` y
+`revisor-accesibilidad`. Entre los cuatro, **un fallo de producción, un bloqueante de
+arquitectura y tres bugs de interfaz**.
+
+- **El código postal escrito «110 111» daba un 400 y nadie podía evitarlo.** Es como se
+  escribe; el formulario lo aceptaba, lo mandaba tal cual, el dominio del servidor lo
+  normaliza pero el borde valida antes y lo rechazaba. Las tres suites en verde. El teléfono
+  tenía la misma grieta en su otra forma: el borde lo medía en caracteres y el dominio en
+  dígitos, así que un número de dieciséis dígitos atravesaba el borde y salía como 400 **sin
+  `errors`**, que es lo contrario del criterio 7. Lo encontró la revisión de pruebas, y lo
+  encontró **porque faltaba la prueba de `e2e-completo` que esta misma historia pedía**.
+
+- **`ShippingAddressView` hablaba con un puerto**, y eso lo puse ahí por haber leído mal la
+  regla que me falló. Cuando `ArchitectureTest` rechazó mis dos clases auxiliares del paquete
+  `usecase` concluí que allí no cabía nada más; la regla lleva `.areTopLevelClasses()`, así
+  que nunca prohibió un método estático, y el proyecto tenía la respuesta escrita una historia
+  antes: `ReadCartUseCase.conVendedores`. De paso, tal como quedó, un controlador podía
+  inyectar la división y saltarse el caso de uso y su transacción sin que ninguna regla lo
+  viera.
+
+- **`quitar` y `marcarPredeterminada` no tenían `try/catch`.** Un fallo dejaba la promesa
+  rechazada sin capturar, la tarjeta en pantalla y ni una palabra. La pantalla tenía sus tres
+  estados para la lectura y ninguno para las escrituras.
+
+- **El foco caía a `<body>`** al borrar, al marcar y al abrir o cerrar el formulario, porque
+  en los cuatro casos se destruye lo que se acaba de pulsar. `cart-page` ya lo había resuelto.
+
+- **El arreglo del foco al primer error no estaba en el orden del DOM**, aunque el comentario
+  que escribí encima dijera que sí.
+
+- **La comprobación de dueño ocurría después de descifrar**, lo que convertía cualquier fallo
+  de una fila ajena en un oráculo de existencia justo donde el criterio 15 exige lo contrario.
+
+- **El motivo que escribí para lo que queda sin cifrar era falso.** Puse que el municipio
+  queda fuera «porque es lo único por lo que la tabla se consulta» y ninguna consulta filtra
+  por municipio: queda fuera porque es clave foránea. Estaba en V21 y, peor, en
+  `datos-personales.md`, que es el documento que se enseña ante una autoridad.
+
+- **El formulario no llevaba aviso de privacidad**, siendo el único del producto que recoge
+  el nombre y el teléfono de alguien que nunca aceptó nada. `datos-personales.md` anticipaba
+  por escrito ese caso de omisión. `PrivacyNotice` estrena la variante `entrega`.
+
+- Tres tokens mal elegidos con la respuesta ya escrita en `marca.css`, hasta treinta botones
+  con el mismo nombre accesible, el criterio 27 a medias —el selector no se deshabilitaba y
+  el cambio no se anunciaba—, y `/mis-direcciones` fuera de la auditoría de axe.
+
+**Lo que no encontraron, y conviene decirlo:** ningún hallazgo crítico ni alto de seguridad.
+No hay IDOR, el 404 se sostiene en las tres rutas, y RN-102 es cierto y está probado contra
+PostgreSQL y no solo documentado.
+
+### Dos cosas que quedan anotadas y no se tocaron
+
+- **La clave del límite de tasa usa la URI cruda**, así que en una ruta con `{id}` cada
+  identificador es una clave distinta y el tope no acota nada. Es un defecto anterior —afecta
+  igual a `DELETE /users/me/sessions/{id}`— y arreglarlo es cambiar cómo se cuenta en los
+  cuatro grupos, con sus pruebas. Lo que sí entró aquí es `/api/v1/locations/**` en el grupo
+  de cuenta, que era la única superficie nueva sin cota.
+- **El criptograma no está atado a su fila** (ADR-0039). Quien consiga escritura en la base
+  puede copiar el cifrado de otra fila a la suya y leerlo por la API. Es propiedad heredada de
+  ADR-0020; cerrarlo exige cambiar la firma de `SensitiveDataCipher`, que usan también la
+  cédula y la cuenta bancaria.
+
 ## Cuándo revisar, con lo que se sabe ahora
 
 Además de lo que ya decía la historia:
