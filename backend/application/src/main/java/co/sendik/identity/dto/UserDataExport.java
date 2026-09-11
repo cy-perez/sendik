@@ -37,6 +37,20 @@ public record UserDataExport(
         List<Direccion> direcciones) {
 
     /**
+     * No imprime nada de lo que hay dentro.
+     *
+     * <p>Un {@code record} imprime todos sus campos por omision, y este lleva dato personal.
+     * El criterio 19 no puede depender de que nadie escriba nunca un {@code LOG.debug} con el
+     * objeto entero —{@code co.sendik} esta en {@code DEBUG} en {@code dev} y en
+     * {@code local}—. Se agrego tras la segunda revision de seguridad, que noto que los seis
+     * {@code toString} de la primera dejaron fuera precisamente los que mas llevan.
+     */
+    @Override
+    public String toString() {
+        return "UserDataExport[generado=" + generado + "]";
+    }
+
+    /**
      * @param ciudad nula si nunca se puso o si se quito. Se emite igual con valor
      *     nulo en lugar de omitirse: "no tenemos tu ciudad" es una respuesta al
      *     derecho a conocer, y una clave ausente no la da
@@ -56,7 +70,22 @@ public record UserDataExport(
             boolean correoVerificado,
             @Nullable Instant correoVerificadoEl,
             List<String> roles,
-            Instant creadaEl) {}
+            Instant creadaEl) {
+
+        /**
+         * No imprime nada de lo que hay dentro.
+         *
+         * <p>Un {@code record} imprime todos sus campos por omision, y este lleva dato personal.
+         * El criterio 19 no puede depender de que nadie escriba nunca un {@code LOG.debug} con el
+         * objeto entero —{@code co.sendik} esta en {@code DEBUG} en {@code dev} y en
+         * {@code local}—. Se agrego tras la segunda revision de seguridad, que noto que los seis
+         * {@code toString} de la primera dejaron fuera precisamente los que mas llevan.
+         */
+        @Override
+        public String toString() {
+            return "Cuenta[id=" + id + "]";
+        }
+    }
 
     public record Consentimiento(String documento, String version, Instant aceptadoEl) {}
 
@@ -126,5 +155,20 @@ public record UserDataExport(
             @Nullable String indicaciones,
             @Nullable String codigoPostal,
             boolean predeterminada,
-            Instant guardadaEl) {}
+            Instant guardadaEl) {
+
+        /**
+         * No imprime nada de lo que hay dentro.
+         *
+         * <p>Un {@code record} imprime todos sus campos por omision, y este lleva dato personal.
+         * El criterio 19 no puede depender de que nadie escriba nunca un {@code LOG.debug} con el
+         * objeto entero —{@code co.sendik} esta en {@code DEBUG} en {@code dev} y en
+         * {@code local}—. Se agrego tras la segunda revision de seguridad, que noto que los seis
+         * {@code toString} de la primera dejaron fuera precisamente los que mas llevan.
+         */
+        @Override
+        public String toString() {
+            return "Direccion[sin imprimir]";
+        }
+    }
 }

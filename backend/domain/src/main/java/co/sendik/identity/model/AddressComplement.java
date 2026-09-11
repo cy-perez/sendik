@@ -17,7 +17,12 @@ public record AddressComplement(String value) {
 
     public AddressComplement {
         Objects.requireNonNull(value, "El complemento es obligatorio: para no tenerlo, se deja sin poner");
-        value = value.replaceAll("\\p{Cntrl}", " ").replaceAll("\\s+", " ").trim();
+        // `\\p{Cntrl}` en Java es solo ASCII, asi que U+2028, U+2029 y la anulacion
+        // bidireccional U+202E atravesaban esto y quedaban guardados. Lo cazo la
+        // revision de seguridad.
+        value = value.replaceAll("[\\p{Cntrl}\\p{Cf}\\p{Zl}\\p{Zp}]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
 
         if (value.isEmpty()) {
             throw new IllegalArgumentException(

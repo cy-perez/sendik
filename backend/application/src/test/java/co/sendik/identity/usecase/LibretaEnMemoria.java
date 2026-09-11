@@ -78,21 +78,37 @@ final class LibretaEnMemoria implements ShippingAddressRepository, GeographicDiv
         ShippingAddress anterior = filas.get(direccion.id());
         filas.put(
                 direccion.id(),
-                anterior == null ? direccion : direccion.comoPredeterminada(anterior.esPredeterminada()));
+                anterior == null
+                        ? direccion
+                        : ShippingAddress.reconstruir(
+                                direccion.id(),
+                                direccion.duena(),
+                                direccion.quienRecibe(),
+                                direccion.telefono(),
+                                direccion.municipio(),
+                                direccion.linea(),
+                                direccion.complemento(),
+                                direccion.indicaciones(),
+                                direccion.codigoPostal(),
+                                // Las dos columnas que el `ON CONFLICT DO UPDATE` real deja
+                                // fuera del SET: `is_default` y `created_at`. La version
+                                // anterior conservaba solo la primera, aunque su javadoc
+                                // dijera que las dos.
+                                anterior.esPredeterminada(),
+                                anterior.creadaEn(),
+                                direccion.actualizadaEn()));
     }
 
     @Override
-    public void borrar(ShippingAddressId id) {
-        filas.remove(id);
+    public void borrar(ShippingAddressId id, UserId cuenta) {
+        buscar(id, cuenta).ifPresent(direccion -> filas.remove(direccion.id()));
     }
 
     @Override
     public void marcarPredeterminada(UserId cuenta, ShippingAddressId direccion) {
         deCuenta(cuenta).forEach(actual -> filas.put(actual.id(), actual.comoPredeterminada(false)));
-        ShippingAddress elegida = filas.get(direccion);
-        if (elegida != null) {
-            filas.put(direccion, elegida.comoPredeterminada(true));
-        }
+        // Con el dueno, como el SQL real: sin esto, marcar la ajena "funcionaria" aqui.
+        buscar(direccion, cuenta).ifPresent(elegida -> filas.put(direccion, elegida.comoPredeterminada(true)));
     }
 
     @Override

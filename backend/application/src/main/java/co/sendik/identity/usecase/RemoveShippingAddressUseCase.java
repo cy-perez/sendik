@@ -57,7 +57,7 @@ public class RemoveShippingAddressUseCase {
         // no esta la que se va y no se podria saber si lo era.
         Optional<ShippingAddress> relevo = libreta.relevoAlQuitar(comando.direccion());
 
-        direcciones.borrar(comando.direccion());
+        direcciones.borrar(comando.direccion(), comando.usuario());
 
         relevo.ifPresent(nueva -> direcciones.marcarPredeterminada(comando.usuario(), nueva.id()));
     }

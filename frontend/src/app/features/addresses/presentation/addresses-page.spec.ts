@@ -77,11 +77,18 @@ describe('AddressesPage', () => {
     }
   };
 
-  /** Por nombre accesible y no por clase de CSS: es lo que ve quien usa la pantalla. */
+  /**
+   * Por nombre accesible y no por texto visible.
+   *
+   * <p>Cuando un botón tiene `aria-label`, su nombre accesible **es** el `aria-label`. La
+   * primera versión comparaba `textContent` con el comentario «por nombre accesible» encima,
+   * así que quitar los tres `aria-label` habría dejado todo en verde.
+   */
   const botonLlamado = (fixture: ComponentFixture<AddressesPage>, nombre: string) =>
     Array.from(
       fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>,
-    ).find((boton) => boton.textContent?.trim() === nombre) ?? null;
+    ).find((boton) => (boton.getAttribute('aria-label') ?? boton.textContent?.trim()) === nombre) ??
+    null;
 
   const montar = async (conSesion: boolean) => {
     const fixture = TestBed.createComponent(AddressesPage);
@@ -144,14 +151,18 @@ describe('AddressesPage', () => {
     const { fixture, backend } = await montar(true);
     await responder(fixture, backend, [direccion({ isDefault: true })]);
 
-    expect(botonLlamado(fixture, 'Usar como predeterminada')).toBeNull();
+    expect(
+      botonLlamado(fixture, 'Usar como predeterminada: la dirección de Ana María Ruiz'),
+    ).toBeNull();
   });
 
   it('sí lo ofrece sobre una que no lo es', async () => {
     const { fixture, backend } = await montar(true);
     await responder(fixture, backend, [direccion({ isDefault: false })]);
 
-    expect(botonLlamado(fixture, 'Usar como predeterminada')).not.toBeNull();
+    expect(
+      botonLlamado(fixture, 'Usar como predeterminada: la dirección de Ana María Ruiz'),
+    ).not.toBeNull();
   });
 
   /** Criterio 1: el vacío es una pantalla y explica para qué sirve. */
@@ -207,7 +218,7 @@ describe('AddressesPage', () => {
     const { fixture, backend } = await montar(true);
     await responder(fixture, backend, [direccion({ isDefault: false })]);
 
-    botonLlamado(fixture, 'Quitar')?.click();
+    botonLlamado(fixture, 'Quitar la dirección de Ana María Ruiz')?.click();
     await bombear(fixture);
 
     backend
@@ -230,7 +241,7 @@ describe('AddressesPage', () => {
     const { fixture, backend } = await montar(true);
     await responder(fixture, backend, [direccion({ isDefault: false })]);
 
-    botonLlamado(fixture, 'Usar como predeterminada')?.click();
+    botonLlamado(fixture, 'Usar como predeterminada: la dirección de Ana María Ruiz')?.click();
     await bombear(fixture);
 
     backend
@@ -262,7 +273,7 @@ describe('AddressesPage', () => {
       direccion({ id: 'la-otra', recipientName: 'Carlos Pérez', isDefault: false }),
     ]);
 
-    botonLlamado(fixture, 'Quitar')?.click();
+    botonLlamado(fixture, 'Quitar la dirección de Ana María Ruiz')?.click();
     await bombear(fixture);
 
     backend
@@ -297,7 +308,7 @@ describe('AddressesPage', () => {
     const { fixture, backend } = await montar(true);
     await responder(fixture, backend, [direccion({ isDefault: false })]);
 
-    botonLlamado(fixture, 'Quitar')?.click();
+    botonLlamado(fixture, 'Quitar la dirección de Ana María Ruiz')?.click();
     await bombear(fixture);
 
     backend
@@ -329,5 +340,96 @@ describe('AddressesPage', () => {
 
     expect(etiquetas).toContain('Editar la dirección de Ana María Ruiz');
     expect(etiquetas).toContain('Quitar la dirección de Ana María Ruiz');
+  });
+
+  /**
+   * El anuncio vive en una región viva que se pinta **siempre**.
+   *
+   * <p>Se prueba sobre el elemento y no sobre `textContent` de la página, porque el defecto
+   * que hubo era justamente ese: el mensaje se veía y no se anunciaba.
+   */
+  it('anuncia por una región viva que existe antes del mensaje', async () => {
+    const { fixture, backend } = await montar(true);
+
+    const region = fixture.nativeElement.querySelector('p.solo-lectores[role="status"]');
+    expect(
+      region,
+      'la región viva tiene que existir antes de que haya nada que decir',
+    ).not.toBeNull();
+
+    await responder(fixture, backend, [direccion({ isDefault: false })]);
+    botonLlamado(fixture, 'Quitar la dirección de Ana María Ruiz')?.click();
+    await bombear(fixture);
+    backend
+      .expectOne(
+        (llamada) => llamada.url === `${API}/users/me/addresses/una` && llamada.method === 'DELETE',
+      )
+      .flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+    backend
+      .expectOne((llamada) => llamada.url === `${API}/users/me/addresses`)
+      .flush({ addresses: [] });
+    await bombear(fixture);
+
+    // El mismo nodo de antes, ahora con el texto dentro.
+    expect(
+      fixture.nativeElement.querySelector('p.solo-lectores[role="status"]').textContent,
+    ).toContain('Dirección quitada');
+  });
+
+  /** El foco no puede caer a `<body>`: lo que se pulsó deja de existir. */
+  it('devuelve el foco al encabezado tras quitar una dirección', async () => {
+    const { fixture, backend } = await montar(true);
+    await responder(fixture, backend, [direccion({ isDefault: false })]);
+
+    botonLlamado(fixture, 'Quitar la dirección de Ana María Ruiz')?.click();
+    await bombear(fixture);
+    backend
+      .expectOne(
+        (llamada) => llamada.url === `${API}/users/me/addresses/una` && llamada.method === 'DELETE',
+      )
+      .flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+    backend
+      .expectOne((llamada) => llamada.url === `${API}/users/me/addresses`)
+      .flush({ addresses: [] });
+    await bombear(fixture);
+
+    expect(document.activeElement?.tagName).toBe('H1');
+  });
+
+  /**
+   * Si el refresco falla, no se deduce nada de una lista vacía.
+   *
+   * <p>`refetch()` no rechaza: resuelve sin datos. Con `?? []` se anunciaba «quitada» aunque
+   * el servidor sí hubiera relevado otra predeterminada.
+   */
+  it('no inventa el relevo cuando la lista no se pudo recargar', async () => {
+    const { fixture, backend } = await montar(true);
+    await responder(fixture, backend, [
+      direccion({ id: 'la-predeterminada', isDefault: true }),
+      direccion({ id: 'la-otra', recipientName: 'Carlos Pérez', isDefault: false }),
+    ]);
+
+    botonLlamado(fixture, 'Quitar la dirección de Ana María Ruiz')?.click();
+    await bombear(fixture);
+    backend
+      .expectOne(
+        (llamada) =>
+          llamada.url === `${API}/users/me/addresses/la-predeterminada` &&
+          llamada.method === 'DELETE',
+      )
+      .flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+
+    // El refresco falla.
+    backend
+      .expectOne((llamada) => llamada.url === `${API}/users/me/addresses`)
+      .flush({ code: 'COMMON_UNEXPECTED' }, { status: 500, statusText: 'Server Error' });
+    await bombear(fixture);
+
+    const texto = fixture.nativeElement.textContent;
+    expect(texto).not.toContain('Dirección quitada');
+    expect(texto).toContain('no pudimos volver a cargar la lista');
   });
 });

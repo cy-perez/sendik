@@ -22,10 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
  * fecha de creacion y la marca de predeterminada sobreviven: lo unico que se reescribe son
  * los siete campos y la fecha de actualizacion.
  *
- * <p><strong>Una direccion ajena responde 404 y no 403</strong>, y por eso el repositorio
- * devuelve la de cualquiera y la comprobacion esta aqui a la vista: un 403 confirmaria que
- * ese identificador existe y que es de alguien. Como una direccion no la ve nadie mas que su
+ * <p><strong>Una direccion ajena responde 404 y no 403</strong>: un 403 confirmaria que ese
+ * identificador existe y que es de alguien. Como una direccion no la ve nadie mas que su
  * duena (RN-098), ni siquiera hay que admitir que existe.
+ *
+ * <p>El 404 lo lanza este caso de uso, pero <strong>quien filtra por dueno es la consulta</strong>:
+ * el repositorio recibe la cuenta y no devuelve la fila ajena. No es para esconder la regla
+ * sino para que la fila de otra persona no llegue a descifrarse.
  */
 public class EditShippingAddressUseCase {
 
@@ -55,9 +58,8 @@ public class EditShippingAddressUseCase {
 
         // El dueno va en la consulta y no en un filtro de despues: asi la fila ajena no
         // llega a descifrarse, y el 404 sale por el mismo camino que el de una inventada.
-        ShippingAddress actual = direcciones
-                .buscar(comando.direccion(), comando.usuario())
-                .orElseThrow(() -> new AddressNotFoundException(comando.direccion()));
+        ShippingAddress actual =
+                direcciones.buscar(comando.direccion(), comando.usuario()).orElseThrow(AddressNotFoundException::new);
 
         ShippingAddress editada = comando.datos().aplicadaA(actual, reloj.instant());
 
@@ -76,7 +78,7 @@ public class EditShippingAddressUseCase {
     private void exigirMunicipioVigente(MunicipalityCode codigo) {
         Optional<Municipality> municipio = division.buscarMunicipio(codigo);
         if (municipio.isEmpty() || !municipio.get().activo()) {
-            throw new UnknownMunicipalityException(codigo);
+            throw new UnknownMunicipalityException();
         }
     }
 }

@@ -54,6 +54,6 @@ public record ShippingAddressView(
      */
     @Override
     public String toString() {
-        return "ShippingAddressView[id=" + id + ", municipio=" + municipioCodigo + "]";
+        return "ShippingAddressView[id=" + id + "]";
     }
 }

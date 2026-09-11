@@ -2,7 +2,6 @@ package co.sendik.identity.exception;
 
 import co.sendik.shared.error.DomainException;
 import co.sendik.shared.error.ErrorCode;
-import co.sendik.shared.geo.MunicipalityCode;
 
 /**
  * El municipio no esta en la division politico-administrativa, o ya no se ofrece.
@@ -19,12 +18,17 @@ import co.sendik.shared.geo.MunicipalityCode;
  * <p>No cubre el caso de "este municipio no pertenece a ese departamento", que no puede
  * ocurrir: el cuerpo de la peticion no lleva departamento y el codigo del municipio lo
  * lleva dentro (RN-100).
+ *
+ * <p><strong>El mensaje no lleva el codigo dentro.</strong> {@code ApiExceptionHandler} lo
+ * registra, y aunque un municipio rechazado nunca sea el de una direccion guardada, la regla
+ * de esta historia es una sola para todos los mensajes: el valor recibido no entra. Se
+ * corrigio tras la segunda revision de seguridad, que noto que estos dos quedaban fuera.
  */
 public final class UnknownMunicipalityException extends DomainException {
 
     private static final long serialVersionUID = 1L;
 
-    public UnknownMunicipalityException(MunicipalityCode municipio) {
-        super(ErrorCode.USER_UNKNOWN_MUNICIPALITY, "El municipio " + municipio + " no esta en la division vigente");
+    public UnknownMunicipalityException() {
+        super(ErrorCode.USER_UNKNOWN_MUNICIPALITY, "El municipio no esta en la division vigente");
     }
 }

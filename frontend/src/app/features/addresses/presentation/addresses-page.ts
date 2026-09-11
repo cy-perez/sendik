@@ -163,14 +163,22 @@ export class AddressesPage {
     this.limpiarAvisos();
 
     const eraLaPredeterminada = direccion.isDefault;
-    let libreta: readonly ShippingAddress[];
+    let libreta: readonly ShippingAddress[] | null;
 
     try {
       await this.store.borrado.mutateAsync(direccion.id);
       libreta = await this.store.refrescarLibreta();
     } catch (error) {
+      // Sin mover el foco: el `role="alert"` es asertivo y moverlo lo pisaria.
       this.falloDeAccion.set(claveDelError(error));
-      this.devolverElFoco();
+      return;
+    }
+
+    // **Si el refresco falló, no se deduce nada.** `refetch()` de TanStack no rechaza:
+    // ante un fallo resuelve sin datos, y con una lista vacía se anunciaría «quitada» aunque
+    // el servidor sí hubiera relevado otra. Lo cazó la segunda revisión de accesibilidad.
+    if (libreta === null) {
+      this.falloDeAccion.set('addresses.errors.stale');
       return;
     }
 
@@ -196,7 +204,6 @@ export class AddressesPage {
       await this.store.refrescarLibreta();
     } catch (error) {
       this.falloDeAccion.set(claveDelError(error));
-      this.devolverElFoco();
       return;
     }
 

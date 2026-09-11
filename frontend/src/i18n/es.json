@@ -289,7 +289,7 @@
       "purpose": {
         "account": "Usamos estos datos para crear y administrar tu cuenta, confirmar tu correo, mantener tu sesión segura y atenderte cuando escribas. No los vendemos ni los cedemos con fines publicitarios.",
         "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más.",
-        "delivery": "Usamos tu dirección, el nombre de quien recibe y su teléfono para una sola cosa: llevarte hasta allí lo que compres. Cuando hagas un pedido, esos datos se los entregamos a la empresa de envíos y a la transportadora que lleve el paquete, porque sin ellos no hay entrega. No salen de Sendik antes de eso, y el vendedor solo ve tu dirección cuando el pago está aprobado."
+        "delivery": "Usamos tu dirección, el nombre de quien recibe y su teléfono para una sola cosa: llevarte hasta allí lo que compres. Hoy no salen de Sendik: se guardan para que no tengas que escribirlos en cada compra. Cuando exista el envío te diremos, antes de que pidas, a quién se los entregamos y para qué."
       },
       "sensitive": "No estás obligado a entregar estos datos. Puedes tener cuenta, navegar y comprar sin ellos; solo hacen falta si decides vender, porque sin saber quién vende el respaldo no significaría nada.",
       "rights": "Puedes conocer, actualizar, rectificar y suprimir tus datos, y retirar esta autorización, escribiendo a {{correo}}.",
@@ -1498,7 +1498,7 @@
       "cancel": "Cancelar",
       "editNamed": "Editar la dirección de {{nombre}}",
       "deleteNamed": "Quitar la dirección de {{nombre}}",
-      "makeDefaultNamed": "Usar como predeterminada la dirección de {{nombre}}"
+      "makeDefaultNamed": "Usar como predeterminada: la dirección de {{nombre}}"
     },
     "notices": {
       "saved": "Dirección guardada.",
@@ -1556,7 +1556,8 @@
       "divisionFailed": "No pudimos cargar la lista de departamentos y municipios. Vuelve a cargar la página."
     },
     "errors": {
-      "full": "Ya tienes {{tope}} direcciones guardadas, que es el máximo. Quita una para agregar otra."
+      "full": "Ya tienes {{tope}} direcciones guardadas, que es el máximo. Quita una para agregar otra.",
+      "stale": "Se hizo el cambio, pero no pudimos volver a cargar la lista. Recarga la página."
     }
   }
 }

@@ -25,7 +25,12 @@ public record RecipientName(String value) {
 
     public RecipientName {
         Objects.requireNonNull(value, "El nombre de quien recibe es obligatorio");
-        value = value.replaceAll("\\p{Cntrl}", " ").replaceAll("\\s+", " ").trim();
+        // `\\p{Cntrl}` en Java es solo ASCII, asi que U+2028, U+2029 y la anulacion
+        // bidireccional U+202E atravesaban esto y quedaban guardados. Lo cazo la
+        // revision de seguridad.
+        value = value.replaceAll("[\\p{Cntrl}\\p{Cf}\\p{Zl}\\p{Zp}]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
 
         if (value.length() < LARGO_MINIMO) {
             throw new IllegalArgumentException(

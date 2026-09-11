@@ -27,8 +27,11 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>La conversion vive aqui y no en el caso de uso porque crear y editar la comparten
  * entera —los campos son los mismos— y porque es mapeo y no orquestacion: no habla con
- * ningun puerto. El precedente del proyecto es {@code SearchHit.de(Listing)}, que tambien
- * convierte dentro de un DTO.
+ * ningun puerto.
+ *
+ * <p>La primera version citaba {@code SearchHit.de(Listing)} como precedente y no lo es:
+ * aquello envuelve un agregado y rellena un nulo, no convierte texto en objetos de valor. El
+ * precedente honesto es que no hay ninguno, y la razon para dejarlo aqui es la de arriba.
  *
  * <p><strong>El primer intento la puso aqui por un motivo equivocado</strong>, y conviene
  * que quede escrito para que nadie lo repita: se leyo que {@code ArchitectureTest} prohibia
@@ -106,11 +109,16 @@ public record ShippingAddressData(
      * una persona, su telefono y el nombre de quien recibe. El criterio 19 no puede depender
      * de que nadie escriba nunca un {@code LOG.debug} con el objeto entero —{@code co.sendik}
      * esta en {@code DEBUG} en {@code dev} y en {@code local}—, asi que lo que se imprime es
-     * lo que no identifica a nadie. Es la misma decision que {@code ShippingAddress} y
+     * lo que no identifica a nadie.
+     *
+     * <p><strong>Tampoco el municipio.</strong> No esta en la lista del criterio 19, pero
+     * Spring registra el cuerpo deserializado en {@code DEBUG} y en que municipio vive
+     * alguien es dato personal: lo destapo la prueba de registros al afirmar sobre el codigo
+     * rechazado. Lo que queda impreso es lo que no identifica a nadie, o nada. Es la misma decision que {@code ShippingAddress} y
      * {@code EncryptedValue}, extendida tras la revision de seguridad.
      */
     @Override
     public String toString() {
-        return "ShippingAddressData[municipio=" + municipio + "]";
+        return "ShippingAddressData[sin imprimir]";
     }
 }

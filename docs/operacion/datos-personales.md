@@ -1,7 +1,7 @@
 # Tratamiento de datos personales
 
 Sendik guarda datos que la ley colombiana clasifica como sensibles: numero de
-documento, imagen del rostro, cuenta bancaria y direccion de residencia. Aplica
+documento, imagen del rostro y cuenta bancaria. Aplica
 la **Ley 1581 de 2012** y el Decreto 1074 de 2015. Este documento es la regla
 operativa; no sustituye asesoria juridica.
 
@@ -305,6 +305,23 @@ es cuando el dato salga de verdad hacia un encargado.
 **Lo que no se hace y conviene que este dicho:** no se geocodifica, no se valida
 contra ningun servicio externo y no se comprueba que la direccion exista (RN-103).
 Guardar una direccion no manda nada a ningun tercero.
+
+**Y por eso el aviso de entrega no nombra a nadie.** La primera version decia que
+los datos se entregan al agregador y a la transportadora, y que el vendedor ve la
+direccion cuando el pago esta aprobado. Las dos cosas son ciertas del futuro y
+ninguna esta en `privacy.2026-09-08b`: su numeral de destinatarios lista a Skydropx
+y a las transportadoras, y **no dice que el vendedor reciba nombre, direccion ni
+telefono del comprador** -que ademas no seria un encargo sino una transferencia-.
+La regla de este documento es que el dia que el aviso diga algo que la politica no
+dice, se publica una version nueva de la politica; como aqui no hay todavia ningun
+flujo real, la salida barata es la contraria: el aviso dice lo que hoy es cierto
+-que el dato no sale de Sendik- y anuncia que antes de pedir se dira a quien se
+entrega.
+
+**Lo que queda pendiente para el dia del pedido**, y conviene que este escrito para
+no descubrirlo entonces: la politica necesita ganar al vendedor como destinatario,
+decir bajo que figura, y decir si hay transferencia internacional -que depende de
+las cuatro respuestas de Skydropx que siguen sin llegar-.
 
 ## Pendiente antes del lanzamiento
 

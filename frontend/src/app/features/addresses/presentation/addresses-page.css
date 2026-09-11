@@ -22,7 +22,13 @@
 
 /* La misma caja y el mismo borde que el resto de las tarjetas del proyecto. No estrena
    nada: son los tokens de superficie y borde del sistema. */
+/* `anywhere` y no `break-word` porque solo el primero afecta al tamano min-content, que es
+   lo que gobierna el `min-width: auto` de un elemento de rejilla. Va en la tarjeta entera y
+   no solo en los botones: lo que de verdad puede ser largo y sin espacios no es
+   «predeterminada» sino la linea de direccion, que admite 120 caracteres, y las indicaciones,
+   que admiten 200. */
 .direcciones__tarjeta {
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: var(--esp-4);
@@ -62,12 +68,6 @@
   flex-wrap: wrap;
   gap: var(--esp-8);
   margin-top: var(--esp-12);
-}
-
-/* «predeterminada» son catorce caracteres indivisibles y `.btn` anade sangria horizontal
-   fija, que no encoge con el texto ampliado. A 360px y al 200% eso desborda la tarjeta. */
-.direcciones__acciones .btn {
-  overflow-wrap: anywhere;
 }
 
 /* Separado del resto de acciones: no se pone al lado de la principal. */

@@ -10,7 +10,7 @@
  * duplicación era la deuda más concreta que dejaba, sin ningún guardián que avisara si solo
  * se cambiaba una. Aquí toda escritura es autenticada, así que el número vive en un solo
  * sitio y la pantalla se entera del rechazo por el código de error. Que el mensaje pueda
- * nombrar el tope sin saberlo es lo que resuelve {@link laLibretaEstaLlena}.
+ * nombrar el tope sin saberlo es lo que resuelve {@link cuantasHay}.
  */
 
 /** Un sitio de la división político-administrativa: lo que se manda y lo que se lee. */

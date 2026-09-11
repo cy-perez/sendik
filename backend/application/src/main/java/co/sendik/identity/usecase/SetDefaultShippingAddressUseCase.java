@@ -47,7 +47,7 @@ public class SetDefaultShippingAddressUseCase {
         // Se busca dentro de SU libreta, no en la tabla entera: asi una direccion ajena cae
         // en el mismo 404 que una inventada, sin una comprobacion de dueno aparte.
         if (libreta.buscar(comando.direccion()).isEmpty()) {
-            throw new AddressNotFoundException(comando.direccion());
+            throw new AddressNotFoundException();
         }
 
         direcciones.marcarPredeterminada(comando.usuario(), comando.direccion());

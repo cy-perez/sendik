@@ -88,7 +88,7 @@ public class AddShippingAddressUseCase {
     private void exigirMunicipioVigente(MunicipalityCode codigo) {
         Optional<Municipality> municipio = division.buscarMunicipio(codigo);
         if (municipio.isEmpty() || !municipio.get().activo()) {
-            throw new UnknownMunicipalityException(codigo);
+            throw new UnknownMunicipalityException();
         }
     }
 }

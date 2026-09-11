@@ -123,6 +123,7 @@ public class JdbcShippingAddressRepository implements ShippingAddressRepository 
                             details_cipher      = EXCLUDED.details_cipher,
                             details_key_version = EXCLUDED.details_key_version,
                             updated_at          = EXCLUDED.updated_at
+                        WHERE shipping_addresses.user_id = EXCLUDED.user_id
                         """)
                 .param("id", direccion.id().value())
                 .param("cuenta", direccion.duena().value())
@@ -135,11 +136,17 @@ public class JdbcShippingAddressRepository implements ShippingAddressRepository 
                 .update();
     }
 
-    /** Idempotente: borrar cero filas es un resultado, no un error (criterio 14). */
+    /**
+     * Idempotente: borrar cero filas es un resultado, no un error (criterio 14).
+     *
+     * <p>Con el dueno en el {@code WHERE}, igual que {@link #buscar}: que la fila sea de
+     * quien pide no puede depender solo de una comprobacion en memoria del caso de uso.
+     */
     @Override
-    public void borrar(ShippingAddressId id) {
-        jdbc.sql("DELETE FROM shipping_addresses WHERE id = :id")
+    public void borrar(ShippingAddressId id, UserId cuenta) {
+        jdbc.sql("DELETE FROM shipping_addresses WHERE id = :id AND user_id = :cuenta")
                 .param("id", id.value())
+                .param("cuenta", cuenta.value())
                 .update();
     }
 

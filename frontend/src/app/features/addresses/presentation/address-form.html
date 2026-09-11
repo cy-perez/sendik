@@ -22,6 +22,15 @@
     [errorKey]="departmentError()"
   />
 
+  <!-- El fallo de la division se pinta junto a los dos selectores que describe y no al
+       final del formulario, a ocho campos de distancia: es lo unico que explica por que
+       estan vacios. -->
+  <p class="error tipo-leyenda" role="alert">
+    @if (divisionFallo()) {
+      {{ 'addresses.form.divisionFailed' | transloco }}
+    }
+  </p>
+
   <!-- Criterio 27: al cambiar de departamento el selector se vacia y se repuebla, y eso
        hay que anunciarlo. Sin esto, quien no lo ve pierde el municipio elegido en silencio. -->
   <p class="solo-lectores" role="status">
@@ -32,7 +41,6 @@
 
   <sendik-select-field
     fieldId="direccion-municipio"
-    [disabled]="!municipioDisponible()"
     labelKey="addresses.form.municipality.label"
     [placeholderKey]="municipioPlaceholder()"
     [control]="form.controls.municipalityCode"
@@ -100,12 +108,6 @@
     [control]="form.controls.postalCode"
     [errorKey]="postalCodeError()"
   />
-
-  @if (divisionFallo()) {
-    <p class="error tipo-leyenda" role="alert">
-      {{ 'addresses.form.divisionFailed' | transloco }}
-    </p>
-  }
 
   @if (fallo(); as mensaje) {
     <!-- El tope va como parametro: la clave generica de `errors.byCode` no lo lleva, y

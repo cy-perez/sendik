@@ -335,4 +335,66 @@ describe('AddressForm', () => {
     expect((campo(fixture, 'direccion-linea') as HTMLInputElement).value).toBe('Calle 45 # 12-34');
     expect((campo(fixture, 'direccion-complemento') as HTMLInputElement).value).toBe('Apto 802');
   });
+
+  /** Criterio 4: no se puede usar hasta que haya departamento, y de verdad. */
+  it('deshabilita el municipio mientras no hay departamento', async () => {
+    const { fixture, backend } = await montar();
+
+    expect((campo(fixture, 'direccion-municipio') as HTMLSelectElement).disabled).toBe(true);
+
+    await escribir(fixture, 'direccion-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+
+    expect((campo(fixture, 'direccion-municipio') as HTMLSelectElement).disabled).toBe(false);
+  });
+
+  /** La historia lo pide con esas palabras: «se vacía al cambiarlo». */
+  it('vacía el municipio al cambiar de departamento', async () => {
+    const { fixture, backend } = await montar();
+
+    await escribir(fixture, 'direccion-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+    await escribir(fixture, 'direccion-municipio', '11001');
+    expect((campo(fixture, 'direccion-municipio') as HTMLSelectElement).value).toBe('11001');
+
+    await escribir(fixture, 'direccion-departamento', '05');
+    await responderMunicipios(fixture, backend, '05');
+
+    expect((campo(fixture, 'direccion-municipio') as HTMLSelectElement).value).toBe('');
+  });
+
+  /** Criterio 27: el cambio se anuncia, y por una región que existe siempre. */
+  it('anuncia cuántos municipios hay al elegir departamento', async () => {
+    const { fixture, backend } = await montar();
+
+    const region = fixture.nativeElement.querySelector('p.solo-lectores[role="status"]');
+    expect(region).not.toBeNull();
+
+    await escribir(fixture, 'direccion-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+
+    expect(
+      fixture.nativeElement.querySelector('p.solo-lectores[role="status"]').textContent,
+    ).toContain('municipios disponibles');
+  });
+
+  /**
+   * RN-104: es el único formulario del producto que recoge datos de un tercero, así que
+   * lleva aviso de privacidad y lleva **el suyo**, no el más flojo.
+   */
+  it('lleva el aviso de privacidad de entrega', async () => {
+    const { fixture } = await montar();
+
+    const texto = fixture.nativeElement.textContent;
+    expect(texto).toContain('Cómo tratamos tus datos');
+    expect(texto).toContain('llevarte hasta allí lo que compres');
+  });
+
+  /** El foco entra al formulario: el botón que lo abrió deja de existir. */
+  it('recoge el foco en su encabezado al abrirse', async () => {
+    const { fixture } = await montar();
+    await bombear(fixture);
+
+    expect(document.activeElement?.tagName).toBe('H2');
+  });
 });

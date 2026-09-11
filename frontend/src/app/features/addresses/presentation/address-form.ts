@@ -183,7 +183,26 @@ export class AddressForm {
     this.store.abrirFormulario(true);
     inject(DestroyRef).onDestroy(() => this.store.abrirFormulario(false));
 
-    afterNextRender(() => this.titulo()?.nativeElement.focus(), { injector: this.injector });
+    // **El foco se recoloca en cada apertura y en cada cambio de direccion editada**, no
+    // solo al construirse. La lista de tarjetas sigue en pantalla con el formulario abierto,
+    // asi que pulsar «Editar» en otra tarjeta no destruye este componente: cambia su
+    // contenido entero -incluido este titulo- sin que el constructor vuelva a correr.
+    effect(() => {
+      this.direccion();
+      afterNextRender(() => this.titulo()?.nativeElement.focus(), { injector: this.injector });
+    });
+
+    // El municipio se deshabilita deshabilitando **el control**. Un `[disabled]` en la
+    // plantilla sobre un `<select>` con `[formControl]` es un no-op: la directiva declara ese
+    // input y su setter solo advierte.
+    effect(() => {
+      const control = this.form.controls.municipalityCode;
+      if (this.municipioDisponible()) {
+        control.enable({ emitEvent: false });
+      } else {
+        control.disable({ emitEvent: false });
+      }
+    });
 
     // Rellena el formulario cuando llega la direccion que se va a editar, y solo mientras
     // nadie lo haya tocado: una respuesta que llegue tarde no puede borrar lo que la

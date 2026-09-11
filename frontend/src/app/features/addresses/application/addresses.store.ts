@@ -169,8 +169,11 @@ export class AddressesStore {
    * leer la señal justo después seguía dando la libreta vieja —la pantalla anunciaba el
    * nombre de la dirección recién borrada—.
    */
-  async refrescarLibreta(): Promise<readonly ShippingAddress[]> {
+  async refrescarLibreta(): Promise<readonly ShippingAddress[] | null> {
     const resultado = await this.libreta.refetch();
-    return resultado.data ?? [];
+    // **Nulo cuando no se pudo, y no una lista vacía.** `refetch()` no rechaza: ante un
+    // fallo resuelve sin datos, y devolver `[]` hacía que quien lo llama dedujera que la
+    // libreta se quedó vacía.
+    return resultado.isError ? null : (resultado.data ?? []);
   }
 }

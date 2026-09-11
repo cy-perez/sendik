@@ -18,8 +18,10 @@ import { correoNuevo, ingresar, registrar, salirSiHaySesion } from './recorridos
  *       selectores salen de la base sembrada por V20, y no de un doble.
  *   <li>Que RN-099 se cumple contra PostgreSQL: la primera nace predeterminada sola, y al
  *       borrar la predeterminada el relevo lo decide el servidor y la pantalla lo dice.
- *   <li>Que RN-102 se cumple de verdad: cerrar la cuenta se lleva las direcciones, y eso
- *       solo se ve ejerciendo el cierre por la interfaz.
+ *   <li>Que el cierre de cuenta desde la interfaz no se atasca teniendo direcciones
+ *       guardadas. Que la fila desaparezca de la tabla —RN-102— lo prueba
+ *       `ShippingAddressPersonalDataTest` contra PostgreSQL; desde fuera no se puede
+ *       observar, y decir que esta prueba lo demuestra sería falso.
  * </ul>
  */
 test.use({ locale: 'es-CO' });
@@ -93,6 +95,12 @@ test.describe('direcciones de entrega', () => {
     // Criterio 24: el municipio nunca se lee solo.
     await expect(page.getByText('Bogotá, D.C., Bogotá, D.C.')).toBeVisible();
 
+    // **El código postal se lee de vuelta.** Sin esto, «arreglar» el fallo dejando de
+    // mandarlo dejaría esta prueba en verde: solo cazaría la vía del 400.
+    await page.getByRole('button', { name: 'Editar la dirección de Ana María Ruiz' }).click();
+    await expect(page.getByLabel('Código postal (opcional)')).toHaveValue('110111');
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+
     // Una segunda, en otro departamento: es lo que demuestra que los dos selectores
     // dependientes funcionan contra la división sembrada de verdad.
     await page.getByRole('button', { name: 'Agregar una dirección' }).click();
@@ -109,29 +117,30 @@ test.describe('direcciones de entrega', () => {
 
     // Marcar la segunda: exactamente una predeterminada (criterio 13).
     await page
-      .getByRole('button', { name: 'Usar como predeterminada la dirección de Carlos Pérez' })
+      .getByRole('button', { name: 'Usar como predeterminada: la dirección de Carlos Pérez' })
       .click();
-    await expect(
-      page.getByText('Tu dirección predeterminada es ahora la de Carlos Pérez'),
-    ).toBeVisible();
+    // Sobre la region viva y no sobre el texto suelto: el mensaje se pinta en dos sitios
+    // -la region que lo anuncia y el parrafo que lo ensena- y lo que importa es el primero.
+    await expect(page.getByRole('status')).toContainText(
+      'Tu dirección predeterminada es ahora la de Carlos Pérez',
+    );
     // Exacto: sin el, casa tambien con el boton «Usar como predeterminada» y con el aviso.
     await expect(page.getByText('Predeterminada', { exact: true })).toHaveCount(1);
 
     // Borrar la predeterminada: el relevo lo decide el servidor y la pantalla dice cuál
     // quedó (criterio 11).
     await page.getByRole('button', { name: 'Quitar la dirección de Carlos Pérez' }).click();
-    await expect(
-      page.getByText('Tu dirección predeterminada es ahora la de Ana María Ruiz'),
-    ).toBeVisible();
+    await expect(page.getByRole('status')).toContainText(
+      'Tu dirección predeterminada es ahora la de Ana María Ruiz',
+    );
 
     // Y sobrevive a la recarga: está guardada, no en memoria (criterio 2).
     await page.reload();
     await expect(page.getByText('Calle 45 # 12-34')).toBeVisible();
     await expect(page.getByText('Predeterminada', { exact: true })).toBeVisible();
 
-    // RN-102: cerrar la cuenta se lleva la libreta. Se comprueba entrando de nuevo con una
-    // cuenta nueva, que es lo único que se puede observar desde fuera; que la fila
-    // desaparece de la tabla lo prueba `ShippingAddressPersonalDataTest`.
+    // El cierre, con la libreta llena: lo que se observa aquí es que termina y cierra la
+    // sesión. Que la fila desaparezca lo prueba `ShippingAddressPersonalDataTest`.
     await page.goto('/mi-cuenta');
     await page.getByRole('button', { name: 'Quiero cerrar mi cuenta' }).click();
     await page.getByLabel('Escribe tu correo para confirmar').fill(correo);

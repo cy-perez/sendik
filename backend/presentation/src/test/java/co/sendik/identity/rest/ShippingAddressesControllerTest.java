@@ -29,7 +29,6 @@ import co.sendik.identity.usecase.EditShippingAddressUseCase;
 import co.sendik.identity.usecase.ListShippingAddressesUseCase;
 import co.sendik.identity.usecase.RemoveShippingAddressUseCase;
 import co.sendik.identity.usecase.SetDefaultShippingAddressUseCase;
-import co.sendik.shared.geo.MunicipalityCode;
 import co.sendik.shared.rest.ApiExceptionHandler;
 import java.time.Instant;
 import java.util.List;
@@ -224,7 +223,7 @@ class ShippingAddressesControllerTest {
     /** RN-100: 422 y con su propio codigo, no el de validacion generica. */
     @Test
     void deberia_traducir_el_municipio_desconocido_a_422() throws Exception {
-        when(agregado.execute(any())).thenThrow(new UnknownMunicipalityException(new MunicipalityCode("99999")));
+        when(agregado.execute(any())).thenThrow(new UnknownMunicipalityException());
 
         mvc.perform(post("/api/v1/users/me/addresses")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -248,7 +247,7 @@ class ShippingAddressesControllerTest {
     /** Criterio 15: 404 y nunca 403 sobre una direccion ajena. */
     @Test
     void deberia_traducir_la_direccion_ajena_a_404() throws Exception {
-        when(edicion.execute(any())).thenThrow(new AddressNotFoundException(DIRECCION));
+        when(edicion.execute(any())).thenThrow(new AddressNotFoundException());
 
         mvc.perform(put("/api/v1/users/me/addresses/" + DIRECCION)
                         .contentType(MediaType.APPLICATION_JSON)

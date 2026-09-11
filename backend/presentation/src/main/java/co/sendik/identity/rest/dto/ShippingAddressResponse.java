@@ -57,11 +57,16 @@ public record ShippingAddressResponse(
      * una persona, su telefono y el nombre de quien recibe. El criterio 19 no puede depender
      * de que nadie escriba nunca un {@code LOG.debug} con el objeto entero —{@code co.sendik}
      * esta en {@code DEBUG} en {@code dev} y en {@code local}—, asi que lo que se imprime es
-     * lo que no identifica a nadie. Es la misma decision que {@code ShippingAddress} y
+     * lo que no identifica a nadie.
+     *
+     * <p><strong>Tampoco el municipio.</strong> No esta en la lista del criterio 19, pero
+     * Spring registra el cuerpo deserializado en {@code DEBUG} y en que municipio vive
+     * alguien es dato personal: lo destapo la prueba de registros al afirmar sobre el codigo
+     * rechazado. Lo que queda impreso es lo que no identifica a nadie, o nada. Es la misma decision que {@code ShippingAddress} y
      * {@code EncryptedValue}, extendida tras la revision de seguridad.
      */
     @Override
     public String toString() {
-        return "ShippingAddressResponse[id=" + id + ", municipalityCode=" + municipalityCode + "]";
+        return "ShippingAddressResponse[id=" + id + "]";
     }
 }

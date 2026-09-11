@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.core.read.ListAppender;
 import co.sendik.identity.model.BirthDate;
 import co.sendik.identity.model.DisplayName;
@@ -351,10 +352,16 @@ class ShippingAddressesSecurityTest {
     /**
      * Criterio 19, probado asi de literal porque la historia decia que convenia.
      *
-     * <p>Hasta ahora lo unico que lo sostenia era la costumbre de no meter el valor en el
-     * mensaje de cinco constructores. El dia que alguien escriba
-     * {@code new IllegalArgumentException("La direccion '" + value + "' no vale")} o un
-     * {@code LOG.debug} con el objeto entero, esto se pone rojo.
+     * <p>La primera version de esta prueba tenia tres huecos que la segunda revision
+     * encontro, y los tres la dejaban pasar sin comprobar nada: no afirmaba haber capturado
+     * ni una linea —con el appender desenganchado, seis {@code doesNotContain} sobre una
+     * cadena vacia pasan—, solo leia {@code getFormattedMessage()} —y el mensaje de una
+     * excepcion registrada viaja en el {@code ThrowableProxy}, que es justo el escenario que
+     * el javadoc prometia cazar— y ninguna de sus peticiones llegaba al manejador de
+     * {@code IllegalArgumentException}, que es el unico que registra {@code e.getMessage()}.
+     *
+     * <p>Ahora recorre las cinco rutas mas la descarga de datos, incluye una peticion que si
+     * llega a ese manejador, y lee tambien las excepciones con sus causas.
      */
     @Test
     void deberia_no_escribir_ningun_dato_de_la_direccion_en_los_registros() throws Exception {
@@ -365,25 +372,52 @@ class ShippingAddressesSecurityTest {
         raiz.setLevel(Level.DEBUG);
         raiz.addAppender(capturadas);
 
+        String id;
         try {
             String token = tokenNuevo();
-            mvc.perform(post("/api/v1/users/me/addresses")
+
+            String creada = mvc.perform(post("/api/v1/users/me/addresses")
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("11001")))
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            id = JSON.readTree(creada).get("id").asString();
+
+            mvc.perform(get("/api/v1/users/me/addresses").header("Authorization", token));
+            mvc.perform(put("/api/v1/users/me/addresses/" + id)
                     .header("Authorization", token)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(cuerpo("11001")));
-            // Y tambien por el camino del rechazo, que es el que pasa por el manejador.
+                    .content(cuerpo("05001")));
+            mvc.perform(put("/api/v1/users/me/default-address")
+                    .header("Authorization", token)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"addressId\":\"" + id + "\"}"));
+            mvc.perform(get("/api/v1/users/me/export").header("Authorization", token));
+
+            // El camino que llega al manejador de IllegalArgumentException, que es el unico
+            // que registra el mensaje de la excepcion: un identificador que no es un UUID.
+            mvc.perform(delete("/api/v1/users/me/addresses/no-es-un-uuid").header("Authorization", token));
+
+            // Y el del rechazo de negocio, que pasa por el manejador de DomainException.
             mvc.perform(post("/api/v1/users/me/addresses")
                     .header("Authorization", token)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(cuerpo("99999")));
-            mvc.perform(get("/api/v1/users/me/addresses").header("Authorization", token));
+
+            mvc.perform(delete("/api/v1/users/me/addresses/" + id).header("Authorization", token));
         } finally {
             raiz.detachAppender(capturadas);
             raiz.setLevel(nivelAnterior);
         }
 
-        String todo =
-                capturadas.list.stream().map(ILoggingEvent::getFormattedMessage).collect(joining("\n"));
+        // Sin esto, un appender que no se enganche deja la prueba en verde sin mirar nada.
+        assertThat(capturadas.list).isNotEmpty();
+
+        String todo = capturadas.list.stream()
+                .map(ShippingAddressesSecurityTest::todoElTexto)
+                .collect(joining("\n"));
 
         assertThat(todo)
                 .doesNotContain("Ana María Ruiz")
@@ -391,7 +425,37 @@ class ShippingAddressesSecurityTest {
                 .doesNotContain("Calle 45")
                 .doesNotContain("Apto 802")
                 .doesNotContain("El timbre no sirve")
-                .doesNotContain("110111");
+                .doesNotContain("110111")
+                // El municipio rechazado tambien es un campo de la direccion.
+                .doesNotContain("99999");
+    }
+
+    /**
+     * El mensaje formateado <strong>y</strong> la excepcion con toda su cadena de causas.
+     *
+     * <p>{@code ApiExceptionHandler.inesperado} registra {@code LOG.error("...", traceId, e)}:
+     * el mensaje de la excepcion no esta en el texto formateado sino en el {@code ThrowableProxy}.
+     */
+    private static String todoElTexto(ILoggingEvent evento) {
+        StringBuilder texto = new StringBuilder(evento.getFormattedMessage());
+        for (IThrowableProxy causa = evento.getThrowableProxy(); causa != null; causa = causa.getCause()) {
+            texto.append('\n').append(causa.getClassName()).append(": ").append(causa.getMessage());
+        }
+        return texto.toString();
+    }
+
+    /**
+     * La validacion del {@code @PathVariable} de la division, en un contexto de verdad.
+     *
+     * <p>{@code LocationsControllerTest} monta con {@code standaloneSetup}, que no aplica
+     * {@code MethodValidationPostProcessor}: alli el {@code @Pattern} no se evalua y la
+     * prueba pasa por el camino viejo —el objeto de valor—, que es el que el cambio queria
+     * dejar de usar. Lo cazo la segunda revision de pruebas.
+     */
+    @Test
+    void deberia_rechazar_en_el_borde_un_codigo_de_departamento_mal_formado() throws Exception {
+        mvc.perform(get("/api/v1/locations/departments/bogota/municipalities").header("Authorization", tokenNuevo()))
+                .andExpect(status().isBadRequest());
     }
 
     @Nested

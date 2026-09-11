@@ -28,6 +28,13 @@ export interface SelectOption {
  * <p>Un `<select>` nativo y no una lista propia: se recorre con el teclado, lo anuncia
  * cualquier lector de pantalla, y en móvil el navegador da su propio selector, que es mejor
  * que cualquiera que pudiéramos escribir (frontend/CLAUDE.md: HTML semántico antes que ARIA).
+ *
+ * <p><strong>No tiene entrada `disabled`, y esa ausencia es deliberada.</strong> Se intentó
+ * y era un no-op: `FormControlDirective` declara un input llamado `disabled` cuyo setter solo
+ * imprime una advertencia, así que el binding se lo comía la directiva y nunca llegaba al
+ * DOM — encima ensuciando la consola en cada cambio. Un control reactivo se deshabilita
+ * deshabilitando **el control**: `control.disable()`. Quien use este componente lo hace desde
+ * su formulario, que es donde vive el `FormGroup`.
  */
 @Component({
   selector: 'sendik-select-field',
@@ -43,16 +50,6 @@ export class SelectField {
   readonly options = input.required<readonly SelectOption[]>();
   /** El texto de la opción vacía. Dice qué hay que elegir, o por qué todavía no se puede. */
   readonly placeholderKey = input.required<string>();
-  /**
-   * Si el selector no se puede usar todavia.
-   *
-   * <p>Existe porque un selector dependiente tiene que poder decir «primero elige lo de
-   * arriba» sin dejar que lo intenten. La opcion vacia explica el motivo; esto impide el
-   * gesto. Se agrego tras la revision de accesibilidad, que noto que el criterio 4 pedia
-   * deshabilitarlo y el componente no sabia.
-   */
-  readonly disabled = input(false);
-
   readonly hintKey = input<string | null>(null);
   readonly errorKey = input<string | null>(null);
 

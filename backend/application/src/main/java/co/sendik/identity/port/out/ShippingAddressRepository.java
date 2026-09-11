@@ -52,8 +52,18 @@ public interface ShippingAddressRepository {
     /** Inserta si no estaba y reemplaza si estaba. */
     void guardar(ShippingAddress direccion);
 
-    /** No falla si ya no estaba: el criterio 14 pide que borrar dos veces responda igual. */
-    void borrar(ShippingAddressId id);
+    /**
+     * La borra, si es de esa cuenta.
+     *
+     * <p>No falla si ya no estaba: el criterio 14 pide que borrar dos veces responda igual.
+     *
+     * <p><strong>El dueno va en la firma por lo mismo que en {@link #buscar}</strong>, y se
+     * corrigio despues de la segunda revision de seguridad: sin el, el puerto exponia un
+     * primitivo de borrado entre cuentas a una llamada de distancia, y lo unico que lo
+     * sostenia era una comprobacion en memoria del caso de uso. Es justo lo que la
+     * correccion de {@code buscar} habia decidido no hacer.
+     */
+    void borrar(ShippingAddressId id, UserId cuenta);
 
     /**
      * Cambia cual es la predeterminada de esa cuenta, en un solo gesto. Criterio 13.

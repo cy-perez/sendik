@@ -289,7 +289,7 @@
       "purpose": {
         "account": "We use this data to create and manage your account, confirm your email, keep your session secure and help you when you write to us. We do not sell it or pass it on for advertising.",
         "verification": "We use your identity document, the photograph of your face and your bank account for one thing only: to confirm you are who you say you are before letting you list, and to be able to pay you for what you sell. They are not shown to anyone else and are not used for anything else.",
-        "delivery": "We use your address, the name of whoever receives the parcel and their phone number for one thing only: getting what you buy to that place. When you place an order we hand those details to the shipping company and to the carrier delivering the parcel, because there is no delivery without them. They don't leave Sendik before that, and the seller only sees your address once the payment is approved."
+        "delivery": "We use your address, the name of whoever receives the parcel and their phone number for one thing only: getting what you buy to that place. Today they don't leave Sendik: they are stored so you don't have to type them on every purchase. When shipping exists we will tell you, before you order, who we hand them to and what for."
       },
       "sensitive": "You are not required to provide this data. You can hold an account, browse and buy without it; it is only needed if you decide to sell, because without knowing who is selling, Sendik's backing would mean nothing.",
       "rights": "You can access, update, correct and delete your data, and withdraw this authorisation, by writing to {{correo}}.",
@@ -1498,7 +1498,7 @@
       "cancel": "Cancel",
       "editNamed": "Edit {{nombre}}'s address",
       "deleteNamed": "Remove {{nombre}}'s address",
-      "makeDefaultNamed": "Use {{nombre}}'s address as default"
+      "makeDefaultNamed": "Use as default: {{nombre}}'s address"
     },
     "notices": {
       "saved": "Address saved.",
@@ -1556,7 +1556,8 @@
       "divisionFailed": "We couldn't load the list of departments and municipalities. Reload the page."
     },
     "errors": {
-      "full": "You already have {{tope}} saved addresses, which is the maximum. Remove one to add another."
+      "full": "You already have {{tope}} saved addresses, which is the maximum. Remove one to add another.",
+      "stale": "The change was made, but we couldn't reload the list. Reload the page."
     }
   }
 }

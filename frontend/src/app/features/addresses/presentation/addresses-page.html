@@ -8,9 +8,24 @@
   region que aparece con texto dentro se comporta distinto segun el lector, y una que
   desaparece al terminar no llega a anunciar nada.
 -->
+<!--
+  **Se pinta siempre y el texto cambia dentro.** La version anterior saco el aviso de aqui
+  y lo puso en un `<p role="status">` creado por un `@if`, y eso lo dejo sin anunciar: una
+  region viva insertada en el DOM con el contenido ya dentro no la anuncia ningun lector.
+  Es exactamente lo que dice el comentario que ya estaba aqui, y aun asi se rompio.
+-->
 <p class="solo-lectores" role="status">
   @if (cargando()) {
     {{ 'addresses.loading' | transloco }}
+  } @else if (aviso(); as mensaje) {
+    {{ mensaje | transloco: { nombre: avisoNombre() } }}
+  }
+</p>
+
+<!-- Lo mismo con el error: el contenedor existe siempre y solo cambia el texto. -->
+<p class="error tipo-cuerpo" role="alert">
+  @if (falloDeAccion(); as fallo) {
+    {{ fallo | transloco }}
   }
 </p>
 
@@ -36,17 +51,12 @@
     </button>
   </div>
 } @else {
-  <!-- El aviso se anuncia por ser una region viva, y se lee una sola vez al recorrer la
-       pagina: antes estaba tambien dentro de la region de arriba y el lector lo leia dos
-       veces. -->
+  <!-- Sin rol: quien anuncia es la region persistente de arriba. Este parrafo esta para
+       quien lo ve, y llevar el rol aqui tambien lo hacia leer dos veces. -->
   @if (aviso(); as mensaje) {
-    <p class="direcciones__aviso tipo-cuerpo" role="status">
+    <p class="direcciones__aviso tipo-cuerpo">
       {{ mensaje | transloco: { nombre: avisoNombre() } }}
     </p>
-  }
-
-  @if (falloDeAccion(); as fallo) {
-    <p class="error tipo-cuerpo" role="alert">{{ fallo | transloco }}</p>
   }
 
   @if (vacia() && !formularioAbierto()) {
@@ -75,7 +85,7 @@
             <p class="direcciones__quien tipo-titulo-tarjeta">
               {{ direccion.recipientName }}
               @if (direccion.isDefault) {
-                <span class="chip tipo-leyenda">
+                <span class="chip">
                   {{ 'addresses.list.default' | transloco }}
                 </span>
               }

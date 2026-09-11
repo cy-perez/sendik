@@ -146,8 +146,12 @@
 
   /* El esqueleto de una tarjeta de direccion: nombre, linea, municipio, telefono y la
      fila de tres acciones. Con nombre y no con un token de espaciado usado de alto, por
-     lo mismo que el de arriba. HU-016. */
-  --alto-esqueleto-direccion: 230px;
+     lo mismo que el de arriba.
+
+     **En `em` y no en px**: la tarjeta que sustituye son seis lineas de texto mas una fila
+     de botones, asi que crece cuando alguien amplia el tipo. La primera version puso 230px
+     y solo cambiaba el nombre del problema que decia corregir. HU-016. */
+  --alto-esqueleto-direccion: 14.5em;
   /* Grosor de la barra lateral de una caja de aviso. Estaba como 4px suelto en el
      aviso de borrador de los documentos legales y en el de error de la bandeja. */
   --grosor-barra-aviso: 4px;

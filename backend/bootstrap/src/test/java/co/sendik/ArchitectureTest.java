@@ -248,7 +248,7 @@ class ArchitectureTest {
     }
 
     /**
-     * Los dos paquetes del dominio, no solo {@code model}.
+     * Los tres paquetes del dominio, no solo {@code model}.
      *
      * <p>La regla nombraba unicamente {@code ..model..} y eso la dejaba ciega ante
      * cualquier tipo de dominio que viva en otro paquete. Al agregar
@@ -315,7 +315,8 @@ class ArchitectureTest {
     }
 
     private static ArchCondition<JavaMethod> noDevolverTiposDelDominio() {
-        return new ArchCondition<>("no devolver tipos de co.sendik..model.. ni de co.sendik.shared.file..") {
+        return new ArchCondition<>(
+                "no devolver tipos de co.sendik..model.., co.sendik.shared.file.. ni co.sendik.shared.geo..") {
             @Override
             public void check(JavaMethod metodo, ConditionEvents eventos) {
                 for (String tipo : tiposDe(metodo.getReturnType())) {
@@ -342,7 +343,10 @@ class ArchitectureTest {
     }
 
     private static boolean esDelDominio(String tipo) {
-        return tipo.startsWith("co.sendik.") && (tipo.contains(".model.") || tipo.startsWith("co.sendik.shared.file."));
+        return tipo.startsWith("co.sendik.")
+                && (tipo.contains(".model.")
+                        || tipo.startsWith("co.sendik.shared.file.")
+                        || tipo.startsWith("co.sendik.shared.geo."));
     }
 
     /**

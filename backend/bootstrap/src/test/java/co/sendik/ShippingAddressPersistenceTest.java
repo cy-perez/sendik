@@ -288,9 +288,9 @@ class ShippingAddressPersistenceTest {
             ShippingAddress guardada = completa(alguien, BOGOTA, AHORA);
             direcciones.guardar(guardada);
 
-            direcciones.borrar(guardada.id());
+            direcciones.borrar(guardada.id(), alguien);
 
-            assertThatCode(() -> direcciones.borrar(guardada.id())).doesNotThrowAnyException();
+            assertThatCode(() -> direcciones.borrar(guardada.id(), alguien)).doesNotThrowAnyException();
             assertThat(direcciones.buscar(guardada.id(), alguien)).isEmpty();
         }
 
@@ -325,6 +325,24 @@ class ShippingAddressPersistenceTest {
         direcciones.guardar(suya);
 
         assertThat(direcciones.buscar(suya.id(), otra)).isEmpty();
+        assertThat(direcciones.buscar(suya.id(), alguien)).isPresent();
+    }
+
+    /**
+     * Borrar la de otra cuenta no borra nada.
+     *
+     * <p>El dueno va en el {@code WHERE} igual que en {@code buscar}: que la fila sea de
+     * quien pide no puede depender solo de una comprobacion en memoria del caso de uso.
+     */
+    @Test
+    void deberia_no_borrar_la_direccion_de_otra_cuenta() {
+        UserId alguien = nuevaCuenta();
+        UserId otra = nuevaCuenta();
+        ShippingAddress suya = completa(alguien, BOGOTA, AHORA);
+        direcciones.guardar(suya);
+
+        direcciones.borrar(suya.id(), otra);
+
         assertThat(direcciones.buscar(suya.id(), alguien)).isPresent();
     }
 
@@ -420,8 +438,13 @@ class ShippingAddressPersistenceTest {
          * no se ejercitaba nunca con una fila en falso y esta mitad del criterio solo estaba
          * probada contra el doble en memoria. Lo cazo la revision de pruebas.
          *
-         * <p>Se restaura al terminar: {@code ShippingAddressesSecurityTest} cuenta los
-         * municipios de Bogota y comparte el contenedor.
+         * <p>Se restaura al terminar. El motivo que se escribio primero era falso
+         * —{@code ShippingAddressesSecurityTest} lleva otra propiedad, asi que es otro
+         * contexto y otro contenedor—; con quien de verdad comparte base son las otras diez
+         * pruebas de este mismo contexto, ninguna de las cuales mira {@code municipalities}.
+         * El riesgo real es que esto deja de ser seguro el dia que alguien active ejecucion
+         * paralela dentro del mismo JVM, y por eso se usa Medellin y no Bogota: es el
+         * municipio que menos pruebas tocan.
          */
         @Test
         void deberia_seguir_leyendo_una_direccion_sobre_un_municipio_suprimido() {

@@ -585,6 +585,54 @@ arquitectura y tres bugs de interfaz**.
 No hay IDOR, el 404 se sostiene en las tres rutas, y RN-102 es cierto y está probado contra
 PostgreSQL y no solo documentado.
 
+### La segunda vuelta de revisiones, sobre las correcciones de la primera
+
+Los cuatro revisores volvieron a correr, esta vez **solo sobre los dos commits de
+correcciones**, que nadie había mirado. Encontraron que tres de aquellos arreglos no
+arreglaban lo que decían:
+
+- **El `[disabled]` del selector de municipio era un no-op.** `FormControlDirective` declara
+  un input llamado `disabled` cuyo setter solo imprime una advertencia, así que el binding se
+  lo comía la directiva y nunca llegaba al DOM — encima ensuciando la consola en cada cambio.
+  El criterio 4 seguía sin cumplirse y ahora además se creía cumplido. Se deshabilita el
+  **control**, y `SelectField` estrena spec.
+
+- **El aviso dejó de anunciarse.** Al quitar la doble lectura, el mensaje salió de la región
+  viva persistente y pasó a un `role="status"` creado por un `@if`. Una región que nace con
+  el texto dentro no la anuncia ningún lector, que es literalmente lo que el comentario de
+  diez líneas más arriba, en ese mismo archivo, ya advertía. Se cambió un defecto por otro.
+
+- **La grieta del código postal seguía abierta en `line` y `recipientName`.** El defecto no
+  era del teléfono: era que `@Size` mide la cadena cruda y el objeto de valor colapsa espacios
+  y **luego** mide. `"Cl  7"` pasaba el borde y reventaba en el dominio como 400 sin `errors`.
+  Ahora el borde normaliza en su constructor compacto, así que las dos validaciones miden lo
+  mismo.
+
+Y dos cosas que la primera corrección introdujo:
+
+- **`refrescarLibreta()` podía anunciar una mentira.** `refetch()` no rechaza: ante un fallo
+  resuelve sin datos, y el `?? []` lo convertía en libreta vacía, de modo que se anunciaba
+  «quitada» aunque el servidor sí hubiera relevado otra. Ahora devuelve nulo cuando falla.
+- **El `toString()` que añadí imprimía el municipio**, y Spring registra el cuerpo
+  deserializado en `DEBUG`. Lo destapó la prueba de registros al afirmar sobre el código
+  rechazado. No está en la lista del criterio 19, pero en qué municipio vive alguien es dato
+  personal.
+
+De seguridad salieron además dos altos: **el aviso de privacidad anunciaba un flujo que la
+política publicada no contiene** —decía que el vendedor ve la dirección, y `privacy.2026-09-08b`
+no lo lista como destinatario— y **los `toString()` dejaron fuera `UserDataExport.Direccion`,
+`UserDataExport.Cuenta` y `ShippingAddressDetailsJson.Detalle`**, este último la dirección ya
+descifrada. El aviso se reescribió para decir solo lo que hoy es cierto —que el dato no sale
+de Sendik— y `datos-personales.md` anota lo que la política tendrá que ganar el día del
+pedido.
+
+Lo demás de esa vuelta: `borrar` sin dueño en el `WHERE`, la regla de `ArchitectureTest` que
+quedó a medias —dije «dos enumeraciones» y toqué una—, la prueba del criterio 19 que pasaba
+sin capturar nada y sin leer las excepciones, `LocationsControllerTest` pasando por el camino
+viejo porque `standaloneSetup` no aplica validación de método, WCAG 2.5.3 roto en inglés, el
+foco pisando el anuncio, `LibretaEnMemoria` sin conservar `creadaEn` pese a afirmarlo, y los
+criterios 18 y 27 todavía sin prueba. Todo corregido.
+
 ### Dos cosas que quedan anotadas y no se tocaron
 
 - **La clave del límite de tasa usa la URI cruda**, así que en una ruta con `{id}` cada
@@ -592,6 +640,11 @@ PostgreSQL y no solo documentado.
   igual a `DELETE /users/me/sessions/{id}`— y arreglarlo es cambiar cómo se cuenta en los
   cuatro grupos, con sus pruebas. Lo que sí entró aquí es `/api/v1/locations/**` en el grupo
   de cuenta, que era la única superficie nueva sin cota.
+
+  **Con un asterisco que conviene tener escrito:** esa ruta lleva el código de departamento
+  en la URI, así que su cupo efectivo son cien cubos y no uno. Tiene cota, pero cien veces más
+  floja de lo que el número sugiere. Es la razón más concreta para arreglar la clave, y la
+  primera candidata el día que se haga.
 - **El criptograma no está atado a su fila** (ADR-0039). Quien consiga escritura en la base
   puede copiar el cifrado de otra fila a la suya y leerlo por la API. Es propiedad heredada de
   ADR-0020; cerrarlo exige cambiar la firma de `SensitiveDataCipher`, que usan también la

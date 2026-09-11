@@ -97,5 +97,18 @@ final class ShippingAddressDetailsJson {
             AddressLine linea,
             @Nullable AddressComplement complemento,
             @Nullable DeliveryInstructions indicaciones,
-            @Nullable PostalCode codigoPostal) {}
+            @Nullable PostalCode codigoPostal) {
+
+        /**
+         * No imprime nada, y aqui hace mas falta que en ningun otro sitio.
+         *
+         * <p>Esto es <strong>la direccion ya descifrada</strong>, viviendo a dos lineas del
+         * criptograma, y los seis objetos de valor devuelven su contenido desde
+         * {@code toString}. Un {@code record} sin esto los imprime todos.
+         */
+        @Override
+        public String toString() {
+            return "Detalle[descifrado]";
+        }
+    }
 }

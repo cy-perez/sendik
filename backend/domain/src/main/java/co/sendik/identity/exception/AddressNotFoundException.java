@@ -1,6 +1,5 @@
 package co.sendik.identity.exception;
 
-import co.sendik.identity.model.ShippingAddressId;
 import co.sendik.shared.error.DomainException;
 import co.sendik.shared.error.ErrorCode;
 
@@ -20,7 +19,7 @@ public final class AddressNotFoundException extends DomainException {
 
     private static final long serialVersionUID = 1L;
 
-    public AddressNotFoundException(ShippingAddressId direccion) {
-        super(ErrorCode.COMMON_NOT_FOUND, "No existe la direccion " + direccion + ", o no es de quien pregunta");
+    public AddressNotFoundException() {
+        super(ErrorCode.COMMON_NOT_FOUND, "No existe esa direccion, o no es de quien pregunta");
     }
 }
