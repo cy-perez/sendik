@@ -24,7 +24,7 @@ Si alguna no tiene respuesta, el campo no se crea.
 | Nivel | Datos | Trato |
 |---|---|---|
 | Publico | Nombre de vendedor, ciudad, publicaciones | Visible en el sitio |
-| Interno | Correo, telefono, fecha de nacimiento, historial de pedidos, favoritos, carrito | Solo el titular y la operacion |
+| Interno | Correo, telefono, fecha de nacimiento, historial de pedidos, favoritos, carrito, direcciones de entrega | Solo el titular y la operacion |
 | Sensible | Documento de identidad, selfie, cuenta bancaria | Cifrado, acceso restringido y auditado |
 | Secreto | Contrasenas, tokens | Nunca legibles, ni por la operacion |
 
@@ -50,6 +50,15 @@ Si alguna no tiene respuesta, el campo no se crea.
   (`docs/operacion/despliegue.md`, paso 1). Conservarlo seria tener un historial de
   busquedas: un dato nuevo, sin finalidad autorizada, que HU-014 decidio expresamente no
   tener.
+- **La direccion de entrega se cifra en reposo aunque este clasificada como
+  Interno.** Es la unica fila de ese nivel que lo esta, y el motivo no es que sea
+  mas delicada que el telefono: es que `docs/arquitectura/modelo-datos.md` ya decia
+  que la copia que el pedido hara de ella -`orders.shipping_address`- va cifrada, y
+  cifrar la copia dejando la fuente en claro no protege nada. Van cifrados los seis
+  campos libres -quien recibe, telefono, linea, complemento, indicaciones y codigo
+  postal- en un solo documento; quedan en claro el municipio, la marca de
+  predeterminada y las fechas, que es lo unico por lo que la tabla se consulta
+  (HU-016, V21).
 - Las respuestas de la API devuelven solo los campos que la pantalla necesita.
   Un endpoint de perfil publico no incluye correo ni telefono.
 - Los datos de verificacion no viajan al frontend una vez aprobada la
@@ -234,6 +243,7 @@ la autorizacion. Operativamente:
 |---|---|
 | Cuenta activa | Mientras exista la cuenta |
 | Favoritos | Mientras exista la cuenta. El cierre los borra en el acto |
+| Direcciones de entrega | Mientras exista la cuenta. El cierre las borra en el acto, en la misma transaccion que anonimiza (RN-102) |
 | Documentos de verificacion | Mientras el vendedor este activo y cinco anos mas |
 | Ordenes y facturas | Diez anos, por obligacion contable |
 | Registros tecnicos con IP | Seis meses |
@@ -263,6 +273,33 @@ Tres consecuencias que hay que respetar al construirlo:
   Si las transportadoras cambian sin que Sendik se entere, una lista con nombres
   propios envejece sola. Por eso la politica nombra al agregador y describe a las
   transportadoras por su papel, en vez de enumerarlas.
+
+### Lo que HU-016 decidio, y lo que dejo abierto
+
+Anotado el 11 de septiembre de 2026, al construirse la libreta de direcciones.
+
+**Hoy no hay encargado.** La direccion se guarda y no sale de Sendik: no hay
+pedido, no hay cotizacion y no hay guia, asi que nada de esto llega todavia al
+agregador ni a una transportadora (RN-098). Lo que dice esta seccion sobre los dos
+eslabones empieza a aplicar el dia que se cotice, no antes.
+
+**El dato de un tercero, y es la primera vez que el proyecto lo trata.** Cuando
+quien recibe el paquete no es el titular de la cuenta -un regalo, la casa de los
+padres, la porteria de una oficina-, lo que Sendik guarda es el nombre y el
+telefono de alguien que nunca abrio una cuenta ni autorizo nada (RN-104).
+
+La salida elegida es **una frase en el formulario y no una casilla**: quien guarda
+la direccion declara que esta autorizado a dar esos datos y que informara del
+tratamiento a quien corresponda. Se descarto la casilla con evidencia fechada, que
+seria mas defendible ante la SIC, por dos motivos: una casilla por cada direccion
+es friccion en el peor momento, y Sendik no puede verificar esa autorizacion de
+ninguna de las dos formas, asi que la casilla daria una apariencia de control que
+no existe. **Queda escrito para poder reabrirlo**, y el momento natural de hacerlo
+es cuando el dato salga de verdad hacia un encargado.
+
+**Lo que no se hace y conviene que este dicho:** no se geocodifica, no se valida
+contra ningun servicio externo y no se comprueba que la direccion exista (RN-103).
+Guardar una direccion no manda nada a ningun tercero.
 
 ## Pendiente antes del lanzamiento
 

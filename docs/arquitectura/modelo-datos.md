@@ -302,6 +302,58 @@ Lo que sí borra estas filas es **cerrar la cuenta**: son dato personal por la m
 que los favoritos y por una más —no dicen solo que algo le interesa a alguien, dicen que
 estuvo a punto de comprarlo—.
 
+**departments** y **municipalities** (`V20`, HU-016)
+
+La división político-administrativa del DANE: 33 departamentos y 1122 municipios,
+con su código, su nombre y una marca de activo. Es dato de referencia sembrado, no
+de nadie, y por eso vive en `shared` y no en `identity` (ADR-0040).
+
+La fuente, la versión del conjunto y la fecha de descarga están escritas en el
+encabezado de la migración, y una prueba de integración cuenta las filas contra
+esos dos números: es lo que impide que una resiembra futura se deje filas por el
+camino sin que nadie lo note.
+
+**Los códigos van en `text` y no en un entero.** Varios empiezan por cero
+—Antioquia es `05` y Atlántico `08`— y un entero se los come; un código con el
+cero perdido no casa con ninguna fila.
+
+**Un municipio suprimido se marca inactivo y no se borra.** Hay direcciones
+guardadas que lo apuntan, y borrarlo dejaría una dirección de alguien real sin
+poder leerse. La clave foránea de `shipping_addresses` lo impide con
+`ON DELETE RESTRICT`, que es lo que convierte esa costumbre en algo que la base
+hace cumplir.
+
+**shipping_addresses** (`V21`, HU-016)
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| id | uuid | PK. **Identidad propia**, al revés que `favorites` y `cart_items`: aquí no hay par, porque la misma persona puede guardar dos direcciones idénticas en todos sus campos y son dos |
+| user_id | uuid | FK a `users`, sin cascada: una cuenta se anonimiza conservando su fila |
+| municipality_code | text | FK a `municipalities` con `ON DELETE RESTRICT`. El departamento son sus dos primeros dígitos y no se guarda aparte (RN-100) |
+| details_cipher | text | JSON cifrado con quien recibe, teléfono, línea, complemento, indicaciones y código postal |
+| details_key_version | smallint | La versión de clave que lo cifró (ADR-0020) |
+| is_default | boolean | RN-099 |
+| created_at, updated_at | timestamptz | |
+
+**Los seis campos libres van cifrados en una sola columna**, y no en seis pares
+`_cipher`/`_key_version` como en `seller_verifications`. Allí cada dato sensible se
+lee por separado —el número de documento tiene además su huella y sus últimos
+cuatro— y aquí los seis se leen y se escriben siempre juntos, porque juntos son una
+dirección. Fuera del cifrado quedan el municipio, la marca de predeterminada y las
+fechas, que es lo único por lo que esta tabla se consulta.
+
+Se cifra aunque la clasificación de `docs/operacion/datos-personales.md` ponga la
+dirección en nivel Interno y no en Sensible: la copia que el pedido hará de esto
+—`orders.shipping_address`— ya estaba escrita como cifrada, y cifrar la copia
+dejando la fuente en claro no protege nada.
+
+**No hay tabla de cabecera.** Una libreta es «las filas de esta persona», como el
+carrito y los favoritos. La única invariante que una cabecera podría guardar —cuál
+es la predeterminada— la guarda mejor el índice único parcial.
+
+Lo que sí borra estas filas es **cerrar la cuenta**, en la misma transacción que
+anonimiza (RN-102).
+
 **orders**: `id`, `buyer_id`, `seller_id`, `status`, `product_amount`,
 `shipping_amount`, `commission_amount`, `total_amount`, `shipping_address`
 (`jsonb`, cifrado), `created_at`, `expires_at`.
@@ -384,6 +436,17 @@ desde un día y no desde otro cuando el agregador reporta con retraso.
   planificador no lo usa y nadie se entera: la búsqueda devuelve lo mismo, solo
   que recorriendo la tabla. Por eso vive como constante en `PostgresSearchEngine`
   y hay una prueba que le pide el plan a PostgreSQL.
+- `shipping_addresses(user_id) WHERE is_default` único **parcial**. Es el criterio
+  13 de HU-016 escrito como restricción: exactamente una predeterminada por
+  persona, y lo garantiza la base y no la aplicación —entre leer cuál es la actual
+  y escribir la nueva cabe la petición de otra pestaña—. Parcial porque un único
+  normal sobre `(user_id)` prohibiría tener más de una dirección; y no exige que
+  haya alguna, que es el caso de una libreta vacía.
+- `shipping_addresses(user_id, created_at desc, id desc)` para la libreta. El orden
+  no es de adorno: de él depende que al borrar la predeterminada el relevo vaya a
+  «la más reciente de las que quedan» (RN-099).
+- `municipalities(department_code, name)`, que es la única consulta que esa tabla
+  recibe: poblar el selector de un departamento.
 - `payment_events(provider_event_id)` único.
 - `orders(buyer_id, created_at desc)` y `orders(seller_id, created_at desc)`.
 

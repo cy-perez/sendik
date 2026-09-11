@@ -1,6 +1,6 @@
 # HU-016 — La dirección de entrega
 
-**Fase:** 3 | **Estado:** pendiente
+**Fase:** 3 | **Estado:** hecha el 11 de septiembre de 2026
 **Reglas que aplica:** RN-039, RN-046, RN-048, RN-049, RN-080, y siete reglas nuevas que
 esta historia obliga a escribir (RN-098 a RN-104, al final).
 
@@ -422,3 +422,127 @@ HU-015 aprendió a hacer con la suya.
   usa para recoger.
 - **Si el DANE crea, suprime o renombra un municipio**, se resiembra con una migración propia y
   se marca inactivo lo que desaparezca. Nunca se borra una fila que una dirección apunte.
+
+---
+
+## Cómo quedó
+
+**Hecha el 11 de septiembre de 2026.** Los veintisiete criterios están implementados y
+probados —uno de ellos por construcción, ver abajo—. Las siete reglas que la historia
+obligaba a escribir, RN-098 a RN-104, están en `reglas-negocio.md`; el glosario estrena
+**Dirección de entrega** / `ShippingAddress`, **Libreta de direcciones** / `AddressBook`,
+**Dirección predeterminada** / `DefaultAddress`, **Departamento** / `Department` y
+**Municipio** / `Municipality`; y las dos decisiones quedaron en **ADR-0039** y
+**ADR-0040**.
+
+### Lo que la historia daba por hecho al revés
+
+- **Sí hay descarga de datos.** La historia decía que no la había y que por eso solo
+  había que pensar en el borrado. `ExportUserDataUseCase` existe desde el criterio 22 de
+  HU-001 y ya llevaba favoritos y carrito. La dirección entra, y **entera**: en el
+  favorito va el identificador y no el título porque el título es del vendedor, pero aquí
+  no hay nada que sea de otro —el nombre de quien recibe, el teléfono, la línea y las
+  indicaciones los escribió esta persona—. Van los nombres del municipio y del
+  departamento y no sus códigos: un «11001» no responde ninguna pregunta que alguien
+  pueda hacerse sobre sus propios datos.
+
+- **El criterio 5 desapareció por construcción.** Pedía rechazar un municipio que no
+  perteneciera al departamento enviado. Los códigos del DANE son jerárquicos —los dos
+  primeros dígitos del código de municipio son los de su departamento, sin una sola
+  excepción en las 1122 filas—, así que el cuerpo de la API pide **solo el municipio** y
+  un par incoherente no puede existir porque no hay par. Lo que lo demuestra es que el
+  DTO no tiene campo de departamento, y hay una prueba de integración que comprueba la
+  propiedad sobre la tabla entera para que se vea si algún día deja de ser cierta.
+
+- **El nombre del municipio no hace falta copiarlo en la dirección.** La historia lo
+  proponía para poder leer una dirección cuyo municipio se hubiera marcado inactivo. No
+  hace falta: la fila de `municipalities` no desaparece nunca —`ON DELETE RESTRICT` lo
+  impide— así que el nombre siempre se puede leer uniendo. Y si el DANE renombra uno,
+  uniendo sale el nombre nuevo, que es lo correcto.
+
+### Las decisiones que se tomaron al implementarla
+
+- **Se cifran los seis campos libres, en una sola columna.** La historia no lo decidía;
+  se decidió al planear y está en ADR-0039. El motivo que lo cerró no fue que la dirección
+  sea más delicada que el teléfono, sino que `modelo-datos.md` ya decía que la copia del
+  pedido —`orders.shipping_address`— iba cifrada, y cifrar la copia dejando la fuente en
+  claro no protege nada.
+
+- **El dato del DANE es real y su origen está escrito.** Los dos conjuntos que el DANE
+  publica en el portal de datos abiertos del Estado, con su URL, la versión del conjunto
+  y la fecha de descarga en el encabezado de V20. Entran los 1122, incluidas 18 áreas no
+  municipalizadas y 1 isla: para una dirección de entrega los tres son el sitio al que
+  hay que llevar algo.
+
+- **RN-104 se resolvió con una frase y no con una casilla.** Quien guarda la dirección
+  declara que está autorizado a dar el nombre y el teléfono de quien recibe. Se descartó
+  la casilla con evidencia fechada —más defendible ante la SIC— porque una casilla por
+  cada dirección es fricción en el peor momento y Sendik no puede verificar esa
+  autorización de ninguna de las dos formas. Queda escrito en `datos-personales.md` para
+  poder reabrirlo.
+
+- **El tope de RN-101 vive en un solo sitio**, y ahí esta historia mejora lo que HU-015
+  dejó: aquel tuvo que repetir su veinte en el backend y en el frontend, y anotó que era
+  la deuda más concreta que dejaba. Aquí toda escritura es autenticada, así que el
+  frontend no conoce el diez. Y el mensaje lo nombra igual, que es lo que el criterio 8
+  pide: cuando el servidor rechaza por lleno, cuántas direcciones hay en la libreta es
+  exactamente el máximo.
+
+### Lo que apareció al escribirla, y no era de esta historia
+
+- **`ArchitectureTest` cazó dos clases auxiliares.** `ShippingAddressFactory` y
+  `ShippingAddressViews` vivían en el paquete `usecase` sin llamarse `UseCase`, y la
+  regla dice que allí solo viven casos de uso. No hay un solo precedente de auxiliar en
+  ese paquete en todo el proyecto, así que la regla tenía razón: convertir los siete
+  campos en dominio es ahora cosa de `ShippingAddressData`, y cruzar una dirección con la
+  división es cosa de `ShippingAddressView`.
+
+- **La prueba de la bandera apagada comparaba contra la ruta equivocada.** Copiaba de
+  `CartApagadoTest` la comparación contra `/api/v1/inventado`, y esa ruta no casa con
+  ninguna regla de `SecurityConfig` y cae en el `denyAll` final: responde 403. No es «una
+  ruta que no existe», es una ruta fuera de la superficie declarada. Lo que hay que
+  comparar es con una inexistente **del mismo prefijo**.
+
+- **Los departamentos los pedía la pantalla y debía pedirlos el formulario.** Lo destapó
+  la prueba del formulario, que se quedaba sin opciones: quien solo miraba su libreta
+  traía treinta y tres filas que no iba a usar, y el formulario dependía de que alguien
+  las hubiera pedido antes.
+
+- **El primer intento escribió su propio catálogo de mensajes de error.** `ApiError` ya
+  sabe convertirse en su clave —`errors.byCode.<CÓDIGO>`— y los dos códigos nuevos viven
+  allí con todos los demás.
+
+- **`isUnprocessableEntity()` está obsoleto en Spring 7**, por el mismo renombrado de la
+  RFC 9110 que ya había sufrido `UNPROCESSABLE_ENTITY`. Es `isUnprocessableContent()`.
+
+- **La cobertura de `presentation` cayó al 78%** y `check` falló. Su regla de JaCoCo lee
+  solo su propio archivo de ejecución —al revés que la de `infrastructure`, que lee
+  también el de `bootstrap`— así que lo que cubren las pruebas de integración no le
+  cuenta. Entraron dos pruebas de controlador.
+
+### Lo que queda fuera, y por qué
+
+- **Cotizar el envío y comprobar la cobertura.** Esperan a Skydropx, y RN-080 sigue sin
+  comprobar. Ninguna pantalla promete entrega (RN-103).
+- **Crear el pedido y el paso a pagar.** Es lo que queda de la línea del alcance.
+- **La dirección de origen del vendedor.** RN-039 la necesita para cotizar y RN-078 para
+  emitir la guía; hoy el perfil solo tiene `city`, texto libre y opcional.
+- **El enlace de navegación a `/mis-direcciones`.** No hay enlace desde ninguna parte,
+  igual que pasó con `/carrito` y `/mis-favoritos`: `FEATURE_CHECKOUT` está apagada y
+  HU-004 y HU-005 prohíben enlazar a algo que no funciona. Su sitio natural es
+  `/mi-cuenta`, y entra cuando la bandera se encienda.
+- **Elegir la dirección al comprar.** No hay dónde: no existe el proceso de compra.
+
+## Cuándo revisar, con lo que se sabe ahora
+
+Además de lo que ya decía la historia:
+
+- **La libreta no tiene guardián de tamaño en la base.** RN-101 se comprueba en el caso de
+  uso contando antes de escribir, así que dos pestañas que agreguen a la vez con nueve
+  direcciones pueden dejar once. Es el mismo desbordamiento de uno que HU-015 aceptó con
+  el carrito, acotado y sin consecuencia, y se cierra igual de caro: bloqueando la cuenta
+  entera en cada petición.
+- **`GET /api/v1/locations/*` no tiene límite de tasa**, como casi toda la API fuera de
+  `/auth`. Es autenticada y devuelve 1155 filas como mucho, así que el riesgo es el de
+  cualquier otra ruta de `/users/**`, que sí cuenta por sujeto. Si algún día la división
+  se hace pública para el cotizador, esa cuenta desaparece y conviene mirarlo.

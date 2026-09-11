@@ -748,6 +748,84 @@ seguir siendo «aproximada».
 - **RN-045** Ningún estado retrocede. Toda transición queda registrada con
   fecha, actor y motivo.
 
+## Dirección de entrega
+
+Nacieron con HU-016, que es la mitad de «el proceso de compra» que no espera a
+Wompi ni a Skydropx. Hasta entonces la única regla que hablaba de la dirección
+del comprador era RN-048, y decía **cuándo se revela**, no qué es ni quién la
+guarda.
+
+- **RN-098** **La dirección de entrega es de quien compra y no se comparte con
+  nadie hasta que hay pago aprobado.** Es RN-048 dicha desde el otro lado:
+  mientras no exista un pedido pagado, la dirección no sale de la cuenta de su
+  dueña —ni hacia el vendedor, ni hacia el agregador, ni hacia una
+  transportadora—. Guardarla no la pone en circulación.
+
+- **RN-099** **Una cuenta puede tener varias direcciones y tiene exactamente una
+  predeterminada mientras tenga al menos una.** La primera lo es sin que se lo
+  pidan; borrar la predeterminada la pasa a **la más reciente de las que
+  quedan**; borrar la última deja la libreta vacía y sin predeterminada, que es
+  correcto.
+
+  Una libreta con direcciones y sin predeterminada obligaría a elegir en el peor
+  momento, que es al pagar. Lo de «exactamente una» no lo garantiza la aplicación
+  sino la base de datos, con un índice único parcial: entre leer cuál es la
+  actual y escribir la nueva cabe la petición de otra pestaña.
+
+- **RN-100** **El municipio no se escribe: se elige de la división
+  político-administrativa oficial del DANE.** El municipio es la entrada de la
+  cotización (RN-039) y lo que decide si hay cobertura (RN-080). Escrito a mano,
+  «Bogotá», «bogota» y «Bogotá D.C.» son tres destinos distintos y ninguno
+  cotiza.
+
+  **El departamento no se guarda aparte**, y de eso depende una decisión del
+  contrato: los códigos del DANE son jerárquicos —los dos primeros dígitos del
+  código de municipio son los de su departamento, sin una sola excepción en las
+  1122 filas— así que se deriva. El cuerpo de la API pide solo el municipio, y un
+  par incoherente no puede existir porque no hay par.
+
+- **RN-101** **Una cuenta admite hasta 10 direcciones.** El motivo no es el mismo
+  que el del carrito: allí RN-097 puso veinte porque el cuerpo de la fusión lo
+  manda quien no ha entrado y sin tope es de tamaño arbitrario. Aquí toda
+  escritura es autenticada, y el tope existe para que una cuenta no se vuelva
+  almacenamiento gratis de texto libre cifrado. Diez cubre con holgura las
+  direcciones reales de una persona —casa, trabajo, la de los padres, la de un
+  regalo— y deja la libreta en una pantalla.
+
+  El rechazo se ve y dice cuál es el tope. **A diferencia del veinte del carrito,
+  este número vive en un solo sitio**: el frontend no lo conoce y lo nombra igual,
+  porque cuando el servidor rechaza por lleno, cuántas direcciones hay es
+  exactamente el máximo.
+
+- **RN-102** **Cerrar la cuenta borra las direcciones en el acto**, en la misma
+  transacción que anonimiza, como los favoritos y el carrito.
+
+  No es una limpieza de cortesía: es lo que sostiene lo que
+  `docs/operacion/datos-personales.md` afirma sobre la ventana de quince minutos
+  del token de acceso, que es aceptable **porque** cuando se abre ya no queda dato
+  personal que ese token pueda alcanzar. Una dirección que sobreviviera al cierre
+  volvería falsa esa frase, que es justo la que el documento pone por escrito ante
+  una autoridad.
+
+- **RN-103** **Guardar una dirección no comprueba que exista ni que haya
+  cobertura.** Sendik no geocodifica ni valida contra nadie, y no insinúa en
+  ninguna pantalla que se pueda entregar allí. La cobertura se sabrá al cotizar, y
+  hoy está sin comprobar (RN-080).
+
+  Es la regla que impide que la pantalla prometa por accidente lo que RN-080 dice
+  que nadie ha verificado. Se afloja el día que exista la cotización.
+
+- **RN-104** **Quien recibe puede no ser quien compra.** El nombre y el teléfono
+  son de la dirección y no de la cuenta: la transportadora llama a quien está en
+  el destino, que a veces es la madre de quien compró o el portero de una oficina.
+
+  Cuando no coinciden, eso es **dato personal de un tercero** que nunca abrió una
+  cuenta ni autorizó nada. Quien guarda la dirección declara que está autorizado a
+  darlos y que informará del tratamiento; es una frase en el formulario y no una
+  casilla, porque una casilla por cada dirección es fricción en el peor momento y
+  Sendik no puede verificar la autorización de ninguna de las dos formas
+  (`docs/operacion/datos-personales.md`).
+
 ## Datos personales
 
 - **RN-046** La cédula, la selfie y la cuenta bancaria se guardan cifradas y solo
@@ -755,7 +833,9 @@ seguir siendo «aproximada».
 - **RN-047** El comprador ve del vendedor: nombre, ciudad, sello de verificado y
   reputación. Nada más.
 - **RN-048** La dirección completa del comprador se revela al vendedor solo
-  cuando el pago está aprobado.
+  cuando el pago está aprobado. Lo que pasa antes —que la dirección se guarda y no
+  sale de la cuenta de su dueña— lo dice RN-098, que es esta misma regla vista
+  desde el otro lado.
 - **RN-049** El usuario puede solicitar la eliminación de sus datos. Se conserva
   lo que la ley obligue a conservar por razones contables y fiscales, y se
   documenta qué es y por cuánto tiempo.
