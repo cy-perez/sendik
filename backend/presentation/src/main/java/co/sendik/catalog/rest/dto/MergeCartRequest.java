@@ -12,9 +12,13 @@ import java.util.List;
  * <p><strong>El tope se declara aqui ademas de comprobarse en el caso de uso</strong>, y es
  * redundante a proposito, como el {@code limit} del catalogo: el del caso de uso protege a
  * cualquiera que lo use, y el de aqui hace que el 400 salga antes de tocar la base y con el
- * nombre del campo que el cliente escribio. Es ademas la unica defensa contra un cuerpo
- * arbitrario mandado por quien no ha entrado —que es la razon de que RN-097 exista—, porque
- * rechazarlo despues de deserializar mil identificadores ya es haberlos leido.
+ * nombre del campo que el cliente escribio.
+ *
+ * <p><strong>Lo que no hace es acotar el cuerpo que llega.</strong> Aqui decia que si, y era
+ * falso: {@code @Valid} corre despues de que Jackson materialice la lista entera, asi que un
+ * cuerpo con mil identificadores se deserializa y luego se rechaza. Lo que de verdad acota
+ * esta ruta es que exige token y que {@code /api/v1/users/**} esta bajo el limitador por
+ * sujeto; un cuerpo JSON sin tope es una carencia general de la API, no de esta anotacion.
  *
  * <p>La lista llega en el orden del navegador, lo mas reciente primero, y ese orden decide
  * que se conserva cuando no cabe todo.

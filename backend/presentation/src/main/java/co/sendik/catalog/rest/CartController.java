@@ -18,6 +18,8 @@ import co.sendik.catalog.usecase.ReadCartUseCase;
 import co.sendik.catalog.usecase.RemoveFromCartUseCase;
 import co.sendik.shared.port.out.PublicFileStore;
 import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -158,13 +160,33 @@ public class CartController {
     public MergeCartResponse fusionar(
             @AuthenticationPrincipal Jwt token, @Valid @RequestBody MergeCartRequest peticion) {
 
-        MergeResult resultado = casoDeFusionar.execute(new MergeCartCommand(
-                quienDe(token),
-                peticion.listingIds().stream().map(ListingId::de).toList()));
+        // **Un identificador malformado se descarta, no tumba la fusion.** Es el caso borde
+        // que la historia describe —«el carrito del navegador manipulado a mano»— y no estaba
+        // cubierto: `ListingId.de` lanza sobre lo que no es un UUID, y con un solo valor malo
+        // la peticion entera salia 400. Peor: el navegador vacia su carrito al terminar la
+        // fusion salga como salga, asi que ese 400 se llevaba por delante los diecinueve
+        // identificadores buenos.
+        //
+        // Van a `notMerged`, que es el campo que existe para lo que no entro, y se mezclan con
+        // los demas descartes sin distinguirse: decir «este estaba mal escrito» seria decir
+        // sobre esos identificadores algo que RN-068 no deja decir del resto.
+        List<String> malformados = new ArrayList<>();
+        List<ListingId> validos = new ArrayList<>();
+        for (String crudo : peticion.listingIds()) {
+            try {
+                validos.add(ListingId.de(crudo));
+            } catch (IllegalArgumentException e) {
+                malformados.add(crudo);
+            }
+        }
 
-        return new MergeCartResponse(
-                Carts.de(resultado.carrito(), almacen),
+        MergeResult resultado = casoDeFusionar.execute(new MergeCartCommand(quienDe(token), validos));
+
+        List<String> noEntraron = new ArrayList<>(
                 resultado.noEntraron().stream().map(ListingId::toString).toList());
+        noEntraron.addAll(malformados);
+
+        return new MergeCartResponse(Carts.de(resultado.carrito(), almacen), noEntraron);
     }
 
     /**

@@ -63,11 +63,19 @@ export class AddToCartToggle {
    */
   private readonly anunciable = signal(false);
 
+  /**
+   * Lo que se anuncia es el <strong>resultado</strong>, no la acción siguiente.
+   *
+   * <p>Decía `toggle.add` en la rama falsa, que es la etiqueta del botón: al quitar, un lector
+   * locutaba «Agregar al carrito», o sea una orden donde tenía que haber una confirmación. El
+   * control de favorito ya lo había resuelto con cadenas de resultado separadas de las de
+   * acción, y aquí se copió mal.
+   */
   protected readonly anuncio = computed(() => {
     if (!this.anunciable()) {
       return null;
     }
-    return this.dentro() ? 'catalog.cart.toggle.added' : 'catalog.cart.toggle.add';
+    return this.dentro() ? 'catalog.cart.toggle.added' : 'catalog.cart.toggle.notInCart';
   });
 
   constructor() {

@@ -82,7 +82,6 @@ public class MergeCartUseCase {
                 .buscarVarias(comando.publicaciones())
                 .forEach(publicacion -> porId.put(publicacion.id(), publicacion));
 
-        int libres = Cart.MAXIMO_DE_PRODUCTOS - carrito.cuantosLleva(comando.quien());
         Instant ahora = reloj.instant();
 
         for (ListingId id : comando.publicaciones()) {
@@ -103,13 +102,21 @@ public class MergeCartUseCase {
                 continue;
             }
 
-            if (libres <= 0) {
+            // **Se cuenta en cada vuelta y no una sola vez al principio.** Contarlo fuera del
+            // bucle deja un desbordamiento mucho peor que el de agregar de uno en uno: dos
+            // fusiones simultaneas sobre un carrito vacio leerian las dos «caben veinte» y
+            // escribirian veinte cada una, o sea cuarenta filas. Y es justo el cuerpo que
+            // RN-097 existe para acotar, porque el servidor lo recibe entero.
+            //
+            // Contando dentro, lo que cabe es a lo sumo un desbordamiento por vuelta perdida,
+            // igual que en AddToCartUseCase y por la misma razon: cerrarlo del todo exigiria
+            // bloquear la cuenta entera durante la fusion.
+            if (carrito.cuantosLleva(comando.quien()) >= Cart.MAXIMO_DE_PRODUCTOS) {
                 noEntraron.add(id);
                 continue;
             }
 
             carrito.guardar(CartItem.de(comando.quien(), publicacion, ahora));
-            libres--;
         }
 
         return new MergeResult(lectura.execute(comando.quien()), noEntraron);

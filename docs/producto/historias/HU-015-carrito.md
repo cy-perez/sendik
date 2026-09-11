@@ -145,9 +145,22 @@ No entra:
     pantalla, y el cambio no se comunica solo por color.
 26. Ningún texto de esta historia vive en una plantilla: todo por clave de Transloco, en
     español y en inglés.
-27. Dado que `FEATURE_CHECKOUT` está apagada, cuando se pide `/carrito` o cualquiera de los
-    endpoints, entonces responden **404 con `COMMON_NOT_FOUND`**, igual que si no existieran,
-    y el control no se pinta en la ficha. No es 403.
+27. Dado que `FEATURE_CHECKOUT` está apagada, cuando se piden los endpoints, entonces
+    responden lo mismo que una ruta que no existe: **404 con `COMMON_NOT_FOUND`** para las
+    cinco de la cuenta, y para la pública lo que la cadena responda a cualquier ruta
+    desconocida. No es 403 en ningún caso.
+
+    > **Este criterio decía además «y el control no se pinta en la ficha», y se corrigió el 10
+    > de septiembre de 2026 tras la revisión.** Pedía algo que el proyecto no tiene: el
+    > frontend no conoce ninguna bandera —tampoco `FEATURE_CATALOG`—, y la forma establecida
+    > desde HU-009 y HU-011 es la contraria: la ruta y el control existen, la API responde 404
+    > y la pantalla muestra su estado de error. Construir propagación de banderas al navegador
+    > es un mecanismo nuevo y no era de esta historia. Lo que sí se ajustó es el criterio, para
+    > que no dé por hecho algo que no existe.
+    >
+    > Y la parte pública no puede responder 404 a quien no ha entrado: en esta aplicación una
+    > ruta desconocida pedida sin token no da 404, así que lo que se afirma —y lo que la prueba
+    > comprueba— es la propiedad de verdad, que es no distinguirse de una ruta que no existe.
 
 ## Casos borde
 

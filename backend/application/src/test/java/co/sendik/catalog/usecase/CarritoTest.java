@@ -248,6 +248,46 @@ class CarritoTest {
             assertThat(exportar.execute(ALGUIEN)).hasSize(Cart.MAXIMO_DE_PRODUCTOS);
         }
 
+        /**
+         * RN-068 gana al tope, y no al reves.
+         *
+         * <p>Era un oraculo: con el carrito lleno, una publicacion real pero no visible
+         * respondia 422 «lleno» y un identificador inventado respondia 404. Dos respuestas
+         * distintas para «esto no lo puedes agregar» es exactamente lo que RN-068 existe para
+         * no dar, y llenar un carrito hasta veinte para tenerlo es trivial.
+         *
+         * <p>Se afirma el tipo de excepcion de los dos y que sea el mismo, que es la propiedad
+         * de verdad: no que sea 404, sino que no se distingan.
+         */
+        @Test
+        void deberia_responder_lo_mismo_con_el_carrito_lleno_para_lo_pausado_y_lo_inexistente() {
+            llenarElCarrito();
+            Listing pausada = publicar();
+            publicaciones.guardar(pausada.pausar(AHORA));
+
+            assertThatThrownBy(() -> agregar.execute(new CartCommand(ALGUIEN, pausada.id())))
+                    .isInstanceOf(ListingNotFoundException.class);
+
+            assertThatThrownBy(() -> agregar.execute(new CartCommand(ALGUIEN, ListingId.nuevo())))
+                    .isInstanceOf(ListingNotFoundException.class);
+        }
+
+        /** Y lo propio tampoco se confunde con «lleno»: RN-092 tambien gana al tope. */
+        @Test
+        void deberia_responder_prohibido_con_el_carrito_lleno_sobre_lo_propio() {
+            llenarElCarrito();
+            Listing publicada = publicar();
+            BuyerId elVendedor = new BuyerId(publicada.sellerId().value());
+
+            // Se llena tambien el carrito de quien vende, para que el tope pudiera ganar.
+            for (int i = 0; i < Cart.MAXIMO_DE_PRODUCTOS; i++) {
+                agregar.execute(new CartCommand(elVendedor, publicar().id()));
+            }
+
+            assertThatThrownBy(() -> agregar.execute(new CartCommand(elVendedor, publicada.id())))
+                    .isInstanceOf(SelfCartForbiddenException.class);
+        }
+
         @Test
         void no_deberia_contar_el_carrito_de_otra_persona() {
             llenarElCarrito();
@@ -352,7 +392,7 @@ class CarritoTest {
         }
 
         @Test
-        void deberia_devolver_un_carrito_vacio_sin_consultar_publicaciones() {
+        void deberia_devolver_un_carrito_vacio() {
             assertThat(leer.execute(ALGUIEN).estaVacio()).isTrue();
         }
 

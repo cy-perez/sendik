@@ -1397,7 +1397,8 @@
       "toggle": {
         "add": "Agregar al carrito",
         "added": "En el carrito",
-        "remove": "Quitar del carrito"
+        "remove": "Quitar del carrito",
+        "notInCart": "Ya no está en tu carrito"
       },
       "title": "Tu carrito",
       "intro": "Lo que llevas, sin comprar todavía.",
@@ -1412,13 +1413,13 @@
       "unavailable": "Ya no está disponible",
       "priceChanged": "El precio cambió desde que lo agregaste",
       "remove": "Quitar",
-      "full": "Tu carrito admite hasta {{ tope }} productos. Quita alguno para agregar otro.",
       "notMerged": "No pudimos agregar {{ cuantos }} de los productos que tenías guardados en este navegador.",
       "noStorage": "Este navegador no puede guardar tu carrito. Entra a tu cuenta para no perderlo.",
       "merge": {
         "question": "Encontramos {{ cuantos }} productos guardados en este navegador. ¿Los agregas a tu carrito?",
         "accept": "Agregarlos",
-        "discard": "No, gracias"
+        "discard": "No, gracias",
+        "title": "Productos guardados en este navegador"
       },
       "empty": {
         "title": "Tu carrito está vacío",
@@ -1428,9 +1429,13 @@
       "errors": {
         "own": "Esta publicación es tuya, así que no la puedes agregar al carrito.",
         "unavailable": "Esta publicación ya no está disponible.",
-        "full": "Tu carrito admite hasta {{ tope }} productos.",
+        "full": "Tu carrito admite hasta {{ tope }} productos. Quita alguno para agregar otro.",
         "failed": "No pudimos actualizar tu carrito. Inténtalo de nuevo."
-      }
+      },
+      "removeNamed": "Quitar {{ titulo }} del carrito",
+      "removed": "Producto quitado de tu carrito",
+      "unavailableGroup": "Ya no disponible",
+      "mergeFailed": "No pudimos agregar los productos de este navegador. Tu carrito quedó como estaba."
     }
   },
   "moderation": {

@@ -5,6 +5,19 @@ import { MAXIMO_DE_PRODUCTOS } from '../domain/cart';
 
 const CLAVE = 'sendik.carrito';
 
+/** Que ya se dijo que no a fusionar este carrito. Ver `recordarQueSeDescarto`. */
+const CLAVE_DESCARTE = 'sendik.carrito.descartado';
+
+/**
+ * La forma de un UUID, para no creerse lo que hay guardado.
+ *
+ * <p>Un identificador que no es un UUID hacía fallar la fusión entera: el borde lo convierte
+ * y lanza, y una sola línea mala se llevaba por delante las diecinueve buenas. El caso borde
+ * de la historia decía «un identificador inventado se descarta sin error» y solo valía para
+ * los inventados **bien escritos**, que no son los que un almacenamiento corrupto produce.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Lo que el navegador guarda de cada producto.
  *
@@ -120,11 +133,40 @@ export class LocalCart {
   }
 
   /**
+   * Deja anotado que se dijo que no a fusionar, para no volver a preguntar.
+   *
+   * <p>Va en el navegador y no en memoria: la pregunta la recibe quien entra, que puede no
+   * ser quien llenó el carrito, y en memoria volvía en cada recarga.
+   */
+  recordarQueSeDescarto(): void {
+    if (!this.enElNavegador) {
+      return;
+    }
+    try {
+      localStorage.setItem(CLAVE_DESCARTE, '1');
+    } catch {
+      // Sin almacenamiento se volverá a preguntar. Es molesto y no es incorrecto.
+    }
+  }
+
+  seDescartoLaFusion(): boolean {
+    if (!this.enElNavegador) {
+      return false;
+    }
+    try {
+      return localStorage.getItem(CLAVE_DESCARTE) !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Lo vacía. Lo llama la fusión al terminar.
    *
-   * <p>Se borra **siempre** al fusionar y no solo cuando la petición sale bien, por lo mismo
-   * que la intención de HU-011: un carrito local que sobrevive a su fusión se volvería a
-   * ofrecer a la siguiente persona que entrara en ese navegador, que es el criterio 12.
+   * <p>Lo llama la fusión **cuando sale bien**, y no cuando falla. Un carrito local que
+   * sobrevive a su fusión se volvería a ofrecer a la siguiente persona que entrara en ese
+   * navegador (criterio 12); pero vaciarlo tras un intento fallido deja a quien lo armó sin
+   * el carrito del navegador y sin el de la cuenta, que es perder datos por una caída de red.
    */
   vaciar(): void {
     if (!this.enElNavegador) {
@@ -132,6 +174,9 @@ export class LocalCart {
     }
     try {
       localStorage.removeItem(CLAVE);
+      // El descarte se va con el carrito: si mañana se arma otro, la pregunta vuelve a
+      // tener sentido y no puede quedar silenciada para siempre por un no de hace meses.
+      localStorage.removeItem(CLAVE_DESCARTE);
     } catch {
       // Sin almacenamiento no había nada que borrar.
     }
@@ -190,6 +235,7 @@ function esProductoGuardado(valor: unknown): valor is ProductoGuardado {
 
   return (
     typeof producto['listingId'] === 'string' &&
+    UUID.test(producto['listingId']) &&
     typeof producto['addedAt'] === 'number' &&
     typeof producto['title'] === 'string' &&
     typeof producto['price'] === 'number'

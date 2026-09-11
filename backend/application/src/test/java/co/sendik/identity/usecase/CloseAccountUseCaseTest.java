@@ -146,6 +146,38 @@ class CloseAccountUseCaseTest {
     }
 
     /**
+     * Y el carrito con ellos. HU-015.
+     *
+     * <p>Esta prueba no existia: el doble de {@code UserCart} se anadio solo para que el
+     * constructor compilara, sin una sola asercion. Sin ella, borrar la llamada de
+     * {@code CloseAccountUseCase} dejaba toda la suite en verde con dato personal vivo justo
+     * despues de ejercer el derecho de supresion.
+     *
+     * <p>El carrito pesa mas que los favoritos, no menos: no dice solo que algo le interesaba
+     * a una persona identificada, dice que estuvo a punto de comprarlo.
+     */
+    @Test
+    void deberia_borrar_el_carrito_HU_015() {
+        conCuenta();
+
+        caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
+
+        verify(carrito).borrarDe(usuario.id());
+    }
+
+    /** Y antes de anonimizar, por lo mismo que los favoritos. */
+    @Test
+    void deberia_borrar_el_carrito_antes_de_anonimizar() {
+        conCuenta();
+
+        caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
+
+        InOrder orden = inOrder(carrito, usuarios);
+        orden.verify(carrito).borrarDe(usuario.id());
+        orden.verify(usuarios).cerrarYAnonimizar(usuario.id(), AHORA);
+    }
+
+    /**
      * Y se borran antes de anonimizar, dentro de la misma transaccion. Si esto fallara
      * despues, la cuenta quedaria sin dueno y con los favoritos puestos.
      */

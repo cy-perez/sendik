@@ -159,10 +159,27 @@ class CartTest {
     @Nested
     class ElTope {
 
-        /** RN-097. El numero vive aqui y no en la capa de aplicacion: es regla de negocio. */
+        /**
+         * RN-097. El numero vive aqui y no en la capa de aplicacion: es regla de negocio.
+         *
+         * <p><strong>Se afirma el efecto y no el literal.</strong> Antes decia
+         * {@code assertThat(MAXIMO_DE_PRODUCTOS).isEqualTo(20)}, que es afirmar que una
+         * constante vale su propio valor: cambiarla a diez dejaba esta prueba y todas las
+         * demas en verde, porque todas usan el simbolo. Lo que si se puede fijar aqui es que
+         * el tope acota de verdad un carrito armado.
+         *
+         * <p>Lo que esta prueba **no** puede cubrir, y la historia lo declara como su deuda
+         * mas concreta: que el tope del frontend siga valiendo lo mismo. Son dos dominios y no
+         * hay guardian que los compare.
+         */
         @Test
-        void deberia_ser_de_veinte() {
-            assertThat(Cart.MAXIMO_DE_PRODUCTOS).isEqualTo(20);
+        void deberia_acotar_el_carrito_al_tope() {
+            List<CartLine> justas = java.util.stream.IntStream.range(0, Cart.MAXIMO_DE_PRODUCTOS)
+                    .mapToObj(i -> linea(UNA, 100_000, Duration.ofMinutes(i)))
+                    .toList();
+
+            assertThat(Cart.de(justas).cuantos()).isEqualTo(Cart.MAXIMO_DE_PRODUCTOS);
+            assertThat(Cart.MAXIMO_DE_PRODUCTOS).isPositive();
         }
 
         @Test

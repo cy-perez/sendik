@@ -442,6 +442,143 @@ describe('CartPage', () => {
       .forEach((peticion) => peticion.flush({ groups: [], willSplit: false }));
   });
 
+  // --- Quitar desde la pantalla --------------------------------------------
+
+  /**
+   * Criterio 20: quitar el último de un grupo se lleva el grupo entero.
+   *
+   * <p>No lo probaba nada: `cart-page.spec.ts` tenía 458 líneas y no pulsaba «Quitar» ni una
+   * vez, así que las dos ramas de `quitarDelCarrito` no se ejecutaban nunca.
+   */
+  it('quita con sesión, y el grupo desaparece entero si era el último', async () => {
+    const { fixture, backend } = await montar(true);
+    backend.expectOne(`${API}/users/me/cart`).flush({
+      groups: [grupo('v-1', 'Ana Maria', [linea(UNA, 100_000)], 100_000)],
+      willSplit: false,
+    });
+    await bombear(fixture);
+
+    fixture.nativeElement.querySelectorAll('button').forEach((b: HTMLButtonElement) => {
+      if (b.textContent?.includes('Quitar')) {
+        b.click();
+      }
+    });
+    await bombear(fixture);
+
+    const borrado = backend.expectOne(`${API}/users/me/cart/items/${UNA}`);
+    expect(borrado.request.method).toBe('DELETE');
+    borrado.flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+
+    // La relectura que dispara la mutación: el grupo ya no viene.
+    backend
+      .match((p) => p.method === 'GET' && p.url === `${API}/users/me/cart`)
+      .forEach((p) => p.flush({ groups: [], willSplit: false }));
+    await bombear(fixture);
+
+    expect(fixture.nativeElement.querySelectorAll('.carrito__grupo')).toHaveLength(0);
+    expect(texto(fixture)).not.toContain('Ana Maria');
+  });
+
+  /** Y la rama sin sesión, que tampoco se ejecutaba: ahí quitar no toca la red. */
+  it('quita sin sesión sin tocar la red', async () => {
+    const local = TestBed.inject(LocalCart);
+    local.agregar({
+      listingId: UNA,
+      title: 'Camisa de lino',
+      price: 100_000,
+      imageUrl: null,
+      sellerName: 'Ana Maria',
+    });
+
+    const { fixture, backend } = await montar(false);
+    backend
+      .expectOne((p) => p.url === `${API}/carts`)
+      .flush({
+        groups: [grupo('v-1', 'Ana Maria', [linea(UNA, 100_000)], 100_000)],
+        willSplit: false,
+      });
+    await bombear(fixture);
+
+    fixture.nativeElement.querySelectorAll('button').forEach((b: HTMLButtonElement) => {
+      if (b.textContent?.includes('Quitar')) {
+        b.click();
+      }
+    });
+    await bombear(fixture);
+
+    expect(local.contiene(UNA)).toBe(false);
+    backend.verify();
+  });
+
+  /**
+   * Y se anuncia. El botón que se pulsa desaparece con su fila, así que sin esto quien usa
+   * lector de pantalla no oye nada: no queda rastro de que la acción surtiera efecto.
+   */
+  it('anuncia que se quitó algo', async () => {
+    const local = TestBed.inject(LocalCart);
+    local.agregar({
+      listingId: UNA,
+      title: 'Camisa de lino',
+      price: 100_000,
+      imageUrl: null,
+      sellerName: 'Ana Maria',
+    });
+
+    const { fixture, backend } = await montar(false);
+    backend
+      .expectOne((p) => p.url === `${API}/carts`)
+      .flush({
+        groups: [grupo('v-1', 'Ana Maria', [linea(UNA, 100_000)], 100_000)],
+        willSplit: false,
+      });
+    await bombear(fixture);
+
+    fixture.nativeElement.querySelectorAll('button').forEach((b: HTMLButtonElement) => {
+      if (b.textContent?.includes('Quitar')) {
+        b.click();
+      }
+    });
+    await bombear(fixture);
+
+    const region = fixture.nativeElement.querySelector('[role="status"]') as HTMLElement;
+    expect(region.textContent).toContain('quitado');
+  });
+
+  /**
+   * Una fusión que falla no se lleva el carrito del navegador, y se dice.
+   *
+   * <p>Estaba en `onSettled` —«salga bien o mal»— y eso era pérdida de datos: quien sufría una
+   * caída de red se quedaba sin el carrito del navegador y sin el de la cuenta.
+   */
+  it('conserva el carrito local y avisa cuando la fusión falla', async () => {
+    const local = TestBed.inject(LocalCart);
+    local.agregar({
+      listingId: UNA,
+      title: 'Camisa de lino',
+      price: 100_000,
+      imageUrl: null,
+      sellerName: 'Ana Maria',
+    });
+
+    const { fixture, backend } = await montar(true);
+    backend.expectOne(`${API}/users/me/cart`).flush({ groups: [], willSplit: false });
+    await bombear(fixture);
+
+    (
+      fixture.nativeElement.querySelector('.carrito__fusion .btn-primario') as HTMLButtonElement
+    ).click();
+    await bombear(fixture);
+
+    backend
+      .expectOne(`${API}/users/me/cart`)
+      .flush({ code: 'COMMON_GENERIC' }, { status: 500, statusText: 'Server Error' });
+    await bombear(fixture);
+
+    expect(local.contiene(UNA)).toBe(true);
+    expect(texto(fixture)).toContain('Tu carrito quedó como estaba');
+  });
+
   // --- El error ------------------------------------------------------------
 
   it('ofrece reintentar cuando la carga falla', async () => {

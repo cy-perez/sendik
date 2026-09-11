@@ -1397,7 +1397,8 @@
       "toggle": {
         "add": "Add to cart",
         "added": "In your cart",
-        "remove": "Remove from cart"
+        "remove": "Remove from cart",
+        "notInCart": "No longer in your cart"
       },
       "title": "Your cart",
       "intro": "What you are carrying, not bought yet.",
@@ -1412,13 +1413,13 @@
       "unavailable": "No longer available",
       "priceChanged": "The price changed since you added it",
       "remove": "Remove",
-      "full": "Your cart holds up to {{ tope }} products. Remove one to add another.",
       "notMerged": "We could not add {{ cuantos }} of the products saved in this browser.",
       "noStorage": "This browser cannot save your cart. Sign in so you do not lose it.",
       "merge": {
         "question": "We found {{ cuantos }} products saved in this browser. Add them to your cart?",
         "accept": "Add them",
-        "discard": "No, thanks"
+        "discard": "No, thanks",
+        "title": "Products saved in this browser"
       },
       "empty": {
         "title": "Your cart is empty",
@@ -1428,9 +1429,13 @@
       "errors": {
         "own": "This listing is yours, so you cannot add it to your cart.",
         "unavailable": "This listing is no longer available.",
-        "full": "Your cart holds up to {{ tope }} products.",
+        "full": "Your cart holds up to {{ tope }} products. Remove one to add another.",
         "failed": "We could not update your cart. Please try again."
-      }
+      },
+      "removeNamed": "Remove {{ titulo }} from your cart",
+      "removed": "Product removed from your cart",
+      "unavailableGroup": "No longer available",
+      "mergeFailed": "We could not add the products from this browser. Your cart is unchanged."
     }
   },
   "moderation": {

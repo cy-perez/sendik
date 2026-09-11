@@ -180,6 +180,28 @@ class ExportUserDataUseCaseTest {
                 .containsExactly("una-publicacion", AHORA.minus(Duration.ofDays(2)));
     }
 
+    /**
+     * Y el carrito. HU-015.
+     *
+     * <p>Esta prueba tampoco existia, por lo mismo: el doble se anadio para compilar. Sin
+     * ella, quitar el carrito de {@code UserDataExport} dejaba la suite en verde y la descarga
+     * incompleta, que es responder con un resumen a un derecho que es sobre lo que hay.
+     */
+    @Test
+    void deberia_incluir_el_carrito_HU_015() {
+        when(usuarios.buscarPorId(usuario)).thenReturn(Optional.of(cuentaCon(null, null)));
+        when(consentimientos.listarDe(usuario)).thenReturn(List.of());
+        when(refrescos.listarSesionesActivasDe(usuario, AHORA)).thenReturn(List.of());
+        when(carrito.de(usuario))
+                .thenReturn(List.of(
+                        new UserDataExport.ProductoEnCarrito("una-publicacion", AHORA.minus(Duration.ofDays(1)))));
+
+        assertThat(caso.execute(usuario).carrito())
+                .singleElement()
+                .extracting(UserDataExport.ProductoEnCarrito::publicacion, UserDataExport.ProductoEnCarrito::agregadoEl)
+                .containsExactly("una-publicacion", AHORA.minus(Duration.ofDays(1)));
+    }
+
     @Test
     void deberia_incluir_las_sesiones_abiertas_con_su_navegador_y_sus_fechas() {
         when(usuarios.buscarPorId(usuario)).thenReturn(Optional.of(cuentaCon(null, null)));

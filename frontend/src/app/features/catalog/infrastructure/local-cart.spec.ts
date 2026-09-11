@@ -19,6 +19,12 @@ describe('LocalCart', () => {
 
   let carrito: LocalCart;
 
+  /**
+   * Un UUID distinto por índice. Hace falta de verdad: el almacén descarta lo que no tenga
+   * forma de UUID, que es lo que impide que una copia corrupta tumbe la fusión entera.
+   */
+  const uuid = (i: number) => `01a04385-47b7-79c7-b3f2-${String(i).padStart(12, '0')}`;
+
   const producto = (listingId: string) => ({
     listingId,
     title: 'Camisa de lino color hueso',
@@ -104,7 +110,7 @@ describe('LocalCart', () => {
 
   it('rechaza el producto veintiuno', () => {
     for (let i = 0; i < MAXIMO_DE_PRODUCTOS; i++) {
-      expect(carrito.agregar(producto(`${ID}-${i}`))).toBe(true);
+      expect(carrito.agregar(producto(uuid(i)))).toBe(true);
     }
 
     expect(carrito.agregar(producto(OTRA))).toBe(false);
@@ -114,7 +120,7 @@ describe('LocalCart', () => {
   /** El borde por los dos lados: veinte vale y veintiuno no. */
   it('admite el producto veinte', () => {
     for (let i = 0; i < MAXIMO_DE_PRODUCTOS - 1; i++) {
-      carrito.agregar(producto(`${ID}-${i}`));
+      carrito.agregar(producto(uuid(i)));
     }
 
     expect(carrito.agregar(producto(OTRA))).toBe(true);
@@ -123,10 +129,10 @@ describe('LocalCart', () => {
   /** Y el carrito lleno sigue aceptando lo que ya tiene dentro. */
   it('no rechaza el reintento de algo que ya está dentro con el carrito lleno', () => {
     for (let i = 0; i < MAXIMO_DE_PRODUCTOS; i++) {
-      carrito.agregar(producto(`${ID}-${i}`));
+      carrito.agregar(producto(uuid(i)));
     }
 
-    expect(carrito.agregar(producto(`${ID}-0`))).toBe(true);
+    expect(carrito.agregar(producto(uuid(0)))).toBe(true);
   });
 
   // --- Lo que otro escribió ------------------------------------------------
@@ -162,9 +168,7 @@ describe('LocalCart', () => {
 
   /** Ni siquiera un archivo escrito a mano puede saltarse el tope. */
   it('no devuelve más del tope aunque el almacenamiento traiga más', () => {
-    const demasiados = Array.from({ length: MAXIMO_DE_PRODUCTOS + 5 }, (_, i) =>
-      guardado(`${ID}-${i}`),
-    );
+    const demasiados = Array.from({ length: MAXIMO_DE_PRODUCTOS + 5 }, (_, i) => guardado(uuid(i)));
     localStorage.setItem(CLAVE, JSON.stringify(demasiados));
 
     expect(carrito.todos()).toHaveLength(MAXIMO_DE_PRODUCTOS);
@@ -204,13 +208,60 @@ describe('LocalCart', () => {
    * <p>Un carrito local que sobrevive a su fusión se le vuelve a ofrecer a la siguiente
    * persona que entre en este navegador, que es exactamente lo que el criterio prohíbe.
    */
+  /**
+   * Criterio 12, con prueba propia y no como efecto secundario de otra.
+   *
+   * <p>Lo que el criterio protege es que el carrito de A no acabe en la cuenta de B. Lo que
+   * el diseño puede garantizar —ADR-0037 lo dice— es que nadie lo herede sin decir que sí, y
+   * que decir que no valga. Esto fija la segunda mitad: descartada la oferta, **no se vuelve
+   * a preguntar ni siquiera tras recargar**, que era el hueco real.
+   */
+  it('recuerda que se descartó la fusión, y lo recuerda entre recargas', () => {
+    carrito.agregar(producto(ID));
+
+    expect(carrito.seDescartoLaFusion()).toBe(false);
+
+    carrito.recordarQueSeDescarto();
+
+    expect(carrito.seDescartoLaFusion()).toBe(true);
+    expect(TestBed.inject(LocalCart).seDescartoLaFusion()).toBe(true);
+  });
+
+  /** Y el carrito de A no se pierde por haber dicho que no: sigue siendo suyo sin entrar. */
+  it('descartar no borra lo guardado', () => {
+    carrito.agregar(producto(ID));
+
+    carrito.recordarQueSeDescarto();
+
+    expect(carrito.contiene(ID)).toBe(true);
+  });
+
+  /**
+   * Un identificador malformado se descarta y no se lleva por delante a los demás.
+   *
+   * <p>Es el caso borde de la historia —«el carrito del navegador manipulado a mano»— y hasta
+   * ahora solo valía para los inventados **bien escritos**. Uno mal formado llegaba al borde,
+   * `ListingId.de` lanzaba, y la fusión entera salía 400 con los diecinueve buenos dentro.
+   */
+  it('descarta un identificador que no tiene forma de UUID', () => {
+    localStorage.setItem(CLAVE, JSON.stringify([guardado(ID), guardado('no-soy-un-uuid')]));
+
+    expect(carrito.todos()).toHaveLength(1);
+    expect(carrito.contiene(ID)).toBe(true);
+  });
+
   it('se vacía del todo', () => {
     carrito.agregar(producto(ID));
     carrito.agregar(producto(OTRA));
+
+    carrito.recordarQueSeDescarto();
 
     carrito.vaciar();
 
     expect(carrito.todos()).toEqual([]);
     expect(localStorage.getItem(CLAVE)).toBeNull();
+    // El descarte se va con el carrito: si mañana se arma otro, la pregunta vuelve a tener
+    // sentido y no puede quedar silenciada para siempre por un no de hace meses.
+    expect(carrito.seDescartoLaFusion()).toBe(false);
   });
 });

@@ -64,6 +64,19 @@ public class AddToCartUseCase {
                 .buscar(comando.publicacion())
                 .orElseThrow(() -> new ListingNotFoundException(comando.publicacion()));
 
+        // **RN-068 y RN-092 se comprueban ANTES que el tope, y ese orden no es
+        // intercambiable.** `buscar` no filtra por estado, asi que el 404 de arriba solo
+        // salta cuando la fila no existe; quien decide sobre lo pausado, lo vendido y lo
+        // propio es `CartItem.de`.
+        //
+        // Al reves habia un oraculo: con el carrito lleno, una publicacion real pero no
+        // visible respondia 422 «lleno» y un identificador inventado respondia 404. Dos
+        // respuestas distintas es exactamente lo que RN-068 existe para no dar, y llenar un
+        // carrito hasta veinte para tenerlo es trivial.
+        //
+        // Construirlo aqui no cuesta nada: la publicacion ya esta cargada.
+        CartItem item = CartItem.de(comando.quien(), publicacion, reloj.instant());
+
         // El tope se mira solo cuando el producto no estaba ya, porque volver a agregar lo
         // que ya esta no suma ninguna fila. Sin esta condicion, un carrito lleno rechazaria
         // el reintento de algo que ya tiene dentro y romperia la idempotencia del criterio 4
@@ -73,6 +86,6 @@ public class AddToCartUseCase {
             throw new CartFullException();
         }
 
-        carrito.guardar(CartItem.de(comando.quien(), publicacion, reloj.instant()));
+        carrito.guardar(item);
     }
 }

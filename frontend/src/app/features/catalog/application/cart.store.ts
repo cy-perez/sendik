@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 
+import { ApiError } from '../../../core/http/api-error';
 import { SessionStore } from '../../../core/session/session.store';
 import { CARRITO_VACIO, cuantosLleva, MAXIMO_DE_PRODUCTOS, type Cart } from '../domain/cart';
 import { CartApi, type CartItemState } from '../infrastructure/cart.api';
@@ -61,6 +62,7 @@ export class CartStore {
 
   constructor() {
     this.releerLoLocal();
+    this.fusionDescartada.set(this.local.seDescartoLaFusion());
   }
 
   // --- El control de la ficha ----------------------------------------------
@@ -117,11 +119,20 @@ export class CartStore {
    */
   private readonly optimista = signal<boolean | null>(null);
 
+  /**
+   * Si hay una escritura en vuelo. Se pone **antes** de lanzarla, en el mismo tick.
+   *
+   * <p>Es lo que corta el doble pulsado, y tiene que ser síncrona: `isPending()` de TanStack
+   * se actualiza después, así que dos clics seguidos lo leen en falso los dos.
+   */
+  private readonly escribiendo = signal(false);
+
   readonly agregar = injectMutation(() => ({
     mutationFn: (listingId: string) => this.api.agregar(listingId),
     onMutate: () => this.optimista.set(true),
     onError: () => this.optimista.set(null),
     onSuccess: () => this.refrescar(),
+    onSettled: () => this.escribiendo.set(false),
   }));
 
   readonly quitar = injectMutation(() => ({
@@ -129,6 +140,7 @@ export class CartStore {
     onMutate: () => this.optimista.set(false),
     onError: () => this.optimista.set(null),
     onSuccess: () => this.refrescar(),
+    onSettled: () => this.escribiendo.set(false),
   }));
 
   /**
@@ -140,18 +152,30 @@ export class CartStore {
    * producto no sabría por cuál de las tres razones.
    */
   readonly errorDelControl = computed<string | null>(() => {
-    const fallo = (this.agregar.error() ?? this.quitar.error()) as { status?: number } | null;
+    const fallo = this.agregar.error() ?? this.quitar.error();
 
     if (fallo == null) {
       return this.topeLocalAlcanzado() ? 'catalog.cart.errors.full' : null;
     }
-    if (fallo.status === 403) {
-      return 'catalog.cart.errors.own';
+
+    // **Por `code` y no por estado HTTP.** Los dos códigos propios existen justamente para
+    // que el cliente distinga —`ErrorCode` y `contrato-api.md` lo justifican con esas
+    // palabras— y mapear por 403/404/422 los ignoraba: cualquier segundo 422 que ese
+    // endpoint devuelva mañana diría «tu carrito está lleno». Es el patrón que ya usan
+    // `listing-review.store.ts` y `review.store.ts`.
+    if (fallo instanceof ApiError) {
+      if (fallo.code === 'CATALOG_SELF_CART_FORBIDDEN') {
+        return 'catalog.cart.errors.own';
+      }
+      if (fallo.code === 'CATALOG_CART_FULL') {
+        return 'catalog.cart.errors.full';
+      }
+      if (fallo.code === 'COMMON_NOT_FOUND') {
+        return 'catalog.cart.errors.unavailable';
+      }
     }
-    if (fallo.status === 404) {
-      return 'catalog.cart.errors.unavailable';
-    }
-    return fallo.status === 422 ? 'catalog.cart.errors.full' : 'catalog.cart.errors.failed';
+
+    return 'catalog.cart.errors.failed';
   });
 
   /** El tope alcanzado sin sesión, que no viene de ninguna respuesta: lo decide el navegador. */
@@ -167,9 +191,26 @@ export class CartStore {
    * decisión de esta capa, no de la pantalla.
    */
   alternar(publicacion: PublicListing, nombreDelVendedor: string | null): void {
+    // **El doble pulsado se corta aquí, y hasta ahora no se cortaba en ninguna parte.** La
+    // plantilla del control afirmaba «el doble pulsado ya lo bloquea el almacén contando
+    // peticiones» y era falso: dos clics seguidos con sesión lanzaban un PUT y, al leer el
+    // estado optimista ya en `true`, un DELETE detrás. Dos escrituras en vuelo sobre el mismo
+    // par, con resultado dependiente del orden de llegada al servidor.
+    //
+    // Se corta aquí y no con `[disabled]` en el botón: deshabilitarlo en el mismo tick del
+    // clic manda el foco a `body`, que es la regresión que HU-011 tuvo que arreglar.
+    //
+    // Y con señal propia y no con `isPending()` de la mutación: aquel no cambia dentro del
+    // mismo tick, así que dos clics síncronos lo leían en falso los dos y pasaban igual. La
+    // prueba lo encontró al primer intento.
+    if (this.escribiendo()) {
+      return;
+    }
+
     const dentro = this.control().dentro;
 
     if (this.haySesion()) {
+      this.escribiendo.set(true);
       if (dentro) {
         this.quitar.mutate(publicacion.id);
       } else {
@@ -262,6 +303,10 @@ export class CartStore {
   /** Quita desde la pantalla del carrito, con sesión o sin ella. */
   quitarDelCarrito(listingId: string): void {
     if (this.haySesion()) {
+      if (this.escribiendo()) {
+        return;
+      }
+      this.escribiendo.set(true);
       this.quitar.mutate(listingId);
       return;
     }
@@ -288,19 +333,34 @@ export class CartStore {
     () => this.haySesion() && this.guardadoLocal().length > 0 && !this.fusionDescartada(),
   );
 
+  /**
+   * Si ya se dijo que no a fusionar este carrito.
+   *
+   * <p><strong>Vive en el navegador y no solo en memoria.</strong> Estaba en memoria, y eso
+   * dejaba a quien no armó ese carrito diciendo que no en cada recarga: la pregunta volvía
+   * sola. Es el lado incómodo del criterio 12 —quien recibe la oferta puede no ser quien
+   * llenó el carrito— y decir que no una vez tiene que bastar.
+   */
   private readonly fusionDescartada = signal(false);
 
   readonly fusionar = injectMutation(() => ({
     mutationFn: (ids: readonly string[]) => this.api.fusionar(ids),
-    // Se vacía siempre al terminar, salga bien o mal, por lo mismo que la intención de
-    // HU-011: un carrito local que sobrevive a su fusión se le vuelve a ofrecer a la
-    // siguiente persona que entre en este navegador, que es el criterio 12.
-    onSettled: () => {
+    // **Se vacía solo cuando la fusión salió bien.** Estaba en `onSettled` —«salga bien o
+    // mal»— y eso era un camino de pérdida de datos: una fusión que falla por red dejaba a la
+    // persona sin el carrito del navegador y sin el de la cuenta, y sin nada que reintentar.
+    //
+    // El criterio 12 pedía que el carrito local no sobreviva a **su fusión**, no a un intento
+    // fallido: si no se fusionó, no hay nada que heredar todavía, y quien vuelva a entrar
+    // recibirá otra vez la pregunta, que es el comportamiento correcto.
+    onSuccess: () => {
       this.local.vaciar();
       this.releerLoLocal();
       this.refrescar();
     },
   }));
+
+  /** Si la última fusión falló. La pantalla lo dice y ofrece reintentar. */
+  readonly falloLaFusion = computed(() => this.fusionar.isError());
 
   /** Lo que no entró en la última fusión, para decirlo (criterio 10). */
   readonly noEntraron = computed<readonly string[]>(() => this.fusionar.data()?.notMerged ?? []);
@@ -315,6 +375,7 @@ export class CartStore {
   /** Descartar no borra el carrito local: quien dijo que no puede seguir sin entrar. */
   descartarLaFusion(): void {
     this.fusionDescartada.set(true);
+    this.local.recordarQueSeDescarto();
   }
 
   // --- Lo que hace la ficha -------------------------------------------------
@@ -323,6 +384,7 @@ export class CartStore {
   abrirFicha(id: string | null): void {
     this.ficha.set(id);
     this.optimista.set(null);
+    this.escribiendo.set(false);
     this.topeLocalAlcanzado.set(false);
     this.agregar.reset();
     this.quitar.reset();

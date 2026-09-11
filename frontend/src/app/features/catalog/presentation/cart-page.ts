@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
@@ -95,6 +104,30 @@ export class CartPage {
 
   protected readonly noEntraron = computed(() => this.store.noEntraron());
 
+  protected readonly falloLaFusion = computed(() => this.store.falloLaFusion());
+
+  /**
+   * El fallo de quitar, que hasta ahora solo se pintaba en la ficha del producto.
+   *
+   * <p>La mutación se comparte con el control, y su mensaje vivía solo allí: un `DELETE` que
+   * fallaba desde esta pantalla dejaba la fila puesta sin decir nada, y el aviso aparecía
+   * después en la ficha del primer producto que alguien abriera.
+   */
+  protected readonly errorDeAccion = computed(() => this.store.errorDelControl());
+
+  protected readonly tope = this.store.tope;
+
+  /**
+   * Si se acaba de quitar algo, para anunciarlo.
+   *
+   * <p>Nace en falso y solo se enciende tras la acción, por lo mismo que el control de la
+   * ficha: una región viva que nace con texto suelta en algunos lectores un anuncio que nadie
+   * pidió en cada carga.
+   */
+  protected readonly seQuito = signal(false);
+
+  private readonly titulo = viewChild<ElementRef<HTMLElement>>('titulo');
+
   protected readonly cuantosGuardados = computed(() => this.store.cuantosGuardadosLocalmente());
 
   /** Si el navegador no puede guardar, se dice en vez de perder el carrito en silencio. */
@@ -112,8 +145,19 @@ export class CartPage {
     return precioFormateado(valor, this.idioma.getActiveLang());
   }
 
+  /**
+   * Quita, lo anuncia y recoge el foco.
+   *
+   * <p><strong>El foco es lo que no se podía dejar como estaba.</strong> El botón que se pulsa
+   * desaparece con su fila, y si era el último del grupo desaparece el grupo entero (criterio
+   * 20): el navegador manda el foco a `body` y quien navega con teclado vuelve al principio
+   * del documento. Se lleva al `h1`, que para eso tiene `tabindex="-1"`, igual que
+   * `main#contenido`.
+   */
   protected quitar(listingId: string): void {
     this.store.quitarDelCarrito(listingId);
+    this.seQuito.set(true);
+    this.titulo()?.nativeElement.focus();
   }
 
   protected reintentar(): void {

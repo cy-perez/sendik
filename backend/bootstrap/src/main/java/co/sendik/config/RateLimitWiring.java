@@ -30,6 +30,8 @@ public class RateLimitWiring {
                 limites.account().window(),
                 limites.listings().maxRequests(),
                 limites.listings().window(),
+                limites.anonymousCart().maxRequests(),
+                limites.anonymousCart().window(),
                 limites.maxTrackedKeys());
     }
 }

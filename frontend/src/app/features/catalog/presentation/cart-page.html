@@ -1,4 +1,8 @@
-<h1 class="tipo-h1">{{ 'catalog.cart.title' | transloco }}</h1>
+<!--
+  Con `tabindex="-1"` para poder recibir el foco cuando una fila desaparece al quitarla. No
+  entra en el orden de tabulacion: -1 permite enfocarlo por codigo y no con el teclado.
+-->
+<h1 class="tipo-h1" tabindex="-1" #titulo>{{ 'catalog.cart.title' | transloco }}</h1>
 
 <!--
   La region viva se pinta siempre y fuera de las ramas del @if. Una region que aparece con
@@ -8,6 +12,13 @@
 <p class="solo-lectores" role="status">
   @if (cargando()) {
     {{ 'catalog.cart.loading' | transloco }}
+  } @else if (seQuito()) {
+    <!--
+      Quitar hace desaparecer la fila -y el grupo entero, si era la ultima-. Sin esto, quien
+      usa lector de pantalla no oia absolutamente nada: el boton que acababa de pulsar ya no
+      existe y no queda rastro de que la accion surtiera efecto.
+    -->
+    {{ 'catalog.cart.removed' | transloco }}
   }
 </p>
 
@@ -23,7 +34,16 @@
   poder mirar, y aqui lo razonable es poder ver el carrito antes de contestar.
 -->
 @if (hayQueFusionar()) {
-  <div class="carrito__fusion" role="region" [attr.aria-label]="'catalog.cart.title' | transloco">
+  <!--
+    <section> con su propio h2 y no un <div role="region"> etiquetado con el titulo de la
+    pagina. Dos correcciones en una: el elemento nativo hace ese papel sin ARIA -«HTML
+    semantico antes que ARIA»- y la etiqueta anterior hacia que la lista de regiones de un
+    lector anunciara «Tu carrito» para un bloque que pregunta por la fusion.
+  -->
+  <section class="carrito__fusion" aria-labelledby="fusion-titulo">
+    <h2 class="tipo-titulo-tarjeta" id="fusion-titulo">
+      {{ 'catalog.cart.merge.title' | transloco }}
+    </h2>
     <p class="tipo-cuerpo">
       {{ 'catalog.cart.merge.question' | transloco: { cuantos: cuantosGuardados() } }}
     </p>
@@ -40,7 +60,17 @@
         {{ 'catalog.cart.merge.discard' | transloco }}
       </button>
     </div>
-  </div>
+  </section>
+}
+
+<!--
+  Que la fusion fallo. Antes no se pintaba nada: la peticion caia, el carrito local se
+  vaciaba igual -eso tambien se corrigio- y quien miraba no se enteraba de nada.
+-->
+@if (falloLaFusion()) {
+  <p class="carrito__aviso tipo-secundario" role="alert">
+    {{ 'catalog.cart.mergeFailed' | transloco }}
+  </p>
 }
 
 <!--
@@ -51,6 +81,17 @@
 @if (noEntraron().length > 0) {
   <p class="carrito__aviso tipo-secundario" role="status">
     {{ 'catalog.cart.notMerged' | transloco: { cuantos: noEntraron().length } }}
+  </p>
+}
+
+<!--
+  El fallo al quitar. La mutacion se comparte con el control de la ficha, y su mensaje solo
+  se pintaba alli: un DELETE que fallaba desde esta pantalla dejaba la fila puesta, sin decir
+  nada, y el aviso aparecia despues en la ficha del primer producto que alguien abriera.
+-->
+@if (errorDeAccion(); as clave) {
+  <p class="carrito__aviso tipo-secundario" role="alert">
+    {{ clave | transloco: { tope: tope } }}
   </p>
 }
 
@@ -124,7 +165,7 @@
             @if (linea.available) {
               <p class="precio">{{ formatear(linea.listing.product.price!) }}</p>
             } @else {
-              <p class="precio carrito__precio-tachado">
+              <p class="precio">
                 <s>{{ formatear(linea.listing.product.price!) }}</s>
               </p>
               <p class="carrito__no-disponible tipo-secundario">
@@ -138,9 +179,17 @@
               </p>
             }
 
+            <!--
+              El texto visible sigue siendo «Quitar», que es lo que cabe en la fila; el nombre
+              accesible nombra el producto. Con el tope de veinte, un lector de pantalla
+              recorria una lista de veinte botones llamados todos igual.
+            -->
             <button
               type="button"
               class="btn btn-secundario carrito__quitar"
+              [attr.aria-label]="
+                'catalog.cart.removeNamed' | transloco: { titulo: linea.listing.product.title }
+              "
               (click)="quitar(linea.listing.id)"
             >
               {{ 'catalog.cart.remove' | transloco }}
@@ -170,7 +219,15 @@
     que ya no responde.
   -->
   @if (noDisponibles().length > 0) {
-    <section class="carrito__grupo">
+    <section class="carrito__grupo" aria-labelledby="no-disponibles-titulo">
+      <!--
+        Con encabezado, como todos los demas grupos. Sin el era una seccion cerrada con borde
+        y sin nombre accesible: aparecia detras de los grupos con vendedor sin decir que es.
+      -->
+      <h2 class="tipo-titulo-tarjeta carrito__vendedor" id="no-disponibles-titulo">
+        {{ 'catalog.cart.unavailableGroup' | transloco }}
+      </h2>
+
       <ul class="carrito__lineas">
         @for (producto of noDisponibles(); track producto.listingId) {
           <li class="carrito__linea carrito__linea--apagada">
@@ -181,6 +238,7 @@
             <button
               type="button"
               class="btn btn-secundario carrito__quitar"
+              [attr.aria-label]="'catalog.cart.removeNamed' | transloco: { titulo: producto.title }"
               (click)="quitar(producto.listingId)"
             >
               {{ 'catalog.cart.remove' | transloco }}

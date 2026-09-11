@@ -36,10 +36,13 @@ import co.sendik.shared.money.Money;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -131,6 +134,50 @@ class CartPersistenceTest {
         assertThat(guardado.precioAlAgregar()).isEqualTo(PRECIO);
     }
 
+    /**
+     * Criterio 4, <strong>de verdad</strong>: dos escrituras simultaneas sobre el mismo par.
+     *
+     * <p>La prueba secuencial de arriba pasaria igual con un {@code if (existe) return;}
+     * delante del {@code INSERT}, asi que no demuestra lo que su nombre dice. Lo que hay que
+     * demostrar es lo que el puerto, el caso de uso, la migracion y la historia repiten en
+     * cinco sitios: que entre esa lectura y la escritura cabe la peticion de la otra pestana,
+     * y que lo unico que decide entonces es la clave primaria.
+     *
+     * <p>Es la misma prueba que {@code FavoritePersistenceTest} tuvo que anadir por lo mismo.
+     * Estaba escrita a dos archivos de distancia y no se copio.
+     */
+    @Test
+    void deberia_ser_idempotente_entre_dos_escrituras_simultaneas_criterio_4() throws Exception {
+        BuyerId quien = nuevoComprador();
+        Listing publicada = publicada();
+        CartItem item = CartItem.reconstruir(quien, publicada.id(), AHORA, PRECIO);
+
+        CountDownLatch salida = new CountDownLatch(1);
+        List<Throwable> fallos = Collections.synchronizedList(new ArrayList<>());
+
+        Runnable escribir = () -> {
+            try {
+                salida.await();
+                carrito.guardar(item);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (RuntimeException e) {
+                fallos.add(e);
+            }
+        };
+
+        Thread una = new Thread(escribir);
+        Thread otra = new Thread(escribir);
+        una.start();
+        otra.start();
+        salida.countDown();
+        una.join();
+        otra.join();
+
+        assertThat(fallos).isEmpty();
+        assertThat(cuantasFilas(quien)).isEqualTo(1);
+    }
+
     @Test
     void deberia_quitar_el_producto_y_no_fallar_al_repetirlo() {
         BuyerId quien = nuevoComprador();
@@ -218,13 +265,21 @@ class CartPersistenceTest {
         carrito.guardar(CartItem.reconstruir(quien, una.id(), AHORA, PRECIO));
         carrito.guardar(CartItem.reconstruir(quien, otra.id(), AHORA, PRECIO));
 
-        List<ListingId> primera =
-                carrito.todosDe(quien).stream().map(CartItem::publicacion).toList();
-        List<ListingId> segunda =
-                carrito.todosDe(quien).stream().map(CartItem::publicacion).toList();
+        // El orden que el SQL promete cuando la fecha empata, **leido de la base y no escrito
+        // a mano**. Comparar dos lecturas entre si no tenia dientes: sin el desempate,
+        // PostgreSQL devuelve igual el mismo orden fisico en dos consultas identicas sobre dos
+        // filas, y la prueba seguia verde mientras el `ORDER BY` perdia su segunda columna.
+        //
+        // Es la leccion que el commit f0bc0b3 dejo escrita para la prueba equivalente del
+        // catalogo, un dia antes, y aqui se volvio a caer en la otra direccion.
+        List<ListingId> esperado = jdbc.sql(
+                        "SELECT listing_id FROM cart_items WHERE user_id = :quien ORDER BY listing_id DESC")
+                .param("quien", quien.value())
+                .query((fila, numero) -> new ListingId(fila.getObject("listing_id", UUID.class)))
+                .list();
 
-        assertThat(primera).isEqualTo(segunda);
-        assertThat(primera).hasSize(2);
+        assertThat(carrito.todosDe(quien).stream().map(CartItem::publicacion).toList())
+                .containsExactlyElementsOf(esperado);
     }
 
     /** El precio vuelve de la base como se guardo, sin decimales y sin perder exactitud. */

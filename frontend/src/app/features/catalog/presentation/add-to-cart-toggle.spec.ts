@@ -174,7 +174,7 @@ describe('AddToCartToggle', () => {
     const local = TestBed.inject(LocalCart);
     for (let i = 0; i < MAXIMO_DE_PRODUCTOS; i++) {
       local.agregar({
-        listingId: `otro-${i}`,
+        listingId: `01a04385-47b7-79c7-b3f2-${String(i).padStart(12, '0')}`,
         title: 'Otra cosa',
         price: 1000,
         imageUrl: null,
@@ -275,6 +275,77 @@ describe('AddToCartToggle', () => {
 
     expect(boton(fixture)!.disabled).toBe(false);
     expect(boton(fixture)!.getAttribute('aria-busy')).toBe('true');
+
+    backend
+      .expectOne(`${API}/users/me/cart/items/${ID}`)
+      .flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+  });
+
+  /**
+   * El doble pulsado no manda dos peticiones.
+   *
+   * <p>La historia lo pide dos veces y no estaba ni probado ni implementado: la plantilla
+   * afirmaba «el doble pulsado ya lo bloquea el almacén contando peticiones» y el almacén no
+   * contaba nada. Dos clics seguidos lanzaban un `PUT` y, al leer el estado optimista ya en
+   * `true`, un `DELETE` detrás: dos escrituras en vuelo sobre el mismo par.
+   */
+  it('no manda dos peticiones al pulsar dos veces seguidas', async () => {
+    const { fixture, backend } = await montar(true);
+    await responderEstado(fixture, backend, { inCart: false, eligible: true });
+
+    boton(fixture)!.click();
+    boton(fixture)!.click();
+    await bombear(fixture);
+
+    // Una sola, y es el PUT. Si hubiera dos, `expectOne` falla diciendo cuántas encontró.
+    const enVuelo = backend.expectOne(`${API}/users/me/cart/items/${ID}`);
+    expect(enVuelo.request.method).toBe('PUT');
+    enVuelo.flush(null, { status: 204, statusText: 'No Content' });
+    await bombear(fixture);
+  });
+
+  /**
+   * Un fallo devuelve el control a su estado anterior, que es lo que la historia pide.
+   *
+   * <p>Se afirma la **etiqueta** y no la estructura: lo que importa es que el botón deje de
+   * mentir, no dónde cuelga el aviso.
+   */
+  it('devuelve el control a su estado anterior cuando la petición falla', async () => {
+    const { fixture, backend } = await montar(true);
+    await responderEstado(fixture, backend, { inCart: false, eligible: true });
+
+    boton(fixture)!.click();
+    await bombear(fixture);
+    // Mientras viaja, el control se adelanta.
+    expect(texto(fixture)).toContain('Quitar del carrito');
+
+    backend
+      .expectOne(`${API}/users/me/cart/items/${ID}`)
+      .flush({ code: 'COMMON_GENERIC' }, { status: 500, statusText: 'Server Error' });
+    await bombear(fixture);
+
+    expect(texto(fixture)).toContain('Agregar al carrito');
+  });
+
+  /**
+   * Lo que se anuncia es el resultado, no la acción siguiente. Criterio 25, segunda mitad.
+   *
+   * <p>Decía «Agregar al carrito» al quitar —la etiqueta del botón— o sea una orden donde
+   * tenía que haber una confirmación. Y la región nace vacía: un anuncio en cada carga de
+   * ficha es ruido que nadie pidió.
+   */
+  it('anuncia el resultado y solo después de pulsar', async () => {
+    const { fixture, backend } = await montar(true);
+    await responderEstado(fixture, backend, { inCart: true, eligible: true });
+
+    const region = fixture.nativeElement.querySelector('[role="status"]') as HTMLElement;
+    expect(region.textContent?.trim()).toBe('');
+
+    boton(fixture)!.click();
+    await bombear(fixture);
+
+    expect(region.textContent).toContain('Ya no está en tu carrito');
 
     backend
       .expectOne(`${API}/users/me/cart/items/${ID}`)

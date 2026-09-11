@@ -116,6 +116,8 @@ class AuthControllerTest {
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new RateLimiter(1000, Duration.ofMinutes(1), 1000),
+                        // El quinto es el carrito anonimo de HU-015.
+                        new RateLimiter(1000, Duration.ofMinutes(1), 1000),
                         new ClientIpHasher(),
                         RELOJ))
                 .build();
@@ -541,6 +543,7 @@ class AuthControllerTest {
                         new ClientIpHasher()))
                 .setControllerAdvice(new ApiExceptionHandler())
                 .addInterceptors(new RateLimitInterceptor(
+                        new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),
                         new RateLimiter(1, Duration.ofMinutes(1), 100),

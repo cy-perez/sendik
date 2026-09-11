@@ -26,6 +26,10 @@ import org.springframework.validation.annotation.Validated;
  *     ademas con una sola cuenta para todo el grupo en vez de una por ruta: lo que
  *     se acota es el bucle enviar -> retirar -> enviar, que recorre dos URI
  *     distintas y con una cuenta por ruta se quedaria sin frenar
+ * @param anonymousCart la lectura publica del carrito, {@code GET /api/v1/carts}. Es el
+ *     unico grupo sin credencial que dispara mas de una consulta por peticion -un IN de
+ *     hasta veinte publicaciones con su join de portadas, mas una consulta de perfil por
+ *     vendedor distinto- asi que se cuenta por origen, que es lo unico que hay
  * @param maxTrackedKeys techo de origenes vivos en memoria, comun a todos los
  *     grupos. Sin techo, quien varie su IP a voluntad haria crecer el mapa hasta
  *     agotar la memoria y la defensa seria la via de ataque
@@ -37,6 +41,7 @@ public record RateLimitProperties(
         @NotNull @Valid Grupo session,
         @NotNull @Valid Grupo account,
         @NotNull @Valid Grupo listings,
+        @NotNull @Valid Grupo anonymousCart,
         @Min(1) int maxTrackedKeys) {
 
     /**

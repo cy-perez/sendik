@@ -118,6 +118,16 @@ export class SessionStore {
 
     if (habiaSesion) {
       this.consultas.removeQueries();
+
+      // **Y la caché de mutaciones, que es otra.** `removeQueries` solo vacía la de
+      // consultas, así que el resultado de la última mutación sobrevivía al cierre: la
+      // fusión del carrito guarda ahí el carrito fusionado entero de quien acaba de salir,
+      // con su recuento de lo que no entró, y `CartStore` es de raíz. La siguiente persona
+      // que entrara en esa pestaña veía un aviso sobre productos de otra.
+      //
+      // El javadoc de arriba promete que no queda nada recuperable. Con una sola de las dos
+      // cachés no era cierto.
+      this.consultas.getMutationCache().clear();
     }
   }
 }
