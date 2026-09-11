@@ -24,6 +24,8 @@ public class RateLimitRegistration implements WebMvcConfigurer {
                 new RateLimiter(ajustes.maxDeSesion(), ajustes.ventanaDeSesion(), ajustes.maxDeOrigenes()),
                 new RateLimiter(ajustes.maxDeCuenta(), ajustes.ventanaDeCuenta(), ajustes.maxDeOrigenes()),
                 new RateLimiter(ajustes.maxDePublicacion(), ajustes.ventanaDePublicacion(), ajustes.maxDeOrigenes()),
+                new RateLimiter(
+                        ajustes.maxDeCarritoAnonimo(), ajustes.ventanaDeCarritoAnonimo(), ajustes.maxDeOrigenes()),
                 hasherDeIp,
                 reloj);
     }
@@ -53,6 +55,11 @@ public class RateLimitRegistration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registro) {
         registro.addInterceptor(limite)
-                .addPathPatterns("/api/v1/auth/**", "/api/v1/users/**", "/api/v1/listings", "/api/v1/listings/**");
+                .addPathPatterns(
+                        "/api/v1/auth/**",
+                        "/api/v1/users/**",
+                        "/api/v1/listings",
+                        "/api/v1/listings/**",
+                        "/api/v1/carts");
     }
 }

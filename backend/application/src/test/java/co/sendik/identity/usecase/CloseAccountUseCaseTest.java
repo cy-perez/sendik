@@ -17,6 +17,7 @@ import co.sendik.identity.model.UserId;
 import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.port.out.MailSender;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
 import co.sendik.shared.port.out.PublicFileStore;
@@ -54,13 +55,16 @@ class CloseAccountUseCaseTest {
     @Mock
     private UserFavorites favoritos;
 
+    @Mock
+    private UserCart carrito;
+
     private CloseAccountUseCase caso;
     private User usuario;
 
     @BeforeEach
     void prepararCaso() {
         caso = new CloseAccountUseCase(
-                usuarios, refrescos, correo, almacen, favoritos, Clock.fixed(AHORA, ZoneOffset.UTC));
+                usuarios, refrescos, correo, almacen, favoritos, carrito, Clock.fixed(AHORA, ZoneOffset.UTC));
 
         usuario = User.registrar(
                 UserId.nuevo(),
@@ -139,6 +143,38 @@ class CloseAccountUseCaseTest {
         caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
 
         verify(favoritos).borrarDe(usuario.id());
+    }
+
+    /**
+     * Y el carrito con ellos. HU-015.
+     *
+     * <p>Esta prueba no existia: el doble de {@code UserCart} se anadio solo para que el
+     * constructor compilara, sin una sola asercion. Sin ella, borrar la llamada de
+     * {@code CloseAccountUseCase} dejaba toda la suite en verde con dato personal vivo justo
+     * despues de ejercer el derecho de supresion.
+     *
+     * <p>El carrito pesa mas que los favoritos, no menos: no dice solo que algo le interesaba
+     * a una persona identificada, dice que estuvo a punto de comprarlo.
+     */
+    @Test
+    void deberia_borrar_el_carrito_HU_015() {
+        conCuenta();
+
+        caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
+
+        verify(carrito).borrarDe(usuario.id());
+    }
+
+    /** Y antes de anonimizar, por lo mismo que los favoritos. */
+    @Test
+    void deberia_borrar_el_carrito_antes_de_anonimizar() {
+        conCuenta();
+
+        caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
+
+        InOrder orden = inOrder(carrito, usuarios);
+        orden.verify(carrito).borrarDe(usuario.id());
+        orden.verify(usuarios).cerrarYAnonimizar(usuario.id(), AHORA);
     }
 
     /**

@@ -109,8 +109,15 @@ Se descarta antes de almacenarse, con una exclusión en el sink `_Default`:
 
 ```bash
 gcloud logging sinks update _Default \
-  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014: el texto que alguien busca no se conserva junto a su IP. Descarta la entrada del registro de peticiones cuando el parametro q viaja en el URL o en la cabecera Referer. Las peticiones sin texto siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND (httpRequest.requestUrl=~"[?&](q|%71|%51)=" OR httpRequest.referer=~"[?&](q|%71|%51)=")'
+  --add-exclusion='name=peticiones-con-texto-de-busqueda,description=HU-014 y HU-015: ni el texto que alguien busca ni los identificadores de su carrito se conservan junto a su IP. Descarta la entrada del registro de peticiones cuando el parametro q o el parametro ids viajan en el URL o en la cabecera Referer. Las demas peticiones siguen registradas y las metricas de Cloud Run no se ven afectadas.,filter=logName:"run.googleapis.com%2Frequests" AND (httpRequest.requestUrl=~"[?&](q|%71|%51|ids)=" OR httpRequest.referer=~"[?&](q|%71|%51|ids)=")'
 ```
+
+**`ids` entra con HU-015, y por el mismo argumento que `q`.** El carrito de quien no
+ha entrado se lee con `GET /api/v1/carts?ids=…`, así que sin esta exclusión el
+contenido del carrito de una persona queda seis meses en `httpRequest.requestUrl`
+junto a su IP, o sea reidentificable. Eso contradice de frente lo que
+`docs/operacion/datos-personales.md` afirma del carrito anónimo —«Sendik no lo
+tiene»— y una intención de compra pesa más que un texto de búsqueda, no menos.
 
 **Va sin `service_name`, y es a propósito:** al ser del proyecto cubre
 `sendik-backend-dev`, `sendik-web-dev` y los dos servicios de `prod` el día que

@@ -22,6 +22,7 @@ import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.model.UserStatus;
 import co.sendik.identity.port.out.ConsentRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
 import java.time.Clock;
@@ -67,13 +68,16 @@ class ExportUserDataUseCaseTest {
     @Mock
     private UserFavorites favoritos;
 
+    @Mock
+    private UserCart carrito;
+
     private ExportUserDataUseCase caso;
     private UserId usuario;
 
     @BeforeEach
     void prepararCaso() {
         caso = new ExportUserDataUseCase(
-                usuarios, consentimientos, refrescos, favoritos, Clock.fixed(AHORA, ZoneOffset.UTC));
+                usuarios, consentimientos, refrescos, favoritos, carrito, Clock.fixed(AHORA, ZoneOffset.UTC));
         usuario = UserId.nuevo();
     }
 
@@ -174,6 +178,28 @@ class ExportUserDataUseCaseTest {
                 .singleElement()
                 .extracting(UserDataExport.Favorito::publicacion, UserDataExport.Favorito::marcadoEl)
                 .containsExactly("una-publicacion", AHORA.minus(Duration.ofDays(2)));
+    }
+
+    /**
+     * Y el carrito. HU-015.
+     *
+     * <p>Esta prueba tampoco existia, por lo mismo: el doble se anadio para compilar. Sin
+     * ella, quitar el carrito de {@code UserDataExport} dejaba la suite en verde y la descarga
+     * incompleta, que es responder con un resumen a un derecho que es sobre lo que hay.
+     */
+    @Test
+    void deberia_incluir_el_carrito_HU_015() {
+        when(usuarios.buscarPorId(usuario)).thenReturn(Optional.of(cuentaCon(null, null)));
+        when(consentimientos.listarDe(usuario)).thenReturn(List.of());
+        when(refrescos.listarSesionesActivasDe(usuario, AHORA)).thenReturn(List.of());
+        when(carrito.de(usuario))
+                .thenReturn(List.of(
+                        new UserDataExport.ProductoEnCarrito("una-publicacion", AHORA.minus(Duration.ofDays(1)))));
+
+        assertThat(caso.execute(usuario).carrito())
+                .singleElement()
+                .extracting(UserDataExport.ProductoEnCarrito::publicacion, UserDataExport.ProductoEnCarrito::agregadoEl)
+                .containsExactly("una-publicacion", AHORA.minus(Duration.ofDays(1)));
     }
 
     @Test

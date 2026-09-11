@@ -24,7 +24,7 @@ Si alguna no tiene respuesta, el campo no se crea.
 | Nivel | Datos | Trato |
 |---|---|---|
 | Publico | Nombre de vendedor, ciudad, publicaciones | Visible en el sitio |
-| Interno | Correo, telefono, fecha de nacimiento, historial de pedidos, favoritos | Solo el titular y la operacion |
+| Interno | Correo, telefono, fecha de nacimiento, historial de pedidos, favoritos, carrito | Solo el titular y la operacion |
 | Sensible | Documento de identidad, selfie, cuenta bancaria | Cifrado, acceso restringido y auditado |
 | Secreto | Contrasenas, tokens | Nunca legibles, ni por la operacion |
 
@@ -61,6 +61,23 @@ Si alguna no tiene respuesta, el campo no se crea.
   los ve el vendedor de lo marcado, no existen en agregado y no hay contador
   publico. Van en la descarga de datos y **el cierre de cuenta los borra**, no los
   anonimiza: a diferencia de la fila de `users`, aqui no queda nada que conservar.
+
+- **El carrito tambien es dato personal**, y por una razon mas fuerte que los
+  favoritos (HU-015): aquellos dicen que algo le interesa a una persona
+  identificada; este dice ademas que estuvo a punto de comprarlo, que es una
+  intencion de compra. Va en la descarga de datos y **el cierre de cuenta lo
+  borra**, igual que a los favoritos y por lo mismo.
+
+  **El carrito que vive en el navegador no lo es, y no puede entrar en la
+  descarga: Sendik no lo tiene.** Mientras no se fusione con una cuenta no hay
+  nadie identificado a quien asociarlo, y en cuanto se fusiona pasa a ser filas de
+  `cart_items` con dueno. Esa es la frontera exacta, y conviene tenerla escrita
+  porque es la unica pieza de la plataforma que guarda algo de alguien sin
+  saber de quien es.
+
+  De la descarga sale el identificador de la publicacion y la fecha, no el titulo
+  ni el precio con el que entro: el titulo es del vendedor y cambia, y el precio
+  es un dato de la publicacion en un instante, no de quien la agrego.
 
 - **Ningun dato personal se pide sin uso concreto.** La ciudad y el telefono del
   perfil son opcionales, nacen vacios y se quitan dejando el campo en blanco: no

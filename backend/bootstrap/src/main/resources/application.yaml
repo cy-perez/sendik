@@ -138,6 +138,19 @@ sendik:
       # sesion no hay sujeto al que atribuirla.
       max-requests: ${RATE_LIMIT_LISTINGS_MAX:90}
       window: ${RATE_LIMIT_LISTINGS_WINDOW:PT1M}
+    anonymous-cart:
+      # La lectura publica del carrito, GET /api/v1/carts. **Por origen y no por
+      # sujeto**, porque aqui no hay sujeto: es la unica ruta de la API sin
+      # credencial que dispara mas de una consulta -un IN de hasta veinte
+      # publicaciones con su join de portadas, mas una consulta de perfil por
+      # vendedor distinto-. Sin tope, una amplificacion de una peticion a
+      # veintiuna consultas queda abierta a cualquiera.
+      #
+      # Treinta por minuto es mucho mas de lo que hace una persona mirando su
+      # carrito -se pide al abrir la pantalla y al quitar algo- y sigue siendo
+      # una cota.
+      max-requests: ${RATE_LIMIT_ANONYMOUS_CART_MAX:30}
+      window: ${RATE_LIMIT_ANONYMOUS_CART_WINDOW:PT1M}
     # Techo de origenes en memoria: sin el, variar la IP a voluntad haria crecer
     # el mapa hasta agotarla y la defensa seria la via de ataque.
     max-tracked-keys: ${RATE_LIMIT_MAX_KEYS:50000}

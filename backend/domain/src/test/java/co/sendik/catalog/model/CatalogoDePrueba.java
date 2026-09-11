@@ -72,10 +72,19 @@ final class CatalogoDePrueba {
     }
 
     static Product camisaCon(Money precio) {
+        return camisaDe(new SellerId(UUID.randomUUID()), precio);
+    }
+
+    /**
+     * Una camisa de un vendedor concreto. La necesita el carrito (HU-015): RN-090 agrupa por
+     * vendedor, asi que sus pruebas tienen que poder decir cuales comparten dueno y cuales
+     * no, y con un identificador aleatorio en cada producto eso no se puede escribir.
+     */
+    static Product camisaDe(SellerId vendedor, Money precio) {
         Category categoria = camisas();
         return Product.crear(
                 ProductId.nuevo(),
-                new SellerId(UUID.randomUUID()),
+                vendedor,
                 categoria,
                 new Title("Camisa de lino color hueso"),
                 new Description("Usada dos veces. Sin manchas ni descosidos."),
@@ -173,5 +182,12 @@ final class CatalogoDePrueba {
     /** Publicada y visible, que es el punto de partida de media docena de pruebas. */
     static Listing publicada() {
         return borradorCompleto().enviarARevision(AHORA).aprobar(new ModeratorId(UUID.randomUUID()), AHORA);
+    }
+
+    /** Publicada, de un vendedor concreto y con un precio concreto. Para el carrito. */
+    static Listing publicadaDe(SellerId vendedor, Money precio) {
+        return conTomas(borradorDe(camisaDe(vendedor, precio)))
+                .enviarARevision(AHORA)
+                .aprobar(new ModeratorId(UUID.randomUUID()), AHORA);
     }
 }

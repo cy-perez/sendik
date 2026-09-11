@@ -446,6 +446,96 @@ antes: hasta el 8 de septiembre de 2026 el catálogo solo se navegaba.
   RN-070: los favoritos son privados y no existe cifra pública derivada de ellos,
   y un orden por favoritos es esa cifra por la puerta de atrás.
 
+## Carrito
+
+Nueve reglas que nacieron con HU-015. Hasta el 10 de septiembre de 2026 este
+documento no mencionaba la palabra carrito, igual que no mencionaba la búsqueda
+antes de HU-014 ni los favoritos antes de HU-011.
+
+- **RN-089** **El carrito no reserva nada.** Agregar un producto no lo aparta ni
+  lo saca del catálogo: la publicación se marca vendida cuando el pago queda
+  aprobado (RN-035) y no antes. Dos personas pueden llevar el mismo producto en
+  su carrito y solo una lo compra.
+
+  Es la regla que hace honesto todo lo demás, y la que obliga a RN-094 a existir:
+  si el carrito apartara, nada de lo que hay dentro podría dejar de estar
+  disponible.
+
+- **RN-090** **Un carrito admite varios vendedores y se agrupa por vendedor.**
+  Cada grupo será un pedido, porque un pedido es la compra de uno o varios
+  productos **a un mismo vendedor** (glosario). La división se le enseña al
+  comprador desde el carrito y no se le descubre al pagar: serán dos pedidos y
+  dos envíos, y eso cambia lo que va a pagar.
+
+- **RN-091** **En el carrito un producto entra una sola vez y sin cantidad.** El
+  producto es único y su existencia es siempre 1: si un vendedor tiene dos
+  iguales, son dos publicaciones. No hay selector de cantidad en ninguna
+  pantalla, y la identidad de una línea del carrito es el par persona-producto.
+
+- **RN-092** **Nadie agrega al carrito su propia publicación.** Es RN-072
+  aplicada a comprar en vez de a guardar, y por una razón más fuerte: comprarse a
+  sí mismo movería dinero y comisión en círculo. Se comprueba en el servidor.
+
+  Mientras el carrito es anónimo no hay contra quién comparar, así que lo propio
+  puede entrar en él. El momento en que aparece alguien con nombre es el ingreso,
+  y es allí donde esta regla se aplica por primera vez a esas filas.
+
+- **RN-093** **El precio del carrito es el vigente, y solo se congela al crear el
+  pedido** (RN-030). Si cambió desde que se agregó, se avisa; lo que manda es el
+  de ahora. El precio con el que entró se guarda **solo para poder avisar**,
+  nunca para cobrar.
+
+  Un carrito que sumara precios viejos prometería un valor que nadie va a cobrar.
+
+- **RN-094** **Lo que deja de estar disponible se queda a la vista, apagado,
+  fuera del subtotal y con un solo motivo.**
+
+  Es la excepción deliberada a RN-071, y la diferencia es el momento: un favorito
+  que desaparece es un misterio menor; un carrito que adelgaza en silencio justo
+  antes de pagar es otra cosa.
+
+  El límite se lo pone RN-068: se dice que ya no está disponible y **no se dice
+  por qué**. Distinguir «se vendió» de «lo pausó su vendedor» publicaría el
+  movimiento del catálogo y las decisiones de un vendedor a cualquiera que apunte
+  un identificador en su carrito.
+
+  Lo que vuelve a estar `PUBLISHED` vuelve a contar, sin que nadie lo agregue de
+  nuevo: la disponibilidad no es un dato del carrito sino una lectura del estado
+  de la publicación en el momento de mirar.
+
+- **RN-095** **El carrito sin sesión vive en el navegador, se fusiona por unión al
+  entrar y no cambia de dueño.** La unión no pierde lo que traía el navegador ni
+  borra lo que ya había en la cuenta.
+
+  **La fusión la dispara una persona y no el sistema**, y eso es una decisión con
+  su ADR (ADR-0037): siendo el carrito anónimo, el servidor no puede distinguir
+  «vuelve el mismo» de «llega otro» en un navegador compartido. Se pregunta una
+  vez. Al fusionar, el carrito del navegador se consume y se borra.
+
+- **RN-096** **El carrito no muestra total.** Solo subtotales de precio base por
+  vendedor, y dice que el envío se calcula al comprar.
+
+  RN-076 obliga a enseñar tres cifras separadas y sumadas —precio base, costo de
+  envío y total— y hoy solo existe la primera. Un carrito que rotulara «total» una
+  suma sin envío mentiría sobre lo que se va a pagar. El total con sus tres cifras
+  nace cuando exista el costo de envío.
+
+- **RN-097** **El carrito admite hasta 20 productos**, a diferencia de los
+  favoritos, donde RN-073 decidió a propósito que no hubiera tope.
+
+  La diferencia no es de gusto: el carrito sin sesión lo arma el navegador y **el
+  servidor lo recibe entero en la fusión**, así que sin tope hay un cuerpo de
+  tamaño arbitrario que alguien manda sin haber entrado.
+
+  **Por qué veinte.** Porque un carrito lleno cabe en una sola lectura —el tope de
+  un tramo de catálogo es cincuenta y su tamaño por omisión veinticuatro—, de modo
+  que leer un carrito entero nunca necesita paginar, y una suma paginada no es una
+  suma. Es además el mismo veinte de las dos colas del moderador.
+
+  El rechazo se ve y no se descarta nada en silencio. El número vive en dos
+  sitios —el dominio del backend y el del frontend— y es a propósito: sin sesión
+  no hay servidor que lo haga cumplir.
+
 ## Precio y comisión
 
 - **RN-026** La comisión es del **5% sobre el precio base del producto**, a cargo

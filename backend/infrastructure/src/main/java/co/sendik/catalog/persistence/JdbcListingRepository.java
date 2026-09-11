@@ -129,6 +129,34 @@ public class JdbcListingRepository implements ListingRepository {
                 .map(this::conImagenes);
     }
 
+    /**
+     * Varias de una vez, en cualquier estado y con su portada. HU-015.
+     *
+     * <p><strong>Con portada y no con el agregado entero</strong>, al reves que
+     * {@link #buscar}. Quien la llama pinta filas —el carrito—, y una fila ensena la toma
+     * frontal de RN-016 y nada mas: cargar las ocho tomas de veinte publicaciones para
+     * quedarse con veinte imagenes serian ciento sesenta filas de {@code product_images} por
+     * pantalla. Es la misma decision que ya toman el catalogo y la cola del moderador.
+     *
+     * <p>Una lista vacia no llega a la base: {@code IN ()} no es SQL valido.
+     *
+     * <p>No filtra por estado —el carrito necesita lo no disponible (RN-094) y la lectura
+     * anonima lo descarta ella— y no garantiza orden: quien necesite uno lo impone.
+     */
+    @Override
+    public List<Listing> buscarVarias(List<ListingId> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+
+        return conPortadas(
+                jdbc,
+                jdbc.sql(SELECT_BASE + " WHERE l.id IN (:ids)")
+                        .param("ids", ids.stream().map(ListingId::value).toList())
+                        .query(JdbcListingRepository::filaAPublicacion)
+                        .list());
+    }
+
     @Override
     public Optional<Listing> buscarDelDueno(ListingId id, SellerId vendedor) {
         return jdbc.sql(SELECT_BASE + " WHERE l.id = :id AND p.seller_id = :vendedor")

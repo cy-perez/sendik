@@ -7,6 +7,7 @@ import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
 import co.sendik.identity.port.out.ConsentRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
 import java.time.Clock;
@@ -30,6 +31,7 @@ public class ExportUserDataUseCase {
     private final ConsentRepository consentimientos;
     private final RefreshTokenRepository refrescos;
     private final UserFavorites favoritos;
+    private final UserCart carrito;
     private final Clock reloj;
 
     public ExportUserDataUseCase(
@@ -37,18 +39,20 @@ public class ExportUserDataUseCase {
             ConsentRepository consentimientos,
             RefreshTokenRepository refrescos,
             UserFavorites favoritos,
+            UserCart carrito,
             Clock reloj) {
         this.usuarios = usuarios;
         this.consentimientos = consentimientos;
         this.refrescos = refrescos;
         this.favoritos = favoritos;
+        this.carrito = carrito;
         this.reloj = reloj;
     }
 
     /*
-     * En una transaccion, y no por escribir: son cuatro lecturas -la cuenta, los
-     * consentimientos, las sesiones y, desde HU-011, los favoritos- y la ultima ademas
-     * atraviesa a otro contexto y abriria la suya. Sin esto, el archivo de datos personales
+     * En una transaccion, y no por escribir: son cinco lecturas -la cuenta, los
+     * consentimientos, las sesiones, los favoritos desde HU-011 y el carrito desde HU-015-
+     * y las dos ultimas ademas atraviesan a otro contexto y abririan la suya. Sin esto, el archivo de datos personales
      * se arma con cuatro instantaneas distintas, y para un artefacto de la Ley 1581
      * conviene que sea una.
      *
@@ -92,6 +96,9 @@ public class ExportUserDataUseCase {
                 // Los favoritos son dato personal: dicen que le interesa a una persona
                 // identificada (docs/operacion/datos-personales.md, HU-011). Vienen de
                 // catalog por un puerto, porque la tabla no es de este contexto.
-                favoritos.de(usuario));
+                favoritos.de(usuario),
+                // El carrito tambien, y por una razon mas fuerte: no dice solo que le
+                // interesa, dice que estuvo a punto de comprarlo (HU-015).
+                carrito.de(usuario));
     }
 }

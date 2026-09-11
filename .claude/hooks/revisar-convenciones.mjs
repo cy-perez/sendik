@@ -39,7 +39,14 @@ const esDocumentoLegal = /frontend\/public\/legal\//.test(ruta);
 // admitir. La excepcion es solo para la regla de API del navegador; el resto de
 // las reglas se les siguen aplicando, aunque ninguna pueda dispararse en un
 // archivo de pruebas.
-const esPruebaDeNavegador = /frontend\/(e2e|e2e-completo|e2e-comun)\//.test(ruta);
+const esPruebaDeNavegador =
+  /frontend\/(e2e|e2e-completo|e2e-comun)\//.test(ruta) ||
+  // Y las unitarias, por lo mismo. Una prueba de Vitest se ejecuta en un entorno de
+  // navegador y nunca se renderiza en el servidor, asi que ahi `localStorage` es lo
+  // correcto: es justo lo que hay que tocar para comprobar que un almacen guarda lo que
+  // dice guardar, o para dejarlo sucio a proposito y ver que no revienta al leerlo. Sin
+  // esto la regla rechaza `favorite-intent.spec.ts`, que ya esta en el repositorio.
+  /\.spec\.ts$/.test(ruta);
 
 // --- Estilos: ningun valor visual suelto ---------------------------------
 const esHojaDelSistema = /(src\/styles|docs\/ui)\/(tokens|tipografia|marca|fuentes)\.css$/.test(ruta);
@@ -99,7 +106,22 @@ if (enFrontend && es('.ts', '.html') && !esDocumentoLegal) {
     [/@ViewChild\(|@ContentChild\(/, 'Decorador de consulta antiguo. Se usan viewChild() y contentChild().'],
     [/HttpClientModule/, 'HttpClientModule. Se usa provideHttpClient().'],
   ];
-  if (!esPruebaDeNavegador) {
+  // Un archivo que YA hace lo que el mensaje pide no puede seguir recibiendolo.
+  //
+  // La regla dice «aislalo tras afterNextRender o una comprobacion de plataforma», y
+  // cuando el archivo trae una de las dos cosas, eso es exactamente lo que hizo. Sin esta
+  // salida la regla rechaza los seis archivos que ya estan en el repositorio y que son el
+  // patron sancionado del proyecto —`favorite-intent.ts`, `session.store.ts`, `locale.ts`,
+  // `language.service.ts` y los dos de idioma—, que es el falso positivo que la cabecera
+  // de este archivo dice no admitir. La regla se escribio despues que ellos y nunca se
+  // ejecuto encima.
+  //
+  // Lo que sigue cazando, que es lo que importa: un componente que toca `window.` sin
+  // aislar nada. Lo que deja pasar: un segundo acceso sin aislar dentro de un archivo que
+  // ya aisla el primero. Ese caso no lo puede ver una expresion regular, y para eso estan
+  // el revisor de accesibilidad y las pruebas de renderizado en servidor.
+  const aislaLaPlataforma = /isPlatformBrowser|afterNextRender|PLATFORM_ID/.test(codigo);
+  if (!esPruebaDeNavegador && !aislaLaPlataforma) {
     reglas.push([/localStorage|sessionStorage|window\.|document\./, 'Acceso directo a API del navegador. Rompe el renderizado en servidor: aislalo tras afterNextRender o una comprobacion de plataforma.']);
   }
   for (const [patron, mensaje] of reglas) if (patron.test(codigo)) hallazgos.push(mensaje);

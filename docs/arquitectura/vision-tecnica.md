@@ -86,7 +86,7 @@ de cada contexto se repiten las cuatro capas.
 | `identity` | Cuentas, credenciales, sesiones, verificación de vendedor | 1 y 2 |
 | `catalog` | Prendas, publicaciones, imágenes, moderación | 2 |
 | ~~`search`~~ | **No existe.** La búsqueda vive dentro de `catalog` desde HU-014 | 3 |
-| `order` | Pedidos y su ciclo de vida | 3 |
+| `order` | Pedidos y su ciclo de vida. **Sigue vacío**: el carrito de HU-015 no es suyo (ADR-0036) | 3 |
 | `payment` | Intentos de pago, división, desembolsos | 3 |
 | `shipping` | Cotización, guías y seguimiento, contra un agregador (ADR-0034) | 3 |
 | `shared` | Objetos de valor comunes: dinero, identificadores, fechas | 1 |
@@ -103,6 +103,13 @@ paquete vacío que obliga a romper la regla para llenarlo.
 
 `backend/CLAUDE.md` ya enumeraba los contextos sin `search`: los dos documentos se
 contradecían y esto lo resuelve.
+
+**Y por qué el carrito tampoco es de `order`.** Es el mismo razonamiento una fase más
+tarde (ADR-0036). Un carrito no tiene ciclo de vida —no tiene estados, no tiene
+transiciones y no reserva nada (RN-089)— y lo que devuelve al leerse son agregados
+`Listing`, que son de `catalog`. Un `order/application` que los importara rompería la
+misma regla que `ArchitectureTest` protege. `order` sigue anunciado y sigue vacío: se
+llenará cuando exista el pedido, que es donde empieza de verdad un ciclo de vida.
 
 Un contexto no llama al repositorio de otro. Si necesita algo, es por un caso de
 uso público o por un evento de dominio. Esto mantiene abierta la puerta a

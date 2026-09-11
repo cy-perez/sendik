@@ -139,6 +139,11 @@
      llega entera en una respuesta, asi que no hay estados intermedios que dibujar. */
   --alto-esqueleto-detalle: 320px;
 
+  /* La linea del esqueleto del carrito mientras carga. Con nombre y no con un token de
+     espaciado usado de alto: --esp-* es la escala de separacion, y usarla como altura hace
+     que el hueco deje de medir lo que sustituye en cuanto el texto crece. */
+  --alto-esqueleto-linea-carrito: 48px;
+
   /* Grosor de la barra lateral de una caja de aviso. Estaba como 4px suelto en el
      aviso de borrador de los documentos legales y en el de error de la bandeja. */
   --grosor-barra-aviso: 4px;

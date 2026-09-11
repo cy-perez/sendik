@@ -1,0 +1,139 @@
+:host {
+  display: block;
+}
+
+.carrito__intro {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-8);
+  margin-bottom: var(--esp-24);
+  max-width: var(--medida);
+}
+
+.carrito__aviso {
+  margin-bottom: var(--esp-16);
+  max-width: var(--medida);
+}
+
+/* La pregunta de la fusion. Va delante del carrito y no en un dialogo: un dialogo atrapa el
+   foco y obliga a decidir para poder mirar, y lo razonable aqui es ver el carrito antes de
+   contestar.
+
+   **Con relleno de superficie y no solo borde.** Ver el comentario de .carrito__grupo: el
+   borde sobre el fondo da 1.18:1 y no separa nada. */
+.carrito__fusion {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-16);
+  margin-bottom: var(--esp-24);
+  max-width: var(--medida);
+}
+
+.carrito__fusion-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  margin-top: var(--esp-12);
+}
+
+/* El grupo por vendedor es la unidad visual (criterio 14). Que sera un pedido aparte tiene
+   que **verse**, y eso lo dice el «Diseño» de la historia con esas palabras.
+
+   **Lo que lo separa es el relleno, no el borde**, y esa es una correccion: con solo borde,
+   --color-borde sobre --color-fondo da **1.18:1** en modo claro y 2.17:1 en oscuro, los dos
+   por debajo del 3:1 que WCAG 1.4.11 exige a un elemento no textual que carga significado.
+   O sea que la unica senal de agrupacion era invisible.
+
+   Con superficie debajo, el borde pasa a ser un remate y no la senal, y todos los pares de
+   color de dentro -texto suave, aviso y error sobre superficie- ya estan en las dos listas
+   PARES. Es lo mismo que hace .tarjeta-producto en marca.css. */
+.carrito__grupo {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  padding: var(--esp-16);
+  margin-bottom: var(--esp-24);
+  max-width: var(--medida);
+}
+
+.carrito__vendedor {
+  margin-bottom: var(--esp-12);
+}
+
+.carrito__lineas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--esp-16);
+}
+
+.carrito__linea {
+  display: grid;
+  gap: var(--esp-8);
+  padding-bottom: var(--esp-16);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.carrito__linea:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Lo no disponible baja de contraste, pero **no se comunica solo asi**: el precio va tachado
+   y el texto lo dice con palabras (criterio 25). Tres senales y solo una es de color. */
+.carrito__linea--apagada .carrito__titulo,
+.carrito__linea--apagada .precio {
+  color: var(--color-texto-suave);
+}
+
+.carrito__no-disponible {
+  color: var(--color-texto-suave);
+}
+
+.carrito__aviso-precio {
+  color: var(--color-aviso);
+}
+
+/* El destino tactil de 44px lo pone .btn; aqui solo se evita que el boton se estire a lo
+   ancho de la fila, que en movil lo dejaria del tamano de la pantalla. */
+.carrito__quitar {
+  justify-self: start;
+}
+
+/* El subtotal cierra su grupo. **En movil queda pegado a el y no flotando**: con dos
+   vendedores, un subtotal flotante no se sabe de cual es.
+
+   **Con flex-wrap**, que es una correccion de reflujo (WCAG 1.4.10): la cifra lleva .precio,
+   que es nowrap a --texto-lg, y un elemento flex no encoge por debajo de su min-content. Con
+   el texto al 200% en un telefono de 360px, etiqueta y cifra no caben y la fila se salia del
+   grupo. */
+.carrito__subtotal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--esp-16);
+  margin-top: var(--esp-16);
+  padding-top: var(--esp-16);
+  border-top: 1px solid var(--color-borde);
+}
+
+.carrito__envio {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-8);
+}
+
+.carrito__vacio {
+  max-width: var(--medida);
+}
+
+.carrito__esqueleto {
+  display: grid;
+  gap: var(--esp-16);
+  max-width: var(--medida);
+}
+
+.carrito__esqueleto-linea {
+  height: var(--alto-esqueleto-linea-carrito);
+}

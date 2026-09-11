@@ -316,6 +316,93 @@ catálogo, y cualquier parámetro de búsqueda responde 404 con `COMMON_NOT_FOUN
 igual que si no existiera. No es 403: un 403 confirmaría que la búsqueda está
 ahí, apagada.
 
+## El carrito
+
+Seis rutas, todas detrás de `FEATURE_CHECKOUT`. Con la bandera apagada no rechazan:
+no están, y responden lo mismo que una ruta que no existe.
+
+| Método y ruta | Quién | Respuesta |
+|---|---|---|
+| `GET /api/v1/users/me/cart` | Autenticado | `200` con el carrito |
+| `PUT /api/v1/users/me/cart/items/{listingId}` | Autenticado | `204`. Idempotente |
+| `DELETE /api/v1/users/me/cart/items/{listingId}` | Autenticado | `204`, también si no estaba |
+| `GET /api/v1/users/me/cart/items/{listingId}` | Autenticado | `200` con `{ inCart, eligible }` |
+| `POST /api/v1/users/me/cart` | Autenticado | `200` con el carrito fusionado y `notMerged` |
+| `GET /api/v1/carts?ids=…` | **Público** | `200` con el carrito, armado con esos identificadores |
+
+**Cuelgan de `/users/me` y no de `/listings/{id}/cart`**, por lo mismo que los
+favoritos: el carrito es de la persona y no de la publicación, allí la regla de
+seguridad ya es «autenticado», y la ruta dice de quién es el dato. El identificador
+de quien compra sale siempre del `sub` del token y jamás de la petición.
+
+**`PUT` y no `POST` para agregar**, con `204` en vez de `201`. Agregar es idempotente
+y la misma petición repetida deja el mismo carrito, que es lo que `PUT` promete. Con
+`POST` y `201`, el segundo intento —un reintento de red, dos pestañas— tendría que
+elegir entre mentir con otro `201` o inventar un conflicto que no existe.
+
+**La fusión es un `POST` sobre el recurso y no lleva verbo en la ruta.** No hay
+`/merge`: esto es «agregar varios a este recurso». Que la operación sea una unión la
+hace idempotente de hecho, así que no necesita cabecera de idempotencia. Responde
+`200` y no `201`: no nace un recurso nuevo, cambia el que ya existía.
+
+### La lectura pública
+
+`GET /api/v1/carts` es la única ruta pública del carrito, y existe por una razón
+concreta: quien no ha entrado guarda su carrito en el navegador, y los grupos por
+vendedor y los subtotales tienen que salir **iguales** que los de quien sí entró. Sin
+ella, esa suma habría que escribirla también en el navegador, y dos implementaciones de
+la misma cifra divergen (ADR-0037).
+
+| Parámetro | Forma | Notas |
+|---|---|---|
+| `ids` | repetible: `?ids=a&ids=b` | Obligatorio, entre 1 y 20 (RN-097). Por encima es 400 y no se recorta |
+
+No revela nada: devuelve publicaciones del catálogo, que ya son públicas por
+identificador desde HU-009. Y solo devuelve lo **visible**, que es RN-068: lo que dejó
+de estar publicado se cae de la respuesta, y el navegador lo pinta apagado con la copia
+que guardó.
+
+**No nace un `/listings/batch`**, por lo mismo que no nació un `/search`: pedir varias
+publicaciones es listar el mismo recurso con otra condición. Lo que justifica una ruta
+propia no es pedir por identificador, es que lo que sale es un carrito.
+
+### La forma del carrito
+
+```json
+{
+  "groups": [
+    {
+      "sellerId": "…",
+      "sellerName": "Ana María",
+      "sellerVerified": true,
+      "lines": [
+        { "listing": {}, "addedAt": "…", "available": true, "priceChanged": false }
+      ],
+      "subtotal": { "amount": 185000, "currency": "COP" },
+      "allUnavailable": false
+    }
+  ],
+  "willSplit": false
+}
+```
+
+**No hay campo `total`, y su ausencia es la regla.** RN-076 obliga a enseñar tres cifras
+—precio base, costo de envío y total— y hoy solo existe la primera. Un `total` con la
+suma de los subtotales mentiría sobre lo que se va a pagar, y en el contrato es donde más
+caro sale corregirlo después. Nace cuando exista el costo de envío (RN-096).
+
+**`available` es un booleano y no un motivo.** Vendido, pausado y bajado por un moderador
+responden idéntico: distinguirlos publicaría el movimiento del catálogo y las decisiones
+de un vendedor a cualquiera que apunte identificadores en su carrito (RN-094, RN-068).
+Aquí no hay campo donde escribir el motivo, así que no se puede filtrar por descuido.
+
+**`notMerged` son identificadores y tampoco motivos.** Lo que no cupo por el tope, lo que
+ya no está publicado y lo que resulta ser de quien entra salen mezclados, por lo mismo.
+
+Códigos propios: `CATALOG_SELF_CART_FORBIDDEN` (403, RN-092) y `CATALOG_CART_FULL`
+(422, RN-097). El 422 y no un 403: la petición es legítima y quien la manda tiene derecho
+a hacerla, lo que pasa es que no cabe.
+
 ## Autenticación
 
 - `Authorization: Bearer <token de acceso>` en toda ruta protegida.

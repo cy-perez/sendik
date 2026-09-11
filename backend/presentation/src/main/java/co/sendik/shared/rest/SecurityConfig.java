@@ -65,6 +65,7 @@ public class SecurityConfig {
         boolean catalogoExpuesto = expuestas.publishing();
         boolean verificacionExpuesta = expuestas.sellerVerification();
         boolean catalogoPublicoExpuesto = expuestas.catalog();
+        boolean carritoExpuesto = expuestas.checkout();
 
         http
                 // El origen permitido lo aporta un bean CorsConfigurationSource que
@@ -252,6 +253,30 @@ public class SecurityConfig {
                         // esta ahi. Con "authenticated" atraviesa la cadena, no encuentra
                         // manejador y sale el 404 que pide el criterio 22.
                         rutas.requestMatchers("/api/v1/sellers/**").authenticated();
+                    }
+
+                    // El carrito de quien no ha entrado. HU-015, criterio 13.
+                    //
+                    // **Publica y sin token, que es toda la razon de que esta ruta exista.**
+                    // Devuelve publicaciones del catalogo, que ya son publicas por
+                    // identificador desde HU-009: quien pide veinte identificadores podria
+                    // pedir veinte fichas. Lo que agrega es agruparlas por vendedor y
+                    // sumarlas, para que esa suma no haya que escribirla tambien en el
+                    // navegador (ADR-0037).
+                    //
+                    // **Solo GET y solo la coleccion**, sin `/**`: de /carts no cuelga hoy
+                    // nada mas, y abrir el prefijo entero seria dejar la puerta abierta a lo
+                    // que cuelgue manana. El carrito de quien si entro no esta aqui: vive
+                    // bajo /users/me/cart y lo cubre la regla autenticada de mas abajo.
+                    if (carritoExpuesto) {
+                        rutas.requestMatchers(HttpMethod.GET, "/api/v1/carts").permitAll();
+                    } else {
+                        // Con la bandera apagada hace falta una regla igualmente, por lo
+                        // mismo que en las otras tres: sin ninguna, la peticion cae en el
+                        // denyAll del final y sale 403, que confirmaria que el carrito esta
+                        // ahi, apagado. Con "authenticated" atraviesa la cadena, no encuentra
+                        // manejador y sale el 404 que pide el criterio 27.
+                        rutas.requestMatchers("/api/v1/carts/**").authenticated();
                     }
 
                     rutas

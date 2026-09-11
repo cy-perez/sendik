@@ -84,6 +84,24 @@
       -->
       <sendik-favorite-toggle [publicacion]="producto.id" />
 
+      <!--
+        HU-015. Junto al de favorito y por la misma razon: en un telefono tiene que verse sin
+        desplazar.
+
+        No lleva @if sobre la sesion, y aqui menos que en el de favorito: sin sesion el
+        carrito funciona igual y sin pedir permiso (criterio 8). Quien decide si se pinta es
+        el propio componente, con lo que responde el servidor sobre si esa publicacion se
+        puede agregar.
+
+        Se le pasa el nombre del vendedor para la copia local del criterio 21: cuando el
+        producto deje de estar publicado, el servidor ya no lo devolvera y esa copia es lo
+        unico que permite pintar la fila apagada.
+      -->
+      <sendik-add-to-cart-toggle
+        [publicacion]="producto"
+        [nombreDelVendedor]="vendedor()?.name ?? null"
+      />
+
       @if (precio(); as valor) {
         <p class="precio ficha__precio">{{ valor }}</p>
       }

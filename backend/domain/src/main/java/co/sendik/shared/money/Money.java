@@ -49,6 +49,29 @@ public record Money(BigDecimal amount) {
         return new Money(BigDecimal.valueOf(pesos));
     }
 
+    /**
+     * Suma dos cantidades. HU-015: es lo que necesita el subtotal de un grupo del carrito.
+     *
+     * <p><strong>Hasta hoy {@code Money} sabia comparar y no sabia sumar</strong>, porque
+     * ninguna regla habia pedido todavia sumar dos precios: la comision de RN-026 se calcula
+     * sobre uno solo y el catalogo nunca totaliza nada. El subtotal de RN-096 es la primera
+     * cifra del proyecto que nace de sumar varias.
+     *
+     * <p>Suma con {@link BigDecimal} y por eso es exacta, que es RN-029 dicho en codigo. Que
+     * el peso no tenga decimales no hace irrelevante la regla: la hace facil de cumplir aqui
+     * y sigue siendo lo que impide que alguien meta un {@code double} manana.
+     *
+     * <p>No hay resta y no es un olvido. Restar dinero abre la puerta a un negativo, que el
+     * constructor rechaza, y hoy no hay ninguna regla que reste: el reintegro de RN-054
+     * devuelve un valor, no la diferencia de dos. Cuando exista, llegara con su regla y con
+     * su prueba.
+     */
+    public Money mas(Money otro) {
+        Objects.requireNonNull(otro, "El sumando es obligatorio");
+
+        return new Money(amount.add(otro.amount));
+    }
+
     public boolean esMenorQue(Money otro) {
         return amount.compareTo(otro.amount) < 0;
     }
