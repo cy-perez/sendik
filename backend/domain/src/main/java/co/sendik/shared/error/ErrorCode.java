@@ -116,6 +116,32 @@ public enum ErrorCode {
     AUTH_CLOSE_CONFIRMATION_MISMATCH,
 
     /**
+     * RN-101: la libreta ya tiene las diez direcciones que caben. HU-016, criterio 8.
+     *
+     * <p>422 y no 403, por lo mismo que {@link #CATALOG_CART_FULL}: la peticion es
+     * legitima y quien la manda tiene derecho a hacerla; lo que pasa es que no cabe.
+     *
+     * <p><strong>Es el primer codigo {@code USER_} del proyecto.</strong> El prefijo
+     * estaba declarado en el contrato desde el primer dia y hasta hoy no lo usaba nadie:
+     * lo de la cuenta salia como {@code AUTH_} porque todo lo de la cuenta era
+     * autenticarse. La direccion de entrega no lo es.
+     */
+    USER_ADDRESS_BOOK_FULL,
+
+    /**
+     * RN-100: ese municipio no esta en la division politico-administrativa vigente.
+     *
+     * <p>Uno solo para "no existe" y para "el DANE lo suprimio y la fila esta inactiva",
+     * porque lo que hay que hacer es lo mismo: elegir otro de la lista. Distinguirlos
+     * obligaria al formulario a explicar la Divipola.
+     *
+     * <p>Codigo propio y no el de validacion generica, por lo mismo que
+     * {@link #SELLER_UNKNOWN_INSTITUTION} y {@link #CATALOG_UNKNOWN_CATEGORY}: lo que hay
+     * que decirle es que elija de la lista, no que revise el formulario.
+     */
+    USER_UNKNOWN_MUNICIPALITY,
+
+    /**
      * Lo que se subio no es una imagen de un tipo aceptado.
      *
      * <p>Se decide por los bytes de cabecera, no por la extension ni por el
