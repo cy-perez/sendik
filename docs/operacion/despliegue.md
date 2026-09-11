@@ -784,6 +784,7 @@ aparezcan tachadas en los registros cuando haga falta leerlas.
 | `STORAGE_PUBLIC_BASE_URL` | `https://storage.googleapis.com/sendik-publico` | el dominio del CDN |
 | `FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING`, `FEATURE_CATALOG` | `true` las tres desde el 5 de septiembre de 2026 | sin definir, que es apagadas |
 | `FEATURE_SEARCH` | `true` desde el 10 de septiembre de 2026, al integrar HU-014 | sin definir, que es apagada. **Se enciende con `FEATURE_CATALOG` o después, nunca al revés**: el frontend no conoce las banderas y pinta la caja de búsqueda igual |
+| `CLIENT_IP_TRUSTED_HOPS` | `1`, **medido** contra `dev` el 10 de septiembre de 2026 | `1` heredado del respaldo del flujo y **sin medir**: `prod` no se ha desplegado nunca y podría no tener la misma topología. ADR-0036 manda remedirlo el día del primer despliegue |
 
 **Las banderas no estaban en esta tabla y ahora sí.** Su efecto se explica en
 `docs/operacion/configuracion.md`; lo que faltaba aquí era su valor por entorno, que
@@ -1004,6 +1005,50 @@ corrección puesta, esa revisión no aparece en la lista.
 > manda el proxy real no demuestra nada. `frontend/e2e/ssr.spec.ts` las tiene ahora
 > en una constante única, `CABECERAS_DE_CLOUD_RUN`, y prueba el juego completo y
 > cada una por separado.
+
+### La misma cabecera, del otro lado: quién es el cliente para el backend
+
+El frontend solo necesita **confiar** en `x-forwarded-for`. El backend necesita algo
+más difícil: saber **cuál** de sus entradas es la de quien llama, porque de eso
+dependen el límite de peticiones de `/api/v1/auth` y la constancia de consentimiento
+que exige la Ley 1581.
+
+**Cloud Run conserva lo que mande el cliente y añade lo suyo al final.** Medido
+contra `dev` el 10 de septiembre de 2026: doce peticiones con un `X-Forwarded-For`
+distinto cada una no llegan nunca al 429, y las mismas doce sin tocar la cabecera lo
+dan en la undécima. Por eso la dirección se cuenta **desde el final**, tantas
+posiciones como diga `CLIENT_IP_TRUSTED_HOPS`, que vale `1` aquí (ADR-0036).
+
+**Cómo volver a medirlo** el día que cambie lo que hay delante —un balanceador, un
+CDN, Firebase Hosting, o el primer despliegue de `prod`—. El borde registra la forma
+de la cabecera a DEBUG, una línea por forma distinta, con números y nunca con
+direcciones:
+
+```bash
+gcloud logging read   'resource.type="cloud_run_revision" AND resource.labels.service_name="sendik-backend-dev"'   --project sendik-col --limit 200 --format 'value(textPayload)' --freshness=30m   | grep "X-Forwarded-For con"
+```
+
+Dice cuántas entradas trae, cuál se toma y si esa coincide con la dirección de la
+conexión. Si la que se toma no es la del cliente, la cifra está mal, y **equivocarla
+no falla al arrancar**: quedarse corto deja que quien llama elija su identificador;
+pasarse hace que todos compartan el del proxy y el límite deje fuera a todo el mundo
+a la vez, que desde un solo cliente se ve idéntico a que funcione.
+
+**Y hay una señal que no depende de DEBUG**, que importa porque `prod` corre a INFO:
+cuando el cálculo no cuadra y la dirección acaba saliendo de la conexión, sale un
+WARN. Detrás de un proxy eso no es un detalle —la conexión viene del proxy, así que
+todas esas peticiones cuentan juntas—, y es lo primero que hay que buscar al
+desplegar a un entorno nuevo:
+
+```bash
+gcloud logging read   'resource.type="cloud_run_revision" AND severity>=WARNING
+   AND textPayload:"Se usa la direccion de la conexion"'   --project sendik-col --limit 20 --format 'value(resource.labels.service_name,textPayload)'
+```
+
+**La cabecera puede llegar repetida, y eso también está cubierto**: se leen todas las
+ocurrencias y se aplanan en orden, porque `getHeader` devuelve solo la primera línea y
+un salto que escribiera lo suyo aparte dejaría a la vista una lista escrita entera por
+quien llama.
 
 ## Volver atrás
 

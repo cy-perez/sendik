@@ -58,3 +58,4 @@ la referencia.
 | 0033 | La reversión de la migración a Tailwind, y qué se recupera de ella | Aceptada. Deja Tailwind aplazado, no descartado |
 | 0034 | Skydropx Colombia como agregador de envíos, y el envío a cargo del comprador | Aceptada |
 | 0035 | La búsqueda arranca en PostgreSQL, detrás del puerto de ADR-0008 | Aceptada. Deja Typesense aplazado, no descartado |
+| 0036 | La dirección del cliente se cuenta desde el final de `X-Forwarded-For` | Aceptada |

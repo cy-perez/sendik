@@ -120,7 +120,21 @@ donde guardar la prueba que pide el articulo 8. Es trabajo de HU-002 y esta desc
   comprobar, meses despues, que el texto que alguien acepto es el que se le
   enseño.
 - Se guarda la evidencia: version del documento aceptado, fecha, hora y direccion
-  IP.
+  IP, esta ultima como hash y nunca en claro: sirve igual como prueba de que la
+  aceptacion vino de algun sitio, sin guardar la direccion.
+- **El hash reduce la exposicion, pero no es anonimato, y conviene tenerlo escrito.**
+  Es SHA-256 **sin clave** sobre un espacio de 2^32 direcciones: recorrerlo entero es
+  cuestion de minutos, asi que para quien tenga un volcado de la base ese campo es la
+  direccion. Pasar a HMAC con clave esta abierto —arrastra gestion de clave y la
+  comparabilidad de las constancias ya guardadas— y hasta entonces el campo se trata
+  como dato personal a todos los efectos, no como uno anonimizado.
+- **Y esa direccion es la de quien acepta, no una que se pueda elegir.** Hasta el
+  10 de septiembre de 2026 se tomaba la primera entrada de `X-Forwarded-For`, que
+  la escribe quien llama: la constancia guardaba lo que el cliente dijera de si
+  mismo, o nada si mandaba una entrada vacia. Ahora se cuenta desde el final, que
+  es la parte que escribe la infraestructura (ADR-0036). Ninguna evidencia real
+  quedo comprometida: `prod` no se ha desplegado nunca y lo registrado en `dev` es
+  de pruebas.
 - **El texto de las casillas y el del aviso viven en Transloco y no se versionan.** Es
   una limitacion conocida y conviene tenerla por escrito: la evidencia apunta a la
   version de la politica, no a la frase exacta que se mostro junto a la casilla ni al
