@@ -13,15 +13,18 @@ import co.sendik.identity.port.out.MailSender;
 import co.sendik.identity.port.out.PasswordHasher;
 import co.sendik.identity.port.out.RefreshTokenRepository;
 import co.sendik.identity.port.out.SellerVerificationRepository;
+import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.TokenGenerator;
 import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
 import co.sendik.identity.port.out.VerificationAccessLog;
 import co.sendik.identity.port.out.VerificationTokenRepository;
+import co.sendik.identity.usecase.AddShippingAddressUseCase;
 import co.sendik.identity.usecase.ApproveVerificationUseCase;
 import co.sendik.identity.usecase.CloseAccountUseCase;
 import co.sendik.identity.usecase.ConfirmEmailChangeUseCase;
+import co.sendik.identity.usecase.EditShippingAddressUseCase;
 import co.sendik.identity.usecase.ExportUserDataUseCase;
 import co.sendik.identity.usecase.ForgotPasswordUseCase;
 import co.sendik.identity.usecase.GrantConfiguredModeratorsUseCase;
@@ -29,6 +32,7 @@ import co.sendik.identity.usecase.IssueSessionUseCase;
 import co.sendik.identity.usecase.ListFinancialInstitutionsUseCase;
 import co.sendik.identity.usecase.ListPendingVerificationsUseCase;
 import co.sendik.identity.usecase.ListSessionsUseCase;
+import co.sendik.identity.usecase.ListShippingAddressesUseCase;
 import co.sendik.identity.usecase.LoginUseCase;
 import co.sendik.identity.usecase.LogoutUseCase;
 import co.sendik.identity.usecase.ReadProfileUseCase;
@@ -38,12 +42,14 @@ import co.sendik.identity.usecase.RefreshSessionUseCase;
 import co.sendik.identity.usecase.RegisterUserUseCase;
 import co.sendik.identity.usecase.RejectVerificationUseCase;
 import co.sendik.identity.usecase.RemoveAvatarUseCase;
+import co.sendik.identity.usecase.RemoveShippingAddressUseCase;
 import co.sendik.identity.usecase.RequestEmailChangeUseCase;
 import co.sendik.identity.usecase.RequestEmailVerificationUseCase;
 import co.sendik.identity.usecase.ResendVerificationUseCase;
 import co.sendik.identity.usecase.ResetPasswordUseCase;
 import co.sendik.identity.usecase.RevokeSessionUseCase;
 import co.sendik.identity.usecase.RevokeVerificationUseCase;
+import co.sendik.identity.usecase.SetDefaultShippingAddressUseCase;
 import co.sendik.identity.usecase.StartSellerVerificationUseCase;
 import co.sendik.identity.usecase.SubmitBankAccountUseCase;
 import co.sendik.identity.usecase.SubmitIdentityDocumentUseCase;
@@ -57,10 +63,13 @@ import co.sendik.shared.config.AppProperties;
 import co.sendik.shared.file.ImageDimensions;
 import co.sendik.shared.file.ImagePolicy;
 import co.sendik.shared.file.StorageProperties;
+import co.sendik.shared.port.out.GeographicDivision;
 import co.sendik.shared.port.out.ImageNormalizer;
 import co.sendik.shared.port.out.PublicFileStore;
 import co.sendik.shared.port.out.RestrictedFileStore;
 import co.sendik.shared.rest.RefreshCookies;
+import co.sendik.shared.usecase.ListDepartmentsUseCase;
+import co.sendik.shared.usecase.ListMunicipalitiesUseCase;
 import java.time.Clock;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -240,8 +249,11 @@ public class IdentityWiring {
             RefreshTokenRepository refrescos,
             UserFavorites favoritos,
             UserCart carrito,
+            ShippingAddressRepository direcciones,
+            GeographicDivision division,
             Clock reloj) {
-        return new ExportUserDataUseCase(usuarios, consentimientos, refrescos, favoritos, carrito, reloj);
+        return new ExportUserDataUseCase(
+                usuarios, consentimientos, refrescos, favoritos, carrito, direcciones, division, reloj);
     }
 
     @Bean
@@ -252,8 +264,58 @@ public class IdentityWiring {
             PublicFileStore almacen,
             UserFavorites favoritos,
             UserCart carrito,
+            ShippingAddressRepository direcciones,
             Clock reloj) {
-        return new CloseAccountUseCase(usuarios, refrescos, correo, almacen, favoritos, carrito, reloj);
+        return new CloseAccountUseCase(usuarios, refrescos, correo, almacen, favoritos, carrito, direcciones, reloj);
+    }
+
+    // --- La libreta de direcciones de entrega. HU-016. ---
+
+    @Bean
+    AddShippingAddressUseCase addShippingAddressUseCase(
+            ShippingAddressRepository direcciones, GeographicDivision division, UserRepository usuarios, Clock reloj) {
+        return new AddShippingAddressUseCase(direcciones, division, usuarios, reloj);
+    }
+
+    @Bean
+    EditShippingAddressUseCase editShippingAddressUseCase(
+            ShippingAddressRepository direcciones, GeographicDivision division, UserRepository usuarios, Clock reloj) {
+        return new EditShippingAddressUseCase(direcciones, division, usuarios, reloj);
+    }
+
+    @Bean
+    RemoveShippingAddressUseCase removeShippingAddressUseCase(
+            ShippingAddressRepository direcciones, UserRepository usuarios) {
+        return new RemoveShippingAddressUseCase(direcciones, usuarios);
+    }
+
+    @Bean
+    SetDefaultShippingAddressUseCase setDefaultShippingAddressUseCase(
+            ShippingAddressRepository direcciones, UserRepository usuarios) {
+        return new SetDefaultShippingAddressUseCase(direcciones, usuarios);
+    }
+
+    @Bean
+    ListShippingAddressesUseCase listShippingAddressesUseCase(
+            ShippingAddressRepository direcciones, GeographicDivision division) {
+        return new ListShippingAddressesUseCase(direcciones, division);
+    }
+
+    /**
+     * Los dos de la division politico-administrativa.
+     *
+     * <p>Viven en este archivo aunque el puerto sea de {@code shared}: hoy su unico
+     * consumidor es el formulario de direccion de entrega, que es de identidad. El dia que
+     * el cotizador de envios los pida, se mueven a su propio cableado.
+     */
+    @Bean
+    ListDepartmentsUseCase listDepartmentsUseCase(GeographicDivision division) {
+        return new ListDepartmentsUseCase(division);
+    }
+
+    @Bean
+    ListMunicipalitiesUseCase listMunicipalitiesUseCase(GeographicDivision division) {
+        return new ListMunicipalitiesUseCase(division);
     }
 
     /**

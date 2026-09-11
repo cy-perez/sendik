@@ -22,11 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ListShippingAddressesUseCase {
 
     private final ShippingAddressRepository direcciones;
-    private final ShippingAddressViews vistas;
+    private final GeographicDivision division;
 
     public ListShippingAddressesUseCase(ShippingAddressRepository direcciones, GeographicDivision division) {
         this.direcciones = direcciones;
-        this.vistas = new ShippingAddressViews(division);
+        this.division = division;
     }
 
     /*
@@ -39,6 +39,6 @@ public class ListShippingAddressesUseCase {
      */
     @Transactional
     public List<ShippingAddressView> execute(UserId usuario) {
-        return vistas.de(direcciones.deCuenta(usuario));
+        return ShippingAddressView.de(direcciones.deCuenta(usuario), division);
     }
 }
