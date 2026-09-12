@@ -162,7 +162,19 @@ depende de Wompi ni de Skydropx; el proceso de compra sí, y espera. El carrito
 termina donde empieza el pedido, **no reserva nada** (RN-089) y **no muestra
 total**, porque el total son las tres cifras de RN-076 y el envío todavía no
 existe (RN-096). Trajo nueve reglas nuevas, RN-089 a RN-097, y dos decisiones:
-ADR-0036 y ADR-0037. La Fase 4 sigue sin abrir. El alcance por fase está en
+ADR-0036 y ADR-0037.
+
+**HU-016, la dirección de entrega, quedó integrada el 11 de septiembre de 2026**,
+detrás de la misma bandera. Es la mitad de «el proceso de compra» que no espera a
+nadie, partida con el criterio que ya había partido el carrito: guardar a dónde
+quiere alguien que le llegue lo que compre no necesita a Wompi ni a Skydropx, y
+además era la única pieza que **produce** el dato que las demás consumen. El
+municipio se elige de la división político-administrativa del DANE y no se
+escribe (RN-100); guardar una dirección **no promete que se pueda entregar allí**
+(RN-103). Trajo siete reglas, RN-098 a RN-104, y dos decisiones: ADR-0039 y
+ADR-0040. Lo que sigue esperando es crear el pedido y el paso a pagar.
+
+La Fase 4 sigue sin abrir. El alcance por fase está en
 `docs/producto/alcance.md`.
 
 Lo que bloqueaba el lanzamiento dejó de hacerlo: los **textos legales** están

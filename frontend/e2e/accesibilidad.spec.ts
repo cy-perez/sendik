@@ -73,6 +73,10 @@ const RUTAS_PUBLICAS: readonly { readonly ruta: string; readonly nombre: string 
   // no sale una invitacion a entrar sino el carrito vacio del criterio 19, que es lo que ve
   // cualquiera que llegue por primera vez.
   { ruta: '/carrito', nombre: 'carrito' },
+  // HU-016. Sin sesion lo que axe recorre es su invitacion a entrar del criterio 17, igual
+  // que en `/mis-favoritos` y `/mis-publicaciones`: la libreta no existe sin cuenta. Se
+  // quedo fuera de esta lista al escribirla y lo cazaron las dos revisiones.
+  { ruta: '/mis-direcciones', nombre: 'mis direcciones' },
   // HU-014. Sin backend, lo que axe recorre del catalogo es su estado de error, y sobre
   // todo **la caja de busqueda y el panel de filtros**, que se pintan igual: se ven antes
   // de que llegue nada y son la interfaz nueva de esta historia.

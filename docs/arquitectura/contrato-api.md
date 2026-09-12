@@ -403,6 +403,94 @@ Códigos propios: `CATALOG_SELF_CART_FORBIDDEN` (403, RN-092) y `CATALOG_CART_FU
 (422, RN-097). El 422 y no un 403: la petición es legítima y quien la manda tiene derecho
 a hacerla, lo que pasa es que no cabe.
 
+## La libreta de direcciones
+
+Siete rutas, todas detrás de `FEATURE_CHECKOUT`. Con la bandera apagada no
+rechazan: no están, y responden lo mismo que una ruta que no existe. HU-016.
+
+| Método y ruta | Quién | Respuesta |
+|---|---|---|
+| `GET /api/v1/users/me/addresses` | Autenticado | `200` con `{ "addresses": [...] }`, sin paginar |
+| `POST /api/v1/users/me/addresses` | Autenticado | `201` con `Location` y la creada |
+| `PUT /api/v1/users/me/addresses/{id}` | Autenticado | `200` con la actualizada |
+| `DELETE /api/v1/users/me/addresses/{id}` | Autenticado | `204`, también si no estaba |
+| `PUT /api/v1/users/me/default-address` | Autenticado | `204`. Cuerpo `{ "addressId": "…" }` |
+| `GET /api/v1/locations/departments` | Autenticado | `200` con `{ "departments": [{code,name}] }` |
+| `GET /api/v1/locations/departments/{code}/municipalities` | Autenticado | `200` con `{ "municipalities": [...] }`, solo los activos |
+
+**Cuelgan de `/users/me`**, por lo mismo que el carrito y los favoritos: una
+dirección es de la persona, allí la regla de seguridad ya es «autenticado», y la
+ruta dice de quién es el dato. El identificador de quien pide sale siempre del
+`sub` del token y jamás de la petición.
+
+**La predeterminada es un recurso singular y no un verbo en la ruta.**
+`/addresses/{id}/default` habría chocado con `{id}` y además el contrato no
+admite verbos. Marcar es reemplazar el valor de ese recurso, que es exactamente
+lo que `PUT` significa; por eso el identificador va en el cuerpo.
+
+### El cuerpo de escritura no lleva departamento
+
+```json
+{ "recipientName": "…", "phone": "…", "municipalityCode": "11001",
+  "line": "Calle 45 # 12-34", "complement": "Apto 802",
+  "instructions": null, "postalCode": null }
+```
+
+**Y esa ausencia es la regla.** Los códigos del DANE son jerárquicos: los dos
+primeros dígitos del código de municipio son los de su departamento, sin una sola
+excepción en las 1122 filas que V20 siembra (RN-100). Con los dos campos habría
+que comprobar que casan; sin el segundo, un par incoherente no puede existir
+porque no hay par.
+
+**La respuesta sí lleva el departamento**, con su código y su nombre, y no es
+asimetría por descuido: al escribir sobra y al leer hace falta. Hay más de un
+«San Pedro» y más de una «Santa María» en Colombia, así que un municipio sin su
+departamento al lado no identifica un sitio.
+
+Lleva además `municipalityActive`, que es falso cuando el DANE suprimió ese
+municipio: la dirección se sigue leyendo igual, y lo que cambia es que al editarla
+hay que elegir otro.
+
+### El `DELETE` responde 204 y sin cuerpo
+
+También sobre una dirección que no está, y también sobre una de otra persona. Con
+un 404 ahí, un reintento de red acabaría en un mensaje de error sobre algo que
+salió como se pidió, y además distinguirlo confirmaría que ese identificador
+existe.
+
+Cuál quedó como predeterminada cuando esta lo era (RN-099) no viaja en la
+respuesta: se sabe releyendo la libreta, que es lo que el cliente hace de todos
+modos al invalidar su consulta. Inventar un cuerpo en un `DELETE` para eso rompe
+la tabla de métodos de este documento.
+
+**404 y nunca 403 sobre una dirección ajena**, con el mismo `COMMON_NOT_FOUND` de
+una que no existe. Aquí el motivo es más fuerte que en una publicación, que es
+pública de todos modos: una dirección no la ve nadie más que su dueña (RN-098),
+así que ni siquiera hay que admitir que existe.
+
+Códigos propios, los dos primeros `USER_` del proyecto: `USER_UNKNOWN_MUNICIPALITY`
+(422, RN-100 — cubre el inexistente y el que el DANE suprimió) y
+`USER_ADDRESS_BOOK_FULL` (422, RN-101). El 422 y no un 403 por lo mismo que
+`CATALOG_CART_FULL`: la petición es legítima y quien la manda tiene derecho a
+hacerla, lo que pasa es que no cabe.
+
+### Las dos rutas de la división político-administrativa
+
+**Autenticadas con la bandera encendida y apagada**, que es el único caso del
+proyecto donde la regla de `SecurityConfig` no cambia con la bandera: las dos
+ramas quieren lo mismo. Encendida, su único consumidor es el formulario de
+dirección, que exige sesión; apagada, la regla tiene que existir igual para que la
+petición atraviese la cadena y salga 404 en vez del 403 del `denyAll` final.
+
+Que una lista de municipios de Colombia no sea secreta no la hace pública: una
+ruta viva que nadie pide es superficie sin dueño. El día que el cotizador de
+envíos la necesite sin sesión, cambia.
+
+**Dos rutas y no una.** Los departamentos son treinta y tres y los municipios más
+de mil: mandar el árbol entero para pintar el primer selector es mandar cuarenta
+veces lo que se necesita. Un departamento que no existe devuelve una lista vacía y
+no un 404: el código viene de la lista de arriba, que la pantalla acaba de pedir.
+
 ## Autenticación
 
 - `Authorization: Bearer <token de acceso>` en toda ruta protegida.

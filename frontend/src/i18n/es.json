@@ -118,6 +118,10 @@
     "cart": {
       "title": "Tu carrito · Sendik",
       "description": "Lo que guardaste en Sendik para comprar."
+    },
+    "addresses": {
+      "title": "Mis direcciones · Sendik",
+      "description": "Guarda a dónde quieres que te llegue lo que compras."
     }
   },
   "layout": {
@@ -245,7 +249,9 @@
       "CATALOG_CONDITION_NOT_ALLOWED": "En esta categoría solo se publica lo nuevo.",
       "CATALOG_REFERENCE_IMAGE_NOT_ALLOWED": "Las imágenes de referencia solo se pueden agregar en tecnología sellada.",
       "CATALOG_UNKNOWN_CATEGORY": "Esa categoría ya no está disponible. Elige otra.",
-      "CATALOG_SELF_MODERATION_FORBIDDEN": "No puedes decidir sobre tu propia publicación."
+      "CATALOG_SELF_MODERATION_FORBIDDEN": "No puedes decidir sobre tu propia publicación.",
+      "USER_ADDRESS_BOOK_FULL": "Ya no caben más direcciones. Quita una para agregar otra.",
+      "USER_UNKNOWN_MUNICIPALITY": "Ese municipio ya no está en la lista oficial. Elige otro."
     }
   },
   "form": {
@@ -282,7 +288,8 @@
       "controllerAddress": "Dirección: {{direccion}}.",
       "purpose": {
         "account": "Usamos estos datos para crear y administrar tu cuenta, confirmar tu correo, mantener tu sesión segura y atenderte cuando escribas. No los vendemos ni los cedemos con fines publicitarios.",
-        "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más."
+        "verification": "Usamos tu documento de identidad, la fotografía de tu rostro y tu cuenta bancaria para una sola cosa: confirmar que eres quien dices ser antes de dejarte publicar, y poder pagarte lo que vendas. No se muestran a otras personas ni se usan para nada más.",
+        "delivery": "Usamos tu dirección, el nombre de quien recibe y su teléfono para una sola cosa: llevarte hasta allí lo que compres. Hoy no salen de Sendik: se guardan para que no tengas que escribirlos en cada compra. Cuando exista el envío te diremos, antes de que pidas, a quién se los entregamos y para qué."
       },
       "sensitive": "No estás obligado a entregar estos datos. Puedes tener cuenta, navegar y comprar sin ellos; solo hacen falta si decides vender, porque sin saber quién vende el respaldo no significaría nada.",
       "rights": "Puedes conocer, actualizar, rectificar y suprimir tus datos, y retirar esta autorización, escribiendo a {{correo}}.",
@@ -1462,6 +1469,95 @@
         "confirm": "¿Revocar el sello de esta persona? Deja de poder publicar y recibe el motivo por correo.",
         "listingsStayVisible": "Lo que ya tiene publicado sigue visible. Para retirarlo hay que bajar cada publicación por separado."
       }
+    }
+  },
+  "addresses": {
+    "title": "Mis direcciones",
+    "loading": "Cargando tus direcciones",
+    "error": "No pudimos cargar tus direcciones.",
+    "retry": "Reintentar",
+    "signedOut": {
+      "body": "Entra a tu cuenta para guardar a dónde quieres que te llegue lo que compras.",
+      "action": "Entrar"
+    },
+    "empty": {
+      "title": "Todavía no tienes direcciones",
+      "body": "Guarda una dirección y no tendrás que escribirla cada vez que compres.",
+      "action": "Agregar una dirección"
+    },
+    "list": {
+      "default": "Predeterminada",
+      "municipalityGone": "Este municipio ya no está en la lista oficial. Al editar esta dirección tendrás que elegir otro."
+    },
+    "actions": {
+      "add": "Agregar una dirección",
+      "edit": "Editar",
+      "delete": "Quitar",
+      "makeDefault": "Usar como predeterminada",
+      "save": "Guardar dirección",
+      "cancel": "Cancelar",
+      "editNamed": "Editar la dirección de {{nombre}}",
+      "deleteNamed": "Quitar la dirección de {{nombre}}",
+      "makeDefaultNamed": "Usar como predeterminada: la dirección de {{nombre}}"
+    },
+    "notices": {
+      "saved": "Dirección guardada.",
+      "removed": "Dirección quitada.",
+      "defaultChanged": "Tu dirección predeterminada es ahora la de {{nombre}}."
+    },
+    "form": {
+      "newTitle": "Nueva dirección",
+      "editTitle": "Editar dirección",
+      "thirdParty": "Si quien recibe no eres tú, al guardar declaras que tienes su autorización para darnos su nombre y su teléfono, y que le informarás de que los usamos para la entrega.",
+      "department": {
+        "label": "Departamento",
+        "choose": "Elige un departamento",
+        "error": "Elige un departamento."
+      },
+      "municipality": {
+        "label": "Municipio",
+        "choose": "Elige un municipio",
+        "chooseDepartmentFirst": "Elige primero un departamento",
+        "loading": "Cargando municipios…",
+        "error": "Elige un municipio.",
+        "failed": "No pudimos cargar los municipios",
+        "updated": "{{cuantos}} municipios disponibles"
+      },
+      "line": {
+        "label": "Dirección",
+        "hint": "Por ejemplo: Calle 45 # 12-34",
+        "error": "Escribe la dirección, entre 5 y 120 caracteres."
+      },
+      "complement": {
+        "label": "Complemento (opcional)",
+        "hint": "Apartamento, torre, oficina o local",
+        "error": "El complemento no puede pasar de 60 caracteres."
+      },
+      "recipientName": {
+        "label": "Quién recibe",
+        "hint": "Puede ser otra persona",
+        "error": "Escribe quién recibe, entre 2 y 80 caracteres."
+      },
+      "phone": {
+        "label": "Teléfono de quien recibe",
+        "hint": "La transportadora llama a este número",
+        "error": "Escribe un teléfono de 7 a 15 dígitos."
+      },
+      "instructions": {
+        "label": "Indicaciones de entrega (opcional)",
+        "hint": "Lo que ayude a encontrar el sitio o a entregar",
+        "error": "Las indicaciones no pueden pasar de 200 caracteres."
+      },
+      "postalCode": {
+        "label": "Código postal (opcional)",
+        "hint": "Seis dígitos, si lo sabes",
+        "error": "El código postal colombiano son seis dígitos."
+      },
+      "divisionFailed": "No pudimos cargar la lista de departamentos y municipios. Vuelve a cargar la página."
+    },
+    "errors": {
+      "full": "Ya tienes {{tope}} direcciones guardadas, que es el máximo. Quita una para agregar otra.",
+      "stale": "Se hizo el cambio, pero no pudimos volver a cargar la lista. Recarga la página."
     }
   }
 }

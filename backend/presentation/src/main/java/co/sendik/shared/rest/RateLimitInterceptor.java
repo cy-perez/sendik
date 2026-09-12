@@ -94,6 +94,16 @@ public class RateLimitInterceptor implements HandlerInterceptor {
      */
     private static final String CARRITO_ANONIMO = "/api/v1/carts";
 
+    /**
+     * La division politico-administrativa. HU-016.
+     *
+     * <p>Va al grupo de cuenta y no sin cota: es autenticada, asi que hay sujeto a quien
+     * contar, y era la unica superficie nueva de HU-016 que se quedaba fuera de los cuatro
+     * grupos. Devuelve como mucho 1122 filas y cambia una vez cada varios anos, pero «barata»
+     * no es «gratis»: sin grupo, no tiene ninguna.
+     */
+    private static final String PREFIJO_DE_DIVISION = "/api/v1/locations/";
+
     private final RateLimiter credenciales;
     private final RateLimiter sesion;
     private final RateLimiter cuenta;
@@ -205,6 +215,9 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
         if (ruta.equals(CARRITO_ANONIMO)) {
             return carritoAnonimo;
+        }
+        if (ruta.startsWith(PREFIJO_DE_DIVISION)) {
+            return cuenta;
         }
         return ruta.startsWith(PREFIJO_DE_PUBLICACION) || ruta.equals(COLECCION_DE_PUBLICACIONES)
                 ? publicaciones

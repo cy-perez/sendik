@@ -107,6 +107,21 @@ export const routes: Routes = [
       import('./features/catalog/presentation/cart-page').then((m) => m.CartPage),
   },
   {
+    // La libreta de direcciones de entrega. HU-016.
+    //
+    // Sin guard, como `/mi-cuenta` y `/carrito`: quien llega sin sesion ve una explicacion
+    // y la forma de entrar, y no se le redirige. Una redireccion desde una direccion que
+    // alguien escribio a proposito hace pensar que se equivoco.
+    //
+    // Existe aunque FEATURE_CHECKOUT este apagada, igual que las del catalogo y el
+    // carrito: la API responde 404 y la pantalla muestra su estado de error.
+    path: 'mis-direcciones',
+    title: 'meta.addresses.title',
+    data: { descriptionKey: 'meta.addresses.description' },
+    loadComponent: () =>
+      import('./features/addresses/presentation/addresses-page').then((m) => m.AddressesPage),
+  },
+  {
     path: 'registro',
     title: 'meta.register.title',
     data: { descriptionKey: 'meta.register.description' },

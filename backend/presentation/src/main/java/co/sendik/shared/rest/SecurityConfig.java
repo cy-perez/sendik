@@ -279,6 +279,20 @@ public class SecurityConfig {
                         rutas.requestMatchers("/api/v1/carts/**").authenticated();
                     }
 
+                    // La division politico-administrativa. HU-016, criterios 21 y 25.
+                    //
+                    // **Autenticada tanto si la bandera esta encendida como si no**, que es
+                    // el unico caso del proyecto donde la regla no cambia con la bandera. El
+                    // motivo es que las dos ramas quieren lo mismo: encendida, su unico
+                    // consumidor es el formulario de direccion, que exige sesion; apagada, la
+                    // regla tiene que existir igual para que la peticion atraviese la cadena
+                    // y salga 404 en vez del 403 del denyAll final.
+                    //
+                    // Que la lista de municipios de Colombia no sea secreta no la hace
+                    // publica: una ruta viva que nadie pide es superficie sin dueno. El dia
+                    // que el cotizador de envios la necesite sin sesion, cambia aqui.
+                    rutas.requestMatchers("/api/v1/locations/**").authenticated();
+
                     rutas
                             // Todo lo demas del catalogo lo hace el vendedor sobre lo suyo.
                             // Que sea suyo lo comprueba el repositorio, que solo devuelve la

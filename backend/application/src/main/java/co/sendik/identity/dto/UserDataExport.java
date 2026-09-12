@@ -33,7 +33,22 @@ public record UserDataExport(
         List<Consentimiento> consentimientos,
         List<Sesion> sesiones,
         List<Favorito> favoritos,
-        List<ProductoEnCarrito> carrito) {
+        List<ProductoEnCarrito> carrito,
+        List<Direccion> direcciones) {
+
+    /**
+     * No imprime nada de lo que hay dentro.
+     *
+     * <p>Un {@code record} imprime todos sus campos por omision, y este lleva dato personal.
+     * El criterio 19 no puede depender de que nadie escriba nunca un {@code LOG.debug} con el
+     * objeto entero —{@code co.sendik} esta en {@code DEBUG} en {@code dev} y en
+     * {@code local}—. Se agrego tras la segunda revision de seguridad, que noto que los seis
+     * {@code toString} de la primera dejaron fuera precisamente los que mas llevan.
+     */
+    @Override
+    public String toString() {
+        return "UserDataExport[generado=" + generado + "]";
+    }
 
     /**
      * @param ciudad nula si nunca se puso o si se quito. Se emite igual con valor
@@ -55,7 +70,22 @@ public record UserDataExport(
             boolean correoVerificado,
             @Nullable Instant correoVerificadoEl,
             List<String> roles,
-            Instant creadaEl) {}
+            Instant creadaEl) {
+
+        /**
+         * No imprime nada de lo que hay dentro.
+         *
+         * <p>Un {@code record} imprime todos sus campos por omision, y este lleva dato personal.
+         * El criterio 19 no puede depender de que nadie escriba nunca un {@code LOG.debug} con el
+         * objeto entero —{@code co.sendik} esta en {@code DEBUG} en {@code dev} y en
+         * {@code local}—. Se agrego tras la segunda revision de seguridad, que noto que los seis
+         * {@code toString} de la primera dejaron fuera precisamente los que mas llevan.
+         */
+        @Override
+        public String toString() {
+            return "Cuenta[id=" + id + "]";
+        }
+    }
 
     public record Consentimiento(String documento, String version, Instant aceptadoEl) {}
 
@@ -98,4 +128,47 @@ public record UserDataExport(
      * identificado, y en cuanto se fusiona pasa a ser estas filas.
      */
     public record ProductoEnCarrito(String publicacion, Instant agregadoEl) {}
+
+    /**
+     * Una direccion de entrega guardada. HU-016.
+     *
+     * <p><strong>Sale entera, al reves que el favorito y el producto del carrito.</strong>
+     * Alli va el identificador y no el titulo porque el titulo es del vendedor y puede
+     * cambiar; aqui no hay nada que sea de otro: el nombre de quien recibe, el telefono, la
+     * linea y las indicaciones los escribio esta persona. Entregar solo un identificador
+     * seria no entregar nada.
+     *
+     * <p><strong>Van los nombres y no los codigos.</strong> «11001» no responde ninguna
+     * pregunta que alguien pueda hacerse sobre sus propios datos; «Bogotá, D.C.» si.
+     *
+     * <p>Cuando quien recibe no es el titular, aqui salen el nombre y el telefono de un
+     * tercero (RN-104). Salen igual: es lo que Sendik guarda asociado a esta cuenta, y el
+     * derecho a conocer es sobre lo que hay.
+     */
+    public record Direccion(
+            String quienRecibe,
+            String telefono,
+            String departamento,
+            String municipio,
+            String linea,
+            @Nullable String complemento,
+            @Nullable String indicaciones,
+            @Nullable String codigoPostal,
+            boolean predeterminada,
+            Instant guardadaEl) {
+
+        /**
+         * No imprime nada de lo que hay dentro.
+         *
+         * <p>Un {@code record} imprime todos sus campos por omision, y este lleva dato personal.
+         * El criterio 19 no puede depender de que nadie escriba nunca un {@code LOG.debug} con el
+         * objeto entero —{@code co.sendik} esta en {@code DEBUG} en {@code dev} y en
+         * {@code local}—. Se agrego tras la segunda revision de seguridad, que noto que los seis
+         * {@code toString} de la primera dejaron fuera precisamente los que mas llevan.
+         */
+        @Override
+        public String toString() {
+            return "Direccion[sin imprimir]";
+        }
+    }
 }

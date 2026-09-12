@@ -444,12 +444,43 @@ publicado.
   en vez de desaparecer (RN-094), que es la excepción deliberada a lo que RN-071
   hace en los favoritos.
 
-- **El proceso de compra**: crear el pedido, la dirección de entrega y el paso a
-  pagar. Es la otra mitad de la línea anterior y espera a las dos integraciones.
+- **La dirección de entrega. Hecho: HU-016, implementada el 11 de septiembre de
+  2026.** La libreta de direcciones de quien compra: agregar, editar, quitar y
+  elegir cuál es la predeterminada, con el municipio elegido de la división
+  político-administrativa oficial del DANE. Trajo siete reglas nuevas, RN-098 a
+  RN-104, y dos decisiones: ADR-0039 y ADR-0040.
+
+  **Se partió de esta línea por el mismo criterio que partió el carrito**, y no
+  para adelantar trabajo. La línea decía «crear el pedido, la dirección de entrega
+  y el paso a pagar» y las tres parecían una sola cosa; no lo son. El pedido
+  necesita el pago, el pago necesita a Wompi y el paso a pagar necesita el costo
+  del envío, que necesita a Skydropx. Guardar a dónde quiere alguien que le llegue
+  lo que compre no necesita a ninguno de los dos, y lo dice `datos-personales.md`
+  desde el 8 de septiembre: «cotizar no necesita la dirección completa, basta la
+  ciudad», y la dirección exacta se manda solo al emitir la guía.
+
+  Hay además una razón de orden: de lo que quedaba de la fase, era **la única
+  pieza que produce el dato que las demás consumen**. RN-039 cotiza con «la
+  dirección de destino del comprador» y hasta hoy ese dato no existía en ninguna
+  tabla del proyecto.
+
+  **Guardar una dirección no promete que se pueda entregar allí** (RN-103). La
+  cobertura sigue sin comprobar (RN-080) y ninguna pantalla afirma lo contrario.
+
+  Lo que queda para cuando lleguen las integraciones está en la línea siguiente.
+
+- **El proceso de compra**: crear el pedido y el paso a pagar. Es lo que queda de
+  la línea anterior y espera a las dos integraciones. Con el pedido llega además
+  una decisión que HU-016 no pudo tomar: que el pedido **copie** la dirección en
+  vez de apuntarla, por lo mismo que RN-030 congela el precio —editar o borrar una
+  dirección no puede cambiar a dónde se mandó algo que ya se envió—.
 - Pago con Wompi: PSE, Nequi, tarjetas, Bancolombia a la mano y Addi.
 - División del pago y retención de la comisión del 5%.
 - Cotización de envíos con **Skydropx Colombia**, el agregador (ADR-0034, RN-038).
-  Una integración, no una por transportadora.
+  Una integración, no una por transportadora. Le falta además **la dirección de
+  origen del vendedor**, que RN-039 necesita y que HU-016 dejó fuera a propósito:
+  hoy el perfil solo tiene `city`, texto libre y opcional, y el origen completo
+  existe para emitir la guía (RN-078), que es Skydropx entero.
 - **Precio base y costo de envío como cifras separadas**, con el envío a cargo del
   comprador y el total a la vista antes de pagar (RN-076, RN-077).
 - **Seguimiento del envío**: guía y eventos visibles para comprador y vendedor, y

@@ -1,0 +1,124 @@
+<form class="formulario-direccion" [formGroup]="form" (ngSubmit)="guardar()">
+  <!-- Recoge el foco al abrirse: el boton que abrio el formulario deja de existir. -->
+  <h2 class="tipo-titulo-tarjeta" tabindex="-1" #titulo>
+    {{ (editando() ? 'addresses.form.editTitle' : 'addresses.form.newTitle') | transloco }}
+  </h2>
+
+  <!-- El aviso va arriba y no al final: el regimen colombiano pide informar la finalidad
+       ANTES de recoger, y este es el unico formulario del producto donde se piden el nombre
+       y el telefono de otra persona (RN-104). La variante `entrega` existe por eso. -->
+  <sendik-privacy-notice variante="entrega" />
+
+  <!--
+    Los dos selectores van primero y en este orden porque el segundo depende del primero:
+    con el municipio arriba, quien lo mira no entiende por que esta apagado.
+  -->
+  <sendik-select-field
+    fieldId="direccion-departamento"
+    labelKey="addresses.form.department.label"
+    placeholderKey="addresses.form.department.choose"
+    [control]="form.controls.departmentCode"
+    [options]="departamentos()"
+    [errorKey]="departmentError()"
+  />
+
+  <!-- El fallo de la division se pinta junto a los dos selectores que describe y no al
+       final del formulario, a ocho campos de distancia: es lo unico que explica por que
+       estan vacios. -->
+  <p class="error tipo-leyenda" role="alert">
+    @if (divisionFallo()) {
+      {{ 'addresses.form.divisionFailed' | transloco }}
+    }
+  </p>
+
+  <!-- Criterio 27: al cambiar de departamento el selector se vacia y se repuebla, y eso
+       hay que anunciarlo. Sin esto, quien no lo ve pierde el municipio elegido en silencio. -->
+  <p class="solo-lectores" role="status">
+    @if (anuncioDeMunicipios(); as anuncio) {
+      {{ anuncio | transloco: { cuantos: municipios().length } }}
+    }
+  </p>
+
+  <sendik-select-field
+    fieldId="direccion-municipio"
+    labelKey="addresses.form.municipality.label"
+    [placeholderKey]="municipioPlaceholder()"
+    [control]="form.controls.municipalityCode"
+    [options]="municipioDisponible() ? municipios() : []"
+    [errorKey]="municipalityError()"
+  />
+
+  <sendik-text-field
+    fieldId="direccion-linea"
+    labelKey="addresses.form.line.label"
+    hintKey="addresses.form.line.hint"
+    autocomplete="street-address"
+    [control]="form.controls.line"
+    [errorKey]="lineError()"
+  />
+
+  <sendik-text-field
+    fieldId="direccion-complemento"
+    labelKey="addresses.form.complement.label"
+    hintKey="addresses.form.complement.hint"
+    [control]="form.controls.complement"
+    [errorKey]="complementError()"
+  />
+
+  <sendik-text-field
+    fieldId="direccion-quien-recibe"
+    labelKey="addresses.form.recipientName.label"
+    hintKey="addresses.form.recipientName.hint"
+    autocomplete="name"
+    [control]="form.controls.recipientName"
+    [errorKey]="recipientNameError()"
+  />
+
+  <sendik-text-field
+    fieldId="direccion-telefono"
+    labelKey="addresses.form.phone.label"
+    hintKey="addresses.form.phone.hint"
+    autocomplete="tel"
+    [control]="form.controls.phone"
+    [errorKey]="phoneError()"
+  />
+
+  <!--
+    RN-104. Quien guarda declara que esta autorizado a dar estos datos cuando no son
+    suyos. Es una frase y no una casilla: una casilla por cada direccion es friccion en el
+    peor momento, y Sendik no puede verificar la autorizacion de ninguna de las dos formas.
+  -->
+  <p class="formulario-direccion__tercero tipo-leyenda">
+    {{ 'addresses.form.thirdParty' | transloco }}
+  </p>
+
+  <sendik-text-field
+    fieldId="direccion-indicaciones"
+    labelKey="addresses.form.instructions.label"
+    hintKey="addresses.form.instructions.hint"
+    [control]="form.controls.instructions"
+    [errorKey]="instructionsError()"
+  />
+
+  <sendik-text-field
+    fieldId="direccion-codigo-postal"
+    labelKey="addresses.form.postalCode.label"
+    hintKey="addresses.form.postalCode.hint"
+    autocomplete="postal-code"
+    [control]="form.controls.postalCode"
+    [errorKey]="postalCodeError()"
+  />
+
+  @if (fallo(); as mensaje) {
+    <!-- El tope va como parametro: la clave generica de `errors.byCode` no lo lleva, y
+         el criterio 8 pide que se diga cual es. -->
+    <p class="error tipo-leyenda" role="alert">{{ mensaje | transloco: { tope: tope() } }}</p>
+  }
+
+  <div class="formulario-direccion__acciones">
+    <sendik-submit-button [loading]="guardando()" labelKey="addresses.actions.save" />
+    <button type="button" class="btn btn-secundario" (click)="cancelar()">
+      {{ 'addresses.actions.cancel' | transloco }}
+    </button>
+  </div>
+</form>

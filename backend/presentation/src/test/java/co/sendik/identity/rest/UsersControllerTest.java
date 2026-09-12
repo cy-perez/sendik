@@ -246,7 +246,21 @@ class UsersControllerTest {
                         List.of(new UserDataExport.Favorito(PUBLICACION_GUARDADA, AHORA)),
                         // HU-015: y el carrito, por una razon mas fuerte: no dice solo que le
                         // interesa, dice que estuvo a punto de comprarlo.
-                        List.of(new UserDataExport.ProductoEnCarrito(PUBLICACION_GUARDADA, AHORA))));
+                        List.of(new UserDataExport.ProductoEnCarrito(PUBLICACION_GUARDADA, AHORA)),
+                        // HU-016: y la libreta de direcciones, que sale entera y con los
+                        // nombres del municipio y del departamento. Aqui no hay nada que sea
+                        // de otro: todo lo escribio esta persona.
+                        List.of(new UserDataExport.Direccion(
+                                "Ana María Ruiz",
+                                "3001234567",
+                                "Bogotá, D.C.",
+                                "Bogotá, D.C.",
+                                "Calle 45 # 12-34",
+                                "Apto 802",
+                                null,
+                                "110111",
+                                true,
+                                AHORA))));
 
         MvcResult resultado = mvc.perform(get("/api/v1/users/me/export"))
                 .andExpect(status().isOk())
@@ -264,6 +278,11 @@ class UsersControllerTest {
                 // comprobaba nada, asi que si desaparecieran del archivo la prueba seguiria
                 // verde y el derecho a conocer se serviria incompleto.
                 .andExpect(jsonPath("$.favoritos[0].publicacion").value(PUBLICACION_GUARDADA))
+                // Y la libreta de direcciones (HU-016). Se afirma el contenido por la misma
+                // razon: un campo que el simulador devuelve y nadie mira puede desaparecer
+                // del archivo con la prueba en verde.
+                .andExpect(jsonPath("$.direcciones[0].linea").value("Calle 45 # 12-34"))
+                .andExpect(jsonPath("$.direcciones[0].municipio").value("Bogotá, D.C."))
                 .andReturn();
 
         // Ni el hash de la contrasena ni el de ningun token: son secretos del

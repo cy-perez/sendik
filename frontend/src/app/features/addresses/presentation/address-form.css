@@ -1,0 +1,30 @@
+/* Una sola columna, tambien en escritorio. Un formulario de direccion en dos columnas
+   obliga a la vista a saltar en zigzag entre campos que se leen en orden, y el ancho de
+   lectura ya acota la linea. */
+.formulario-direccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-16);
+  /* El ancho de FORMULARIO y no el de lectura: marca.css lo dice con esas palabras, y los
+     dos formularios del proyecto usan este. --medida son 70ch, que es otra cosa. */
+  max-width: var(--medida-formulario);
+  margin-top: var(--esp-24);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* La frase de RN-104 va pegada a los dos campos que nombra -quien recibe y su telefono-
+   y no al final del formulario, donde nadie la relacionaria con ellos. */
+.formulario-direccion__tercero {
+  color: var(--color-texto-suave);
+  margin: 0;
+}
+
+.formulario-direccion__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  margin-top: var(--esp-8);
+}

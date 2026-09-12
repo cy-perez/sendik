@@ -6,6 +6,7 @@ import co.sendik.identity.exception.CloseConfirmationMismatchException;
 import co.sendik.identity.model.User;
 import co.sendik.identity.port.out.MailSender;
 import co.sendik.identity.port.out.RefreshTokenRepository;
+import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
@@ -25,9 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
  * no existe. Cuando existan pedidos, RN-009 obliga a bifurcar aqui: cierre
  * pendiente en {@code CLOSING} mientras haya alguno sin resolver.
  *
- * <p>Va en una transaccion porque las tres escrituras solo valen juntas. Anonimizar
- * sin revocar dejaria sesiones vivas de una cuenta que ya no tiene dueno, y su
- * token de refresco dura 30 dias.
+ * <p>Va en una transaccion porque las escrituras solo valen juntas. Anonimizar sin
+ * revocar dejaria sesiones vivas de una cuenta que ya no tiene dueno, y su token de
+ * refresco dura 30 dias.
  *
  * <p>El aviso se manda antes de anonimizar y no despues, por un motivo simple: al
  * terminar ya no se sabe a que direccion escribir.
@@ -40,6 +41,7 @@ public class CloseAccountUseCase {
     private final PublicFileStore almacen;
     private final UserFavorites favoritos;
     private final UserCart carrito;
+    private final ShippingAddressRepository direcciones;
     private final Clock reloj;
 
     public CloseAccountUseCase(
@@ -49,6 +51,7 @@ public class CloseAccountUseCase {
             PublicFileStore almacen,
             UserFavorites favoritos,
             UserCart carrito,
+            ShippingAddressRepository direcciones,
             Clock reloj) {
         this.usuarios = usuarios;
         this.refrescos = refrescos;
@@ -56,6 +59,7 @@ public class CloseAccountUseCase {
         this.almacen = almacen;
         this.favoritos = favoritos;
         this.carrito = carrito;
+        this.direcciones = direcciones;
         this.reloj = reloj;
     }
 
@@ -84,6 +88,17 @@ public class CloseAccountUseCase {
         // Y el carrito con ellos, por la misma razon y con una de mas: no solo dice que le
         // interesaba, dice que estuvo a punto de comprarlo (HU-015, RN-095).
         carrito.borrarDe(cuenta.id());
+
+        // Y las direcciones de entrega (RN-102). No es una limpieza de cortesia: es lo que
+        // sostiene lo que `datos-personales.md` afirma sobre la ventana de quince minutos
+        // del token de acceso, que es aceptable **porque** cuando se abre ya no queda dato
+        // personal que ese token pueda alcanzar. Una direccion que sobreviviera al cierre
+        // volveria falsa esa frase, que es justo la que el documento pone por escrito ante
+        // una autoridad.
+        //
+        // Ademas, cuando quien recibe no era el titular, lo que quedaria vivo seria el
+        // nombre y el telefono de un tercero que nunca abrio una cuenta (RN-104).
+        direcciones.borrarDe(cuenta.id());
 
         usuarios.cerrarYAnonimizar(cuenta.id(), ahora);
 

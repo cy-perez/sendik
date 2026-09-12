@@ -1,0 +1,105 @@
+/* `grid-column` es obligatorio: <main> es una rejilla y sin asignar carril la pagina cae
+   en el de sangria. Es lo mismo que hacen el catalogo y los favoritos, y por lo mismo. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--ancho-max);
+  padding: var(--esp-24) var(--esp-16);
+}
+
+/* Acotado al ancho de lectura: una libreta de direcciones es texto, no una rejilla de
+   fotos, y una tarjeta de 1140px de ancho con cuatro lineas cortas dentro se lee mal.
+   --medida esta en ch, asi que crece cuando alguien amplia el texto. */
+.direcciones__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-16);
+  max-width: var(--medida);
+  margin: var(--esp-24) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* La misma caja y el mismo borde que el resto de las tarjetas del proyecto. No estrena
+   nada: son los tokens de superficie y borde del sistema. */
+/* `anywhere` y no `break-word` porque solo el primero afecta al tamano min-content, que es
+   lo que gobierna el `min-width: auto` de un elemento de rejilla. Va en la tarjeta entera y
+   no solo en los botones: lo que de verdad puede ser largo y sin espacios no es
+   «predeterminada» sino la linea de direccion, que admite 120 caracteres, y las indicaciones,
+   que admiten 200. */
+.direcciones__tarjeta {
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.direcciones__quien {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-8);
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+/* La etiqueta de predeterminada usa `.chip`, que ya existe en marca.css. La primera version
+   la reinventaba con --color-fondo sobre --color-superficie: 1.05:1 en modo claro, asi que
+   la caja no se veia y la etiqueta parecia texto suelto, mientras que en oscuro quedaba un
+   hueco bien marcado. El mismo componente se leia como dos cosas distintas segun el tema. */
+
+.direcciones__indicaciones {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-4);
+}
+
+.direcciones__obsoleto {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-8);
+}
+
+/* En movil las acciones se envuelven en vez de encogerse: un destino tactil no baja de
+   44px, y tres botones apretados en una fila de 320px lo rompen. */
+.direcciones__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  margin-top: var(--esp-12);
+}
+
+/* Separado del resto de acciones: no se pone al lado de la principal. */
+.direcciones__quitar {
+  margin-inline-start: auto;
+}
+
+.direcciones__agregar {
+  margin-top: var(--esp-24);
+}
+
+.direcciones__aviso {
+  color: var(--color-texto-suave);
+  margin-top: var(--esp-16);
+}
+
+/* Con token propio y no con uno de espaciado usado de alto: marca.css lo dice por escrito
+   -`--esp-*` es la escala de separacion, y usarla como altura hace que el hueco deje de
+   medir lo que sustituye en cuanto el texto crece-. El valor es el de una tarjeta real:
+   nombre, linea, municipio, telefono y la fila de tres botones de 44px. */
+.direcciones__esqueleto {
+  height: var(--alto-esqueleto-direccion);
+  width: 100%;
+}
+
+/* El vacio es .vacio, que ya existe en marca.css y usan la bandeja, la cola y los
+   favoritos. Aqui solo se le anade lo que lo distingue: que es una pantalla entera. */
+.direcciones__vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-16);
+  max-width: var(--medida);
+  margin: var(--esp-24) auto 0;
+}

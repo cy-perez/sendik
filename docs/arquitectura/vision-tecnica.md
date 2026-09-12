@@ -89,7 +89,7 @@ de cada contexto se repiten las cuatro capas.
 | `order` | Pedidos y su ciclo de vida. **Sigue vacío**: el carrito de HU-015 no es suyo (ADR-0036) | 3 |
 | `payment` | Intentos de pago, división, desembolsos | 3 |
 | `shipping` | Cotización, guías y seguimiento, contra un agregador (ADR-0034) | 3 |
-| `shared` | Objetos de valor comunes: dinero, identificadores, fechas | 1 |
+| `shared` | Lo que no es de ningún contexto: objetos de valor comunes —dinero, identificadores, fechas—, el cifrado de datos sensibles y, desde HU-016, la **división político-administrativa del DANE**, que es dato de referencia con su puerto, su adaptador JDBC, dos casos de uso y dos rutas (ADR-0040). Que tenga esas piezas no lo convierte en un contexto de negocio: no hay reglas aquí, solo lectura de algo que usan varios |
 
 **Por qué la búsqueda no es un contexto propio.** Esta tabla la anunciaba como uno desde
 la Fase 1, y se escribió cuando la búsqueda iba a ser un índice externo con su propio
