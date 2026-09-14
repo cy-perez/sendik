@@ -319,9 +319,11 @@ probados. Las cuatro reglas que la historia obligaba a escribir —RN-070 a RN-0
 - **El control en las tarjetas del catálogo y del perfil del vendedor.** Estaba fuera desde
   el alcance y sigue fuera. Ahora que el gesto está probado en la ficha, llevarlo a la
   tarjeta es la historia corta que la historia anticipaba.
-- **La entrada de navegación a `/mis-favoritos`.** No hay enlace desde ninguna parte, igual
+- ~~**La entrada de navegación a `/mis-favoritos`.** No hay enlace desde ninguna parte, igual
   que las rutas de HU-002, HU-006 y HU-007: `FEATURE_CATALOG` está apagada y HU-004 y HU-005
-  prohíben enlazar a algo que no funciona. El enlace entra cuando la bandera se encienda.
+  prohíben enlazar a algo que no funciona. El enlace entra cuando la bandera se encienda.~~
+  **Entró el 14 de septiembre de 2026**, en `/mi-cuenta` y solo con `FEATURE_CATALOG`
+  encendida (ADR-0041).
 - **Avisar de que un favorito bajó de precio o se vendió**, compartir la lista, carpetas y
   el contador público. Los cuatro estaban fuera del alcance y siguen fuera.
 - ~~**La frase de la garantía del fabricante en la ficha** (RN-067) sigue aplazada a la tanda

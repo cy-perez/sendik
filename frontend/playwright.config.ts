@@ -100,6 +100,13 @@ export default defineConfig({
        * llamada falla en el acto en vez de colgarse.
        */
       API_BASE_URL: process.env['API_BASE_URL'] ?? 'http://127.0.0.1:9/api/v1',
+      /**
+       * Solo esta bandera, y ninguna de las otras cuatro (ADR-0041). `ssr.spec.ts`
+       * comprueba que la caja de busqueda llega en el HTML servido, y sin ella el
+       * catalogo no la pinta. Las demas cambiarian la cabecera —enlaces y carrito—
+       * y con ella las doce referencias de maquetacion, que se generaron sin tienda.
+       */
+      FEATURE_SEARCH: 'true',
       // El pie las muestra y ninguna es obligatoria, asi que sin declararlas
       // aqui la prueba no distinguiria "no se pintan" de "no habia que pintar".
       COMPANY_NAME: 'Sendik S.A.S.',

@@ -26,6 +26,17 @@
     }}</a>
 
     <p class="tipo-secundario hero-nota">{{ 'home.hero.note' | transloco }}</p>
+
+    <!-- La entrada a la tienda para quien viene a mirar y no a registrarse. Es un
+         enlace de texto y no otro boton: el criterio 2 admite un solo relleno de
+         accion principal. Solo con FEATURE_CATALOG encendida (ADR-0041). -->
+    @if (banderas.catalog) {
+      <p class="hero-nota">
+        <a class="enlace-catalogo tipo-cuerpo" routerLink="/catalogo">
+          {{ 'home.hero.browse' | transloco }}
+        </a>
+      </p>
+    }
   </div>
 </section>
 

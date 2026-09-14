@@ -261,6 +261,15 @@ export default defineConfig({
         LEGAL_TERMS_VERSION: 'borrador-local',
         LEGAL_PRIVACY_VERSION: 'borrador-local',
         LEGAL_COOKIES_VERSION: 'borrador-local',
+
+        // ADR-0041: las mismas banderas que el backend, para que la cabecera, la portada
+        // y /mi-cuenta enlacen lo que existe. Sin ellas el servidor de renderizado no
+        // pinta ninguno de esos enlaces, que es lo que ve `playwright.config.ts`.
+        FEATURE_SELLER_VERIFICATION: 'true',
+        FEATURE_PUBLISHING: 'true',
+        FEATURE_CATALOG: 'true',
+        FEATURE_CHECKOUT: 'true',
+        FEATURE_SEARCH: 'true',
       },
     },
   ],

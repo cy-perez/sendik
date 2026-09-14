@@ -57,6 +57,13 @@ describe('PublishPage', () => {
       verificationReviewDays: 2,
       listingReviewDays: 5,
     },
+    features: {
+      catalog: true,
+      checkout: true,
+      publishing: true,
+      sellerVerification: true,
+      search: true,
+    },
   };
 
   const ARBOL = [

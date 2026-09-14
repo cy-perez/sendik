@@ -6,6 +6,10 @@
   left: var(--esp-8);
   top: var(--esp-8);
   transform: translateY(-250%);
+  /* Tambien es un destino: 44px, sin excepcion. Con solo el relleno se quedaba en 43. */
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
   padding: var(--esp-8) var(--esp-16);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-md);
@@ -19,11 +23,20 @@
 }
 
 .cabecera {
-  position: sticky;
-  top: 0;
   z-index: 5;
   background: var(--color-superficie);
   border-bottom: 1px solid var(--color-borde);
+}
+
+/* Pegajosa solo desde 640px. En movil la barra son dos filas —el logo, el carrito
+   y el menu arriba; idioma, tema y sesion debajo— y pegarla se comia un quinto de
+   la pantalla de un telefono mientras alguien recorre el catalogo. Medido a 360px:
+   108 de 640. */
+@media (min-width: 640px) {
+  .cabecera {
+    position: sticky;
+    top: 0;
+  }
 }
 
 /* Medidas del kit de Sendik: 56 en movil, 72 en escritorio. Es min-height y no
@@ -32,14 +45,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--esp-16);
+  gap: var(--esp-8) var(--esp-16);
   min-height: 56px;
   flex-wrap: wrap;
+  padding-block: var(--esp-4);
 }
 
 @media (min-width: 640px) {
   .barra {
     min-height: 72px;
+    padding-block: 0;
   }
 }
 
@@ -55,6 +70,16 @@
    aqui le gana a la de marca.css aunque parezca menos especifica, justamente
    porque la encapsulacion le suma atributos, y volverian a pintarse dos logos a
    la vez. */
+/* El enlace del logo tambien es un destino tactil: el isotipo mide 32 y el lockup
+   34, asi que el enlace se estira a 44 sin mover la imagen, que sigue alineada
+   con el borde del carril. */
+.logo-sitio {
+  display: inline-flex;
+  align-items: center;
+  min-width: var(--destino-tactil);
+  min-height: var(--destino-tactil);
+}
+
 .logo-sitio .lockup {
   height: 34px;
   width: auto;
@@ -65,14 +90,33 @@
   width: 32px;
 }
 
-/* Envuelve igual que .barra. Con el hueco proyectado son ya tres controles, y
-   con el texto al 200% la fila no cabe en un movil: sin wrap eso saca una barra
-   de desplazamiento horizontal en una cabecera que ademas es pegajosa. */
+/* En movil ocupan la segunda fila entera, siempre. Antes se envolvian solo cuando
+   no cabian, y eso daba una cabecera de una fila en unos telefonos y de dos en
+   otros, y de tres al entrar con sesion. Con la fila propia el resultado es el
+   mismo en todos: arriba el logo, el carrito y el menu; abajo idioma, tema y
+   sesion. Envuelve igual por dentro, para el texto al 200%. */
 .acciones {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--esp-8);
+  flex-basis: 100%;
+}
+
+/* El carrito se pega a la derecha y el boton del menu queda a su lado: sin el
+   margen automatico, space-between los repartiria por la fila. En escritorio con
+   tienda hace lo mismo con las acciones. */
+.enlace-carrito {
+  margin-inline-start: auto;
+}
+
+/* «Estas en el carrito», con borde y no solo con relleno: --color-primario-suave
+   sobre superficie da 1.2:1 y no se percibe, y el borde de control sobre ese
+   relleno da 2.96:1. El par primario sobre primario-suave ya esta en PARES. */
+.enlace-carrito.activo {
+  background: var(--color-primario-suave);
+  border-color: var(--color-primario);
+  border-width: 2px;
 }
 
 /* Todo destino tactil llega a 44px. Sin excepcion. */
@@ -100,8 +144,12 @@
   cursor: pointer;
 }
 
+/* El borde cambia con el relleno: sobre --color-primario-suave, el borde de
+   control da 2.96:1 y deja de cumplir el minimo de 3:1 (es el mismo motivo que la
+   ficha de filtro del catalogo). */
 .boton-icono:hover {
   background: var(--color-primario-suave);
+  border-color: var(--color-primario);
 }
 
 .boton-icono svg {
@@ -185,6 +233,14 @@
     display: none;
   }
 
+  /* En escritorio vuelven a la fila unica, a la derecha de la navegacion. El
+     `order` las coloca despues del panel aunque en el DOM vayan antes: sin tienda
+     la fila es logo, navegacion, acciones, como siempre. */
+  .acciones {
+    flex-basis: auto;
+    order: 1;
+  }
+
   /* En escritorio no hay panel que desplegar: es la fila de siempre. */
   .panel {
     order: 0;
@@ -202,5 +258,23 @@
     flex-direction: row;
     align-items: center;
     gap: var(--esp-8);
+  }
+
+  /* Con la tienda enlazada: la fila de utilidades arriba -logo, carrito, idioma,
+     tema y sesion- y la navegacion en su propia fila debajo, alineada con el logo.
+     Medido: con seis enlaces y una sesion abierta la fila unica pedia 1241px de los
+     1092 del carril, y envolvia dejando las acciones sueltas bajo el logo. */
+  :host(.cabecera--tienda) .barra {
+    min-height: 0;
+    row-gap: 0;
+    padding-block: var(--esp-8);
+  }
+
+  :host(.cabecera--tienda) .panel {
+    order: 1;
+    flex-basis: 100%;
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: var(--esp-4);
   }
 }

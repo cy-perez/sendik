@@ -27,6 +27,9 @@ import type { Session } from './session';
  */
 export type SessionStatus = 'desconocida' | 'anonima' | 'abierta';
 
+/** El nombre del rol tal como lo emite el backend. */
+const ROL_MODERADOR = 'MODERATOR';
+
 @Injectable({ providedIn: 'root' })
 export class SessionStore {
   private readonly consultas = inject(QueryClient);
@@ -59,6 +62,16 @@ export class SessionStore {
    * "no verificado" a un visitante anonimo seria mentirle a esa comprobacion.
    */
   readonly emailVerified = computed(() => this.sesion()?.user.emailVerified ?? false);
+
+  /**
+   * Si quien esta dentro modera. Falso sin sesion.
+   *
+   * <p>Es de la sesion y no de cada funcionalidad: estaba copiado en la ficha del
+   * catalogo, en la moderacion y en la cuenta, y tres copias del mismo nombre de rol
+   * son tres sitios donde cambiarlo. Decide visibilidad y forma de respuesta; quien
+   * protege las rutas sigue siendo `exigirRol` (ADR-0021).
+   */
+  readonly esModerador = computed(() => this.sesion()?.user.roles.includes(ROL_MODERADOR) ?? false);
 
   token(): string | null {
     return this.sesion()?.accessToken ?? null;

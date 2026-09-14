@@ -35,9 +35,7 @@ export class CatalogStore {
    * <p>Entra en la clave de la ficha y en nada más: el listado y el perfil responden
    * igual para todo el mundo (RN-068).
    */
-  private readonly comoModerador = computed(
-    () => this.sesion.user()?.roles.includes('MODERATOR') === true,
-  );
+  private readonly comoModerador = this.sesion.esModerador;
 
   /**
    * Qué categoría se está viendo.

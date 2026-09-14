@@ -21,6 +21,16 @@
   border-top: 1px solid var(--color-borde);
 }
 
+/* El cuerpo del paso cede antes que desbordar. Un elemento flexible no encoge por
+   debajo de su contenido minimo, y el formulario del documento -un desplegable, dos
+   campos y la camara- pedia mas que los 262px que quedan a 360px junto a la marca de
+   «Falta»: la pagina se salia 13px por la derecha. Con `min-width: 0` los campos se
+   ajustan al ancho que hay, que es lo que hacen en el resto de pantallas. */
+.paso > div {
+  flex: 1;
+  min-width: 0;
+}
+
 /* El estado del paso no se distingue solo por el color: lleva su propia palabra,
    «Listo» o «Falta». Un color no puede ser el unico portador de informacion. */
 .estado {

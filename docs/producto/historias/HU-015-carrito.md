@@ -480,9 +480,12 @@ aparecieron al planear quedaron en **ADR-0036** y **ADR-0037**.
   la dirección, la cotización del envío, el pago y la división esperan a Wompi y a
   Skydropx.
 - **El total.** No es una carencia: es RN-096 hasta que exista el costo de envío.
-- **El enlace de navegación a `/carrito`.** No hay enlace desde ninguna parte, igual que
+- ~~**El enlace de navegación a `/carrito`.** No hay enlace desde ninguna parte, igual que
   pasó con `/mis-favoritos`: `FEATURE_CHECKOUT` está apagada y HU-004 y HU-005 prohíben
-  enlazar a algo que no funciona. El enlace entra cuando la bandera se encienda.
+  enlazar a algo que no funciona. El enlace entra cuando la bandera se encienda.~~
+  **Entró el 14 de septiembre de 2026**: un icono en la cabecera, fuera del menú
+  compacto, y un atajo en `/mi-cuenta`, los dos solo con `FEATURE_CHECKOUT` encendida
+  (ADR-0041).
 - **El control en las tarjetas del catálogo**, vaciar el carrito de una vez, y avisar por
   correo de que algo se vendió o cambió de precio. Los cuatro estaban fuera del alcance.
 

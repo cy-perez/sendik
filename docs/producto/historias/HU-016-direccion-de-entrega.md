@@ -284,9 +284,10 @@ No entra:
   nuevos. En `es.json` y en `en.json`.
 - **`/mis-direcciones` va en `app.routes.server.ts`.** Es lo que se olvidó en `/mis-favoritos` y
   lo cazó `rutas.spec.ts`.
-- **No hay enlace de navegación todavía**, igual que `/carrito` y `/mis-favoritos`:
+- ~~**No hay enlace de navegación todavía**, igual que `/carrito` y `/mis-favoritos`:
   `FEATURE_CHECKOUT` está apagada y HU-004 y HU-005 prohíben enlazar a algo que no funciona. El
-  enlace entra cuando la bandera se encienda, y su sitio natural es `/mi-cuenta`.
+  enlace entra cuando la bandera se encienda, y su sitio natural es `/mi-cuenta`.~~ **Entró el
+  14 de septiembre de 2026** en `/mi-cuenta`, con `FEATURE_CHECKOUT` encendida (ADR-0041).
 
 ## Pruebas requeridas
 
@@ -527,10 +528,11 @@ obligaba a escribir, RN-098 a RN-104, están en `reglas-negocio.md`; el glosario
 - **Crear el pedido y el paso a pagar.** Es lo que queda de la línea del alcance.
 - **La dirección de origen del vendedor.** RN-039 la necesita para cotizar y RN-078 para
   emitir la guía; hoy el perfil solo tiene `city`, texto libre y opcional.
-- **El enlace de navegación a `/mis-direcciones`.** No hay enlace desde ninguna parte,
+- ~~**El enlace de navegación a `/mis-direcciones`.** No hay enlace desde ninguna parte,
   igual que pasó con `/carrito` y `/mis-favoritos`: `FEATURE_CHECKOUT` está apagada y
   HU-004 y HU-005 prohíben enlazar a algo que no funciona. Su sitio natural es
-  `/mi-cuenta`, y entra cuando la bandera se encienda.
+  `/mi-cuenta`, y entra cuando la bandera se encienda.~~ **Entró el 14 de septiembre de
+  2026** en `/mi-cuenta` (ADR-0041).
 - **Elegir la dirección al comprar.** No hay dónde: no existe el proceso de compra.
 
 ### Lo que encontraron los cuatro revisores, y que estaba mal de verdad

@@ -2,7 +2,32 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { APP_CONFIG, type AppConfig } from '../../../core/config/app-config';
 import { HomePage } from './home-page';
+
+/** La misma configuracion de pruebas, con el catalogo apagado. */
+const SIN_CATALOGO: AppConfig = {
+  apiBaseUrl: 'https://api.pruebas.sendik.co/api/v1',
+  defaultLocale: 'es',
+  availableLocales: ['es', 'en'],
+  enableDevtools: false,
+  sentryDsn: null,
+  legalVersions: { terms: 'borrador-local', privacy: 'borrador-local', cookies: 'borrador-local' },
+  company: { name: null, taxId: null, address: null, supportEmail: null },
+  business: {
+    commissionRate: 0.05,
+    claimWindowDays: 3,
+    verificationReviewDays: 2,
+    listingReviewDays: 2,
+  },
+  features: {
+    catalog: false,
+    checkout: false,
+    publishing: false,
+    sellerVerification: false,
+    search: false,
+  },
+};
 
 describe('HomePage', () => {
   const render = async () => {
@@ -175,6 +200,33 @@ describe('HomePage', () => {
    * ausencia del enlace. El mecanismo entra con HU-005 y esta prueba se
    * convertira entonces en la que compruebe que si aparece.
    */
+  /**
+   * La entrada a la tienda. Con FEATURE_CATALOG encendida la portada enlaza el
+   * catalogo como texto, sin sumar otro relleno de accion principal; con la bandera
+   * apagada no lo enlaza, porque llevaria a un 404 (criterio 2 y ADR-0041).
+   */
+  it('enlaza el catalogo como texto cuando su bandera esta encendida', async () => {
+    const fixture = await render();
+    const destino = enlace(fixture.nativeElement, 'Ver lo que se está vendiendo');
+
+    expect(destino?.getAttribute('href')).toBe('/catalogo');
+    expect(destino?.classList).not.toContain('btn-primario');
+    expect(fixture.nativeElement.querySelectorAll('.btn-primario')).toHaveLength(1);
+  });
+
+  it('no enlaza el catalogo con la bandera apagada', async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: APP_CONFIG, useValue: SIN_CATALOGO }],
+    });
+    const fixture = await render();
+    const destinos = Array.from(
+      fixture.nativeElement.querySelectorAll('a[href]') as NodeListOf<HTMLAnchorElement>,
+    ).map((candidato) => candidato.getAttribute('href'));
+
+    expect(destinos).not.toContain('/catalogo');
+  });
+
   it('no enlaza la pagina de como funciona mientras no exista', async () => {
     const fixture = await render();
     const destinos = Array.from(

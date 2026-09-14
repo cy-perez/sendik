@@ -9,7 +9,6 @@
   display: block;
   grid-column: content;
   max-width: var(--ancho-max);
-  padding: var(--esp-24) var(--esp-16);
 }
 
 .mias {
@@ -100,6 +99,14 @@
 .mias__confirmacion {
   margin: 0;
   color: var(--color-error);
+}
+
+/* El titulo es el enlace a la publicacion y un enlace de lista es un destino tactil:
+   44px, sin excepcion. Se quedaba en 20. */
+.mias__datos h2 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
 }
 
 /* marca.css define el aspecto del boton, no su tamano: el borde de un secundario lo

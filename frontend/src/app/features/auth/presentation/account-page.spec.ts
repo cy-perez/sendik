@@ -118,6 +118,39 @@ describe('AccountPage', () => {
     TestBed.inject(SessionStore).set(SESION);
   });
 
+  /**
+   * Los atajos a lo de la persona (ADR-0041). La configuracion de pruebas trae las
+   * cuatro banderas encendidas; las bandejas solo aparecen a quien modera.
+   */
+  it('ofrece atajos a lo que las banderas encienden, y las bandejas solo a quien modera', async () => {
+    const fixture = await render();
+    responderLaCarga(LISTA);
+    await asentar(fixture);
+
+    const destinos = () =>
+      Array.from(
+        fixture.nativeElement.querySelectorAll('.atajo') as NodeListOf<HTMLAnchorElement>,
+      ).map((a) => a.getAttribute('href'));
+
+    expect(destinos()).toEqual([
+      '/mis-favoritos',
+      '/carrito',
+      '/mis-direcciones',
+      '/mis-publicaciones',
+      '/publicar',
+      '/verificacion-de-vendedor',
+    ]);
+
+    TestBed.inject(SessionStore).set({
+      ...SESION,
+      user: { ...SESION.user, roles: ['MODERATOR'] },
+    });
+    await asentar(fixture);
+
+    expect(destinos()).toContain('/moderacion/verificaciones');
+    expect(destinos()).toContain('/moderacion/publicaciones');
+  });
+
   // Criterio 17: la lista dice cual es la sesion desde la que se mira.
   it('lista las sesiones y senala la actual criterio_17', async () => {
     const fixture = await render();

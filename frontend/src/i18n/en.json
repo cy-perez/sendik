@@ -161,15 +161,19 @@
         "about": "About Sendik",
         "faq": "FAQ",
         "contact": "Contact"
-      }
-    }
+      },
+      "catalog": "Catalogue",
+      "sell": "Sell"
+    },
+    "cart": "Cart"
   },
   "home": {
     "hero": {
       "title": "Buy and sell quickly and safely",
       "body": "The payment is held until you confirm the item arrived as you saw it.",
       "cta": "Create account",
-      "note": "Listing is free. We only charge when you sell."
+      "note": "Listing is free. We only charge when you sell.",
+      "browse": "See what's for sale"
     },
     "steps": {
       "title": "How it works",
@@ -504,6 +508,18 @@
         "errors": {
           "confirmation": "Type your email exactly as you registered it."
         }
+      },
+      "shortcuts": {
+        "title": "Your activity",
+        "body": "Everything of yours on Sendik, in one place.",
+        "favorites": "Your favourites",
+        "cart": "Your cart",
+        "addresses": "My addresses",
+        "listings": "My listings",
+        "publish": "Sell something",
+        "verification": "Seller verification",
+        "moderationInbox": "Verifications to review",
+        "moderationQueue": "Listings to review"
       }
     },
     "confirmEmail": {

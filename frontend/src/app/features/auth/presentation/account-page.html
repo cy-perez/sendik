@@ -1,5 +1,25 @@
 <h1 class="tipo-h1">{{ 'auth.account.title' | transloco }}</h1>
 
+<!-- Lo que es de la persona, antes que lo que administra: es a lo que vuelve cada
+     vez. Solo se pintan los atajos cuya bandera esta encendida, y las bandejas de
+     moderacion solo a quien modera (ADR-0041). Sin ninguno, la seccion no existe. -->
+@if (atajos().length > 0) {
+  <section class="bloque" aria-labelledby="atajos-titulo">
+    <h2 class="tipo-h2" id="atajos-titulo">{{ 'auth.account.shortcuts.title' | transloco }}</h2>
+    <p class="tipo-cuerpo">{{ 'auth.account.shortcuts.body' | transloco }}</p>
+
+    <ul class="atajos" role="list">
+      @for (atajo of atajos(); track atajo.ruta) {
+        <li>
+          <a class="atajo tipo-secundario" [routerLink]="atajo.ruta">
+            {{ 'auth.account.shortcuts.' + atajo.clave | transloco }}
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
 <!-- Criterio 21. Va primero: es lo que la persona viene a mirar; las sesiones y
      el cierre son lo que viene a revisar de vez en cuando. -->
 <section class="bloque">

@@ -275,6 +275,47 @@ describe('avisosDeConfiguracion', () => {
   });
 });
 
+describe('readAppConfig, banderas de funcionalidad', () => {
+  it('las deja apagadas cuando no se declaran', () => {
+    expect(readAppConfig(MINIMUM).features).toEqual({
+      catalog: false,
+      checkout: false,
+      publishing: false,
+      sellerVerification: false,
+      search: false,
+    });
+  });
+
+  it('enciende cada una con su variable y solo con el valor true', () => {
+    const config = readAppConfig({
+      ...MINIMUM,
+      FEATURE_CATALOG: 'true',
+      FEATURE_CHECKOUT: ' TRUE ',
+      FEATURE_PUBLISHING: 'yes',
+      FEATURE_SELLER_VERIFICATION: '',
+      FEATURE_SEARCH: 'true',
+    });
+
+    expect(config.features).toEqual({
+      catalog: true,
+      checkout: true,
+      publishing: false,
+      sellerVerification: false,
+      search: true,
+    });
+  });
+
+  it('la configuracion de relleno las trae apagadas', () => {
+    expect(readAppConfigForBootstrap({}).features).toEqual({
+      catalog: false,
+      checkout: false,
+      publishing: false,
+      sellerVerification: false,
+      search: false,
+    });
+  });
+});
+
 describe('readAppConfigForBootstrap', () => {
   // Angular arranca la aplicacion al construir para extraer las rutas, y ahi no
   // hay entorno. Si esto lanzara, no se podria compilar en integracion continua.

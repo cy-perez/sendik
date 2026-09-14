@@ -8,8 +8,6 @@ import { ModerationApi } from '../infrastructure/moderation.api';
 import { queryKeys } from './query-keys';
 
 /** El rol que habilita las dos acciones. El mismo que exigen las rutas de moderación. */
-const MODERADOR = 'MODERATOR';
-
 /**
  * Deshacer lo que un moderador ya decidió, desde las pantallas públicas. HU-010.
  *
@@ -29,7 +27,7 @@ export class ModerationStore {
   private readonly sesion = inject(SessionStore);
   private readonly consultas = inject(QueryClient);
 
-  readonly puedeModerar = computed(() => this.sesion.user()?.roles.includes(MODERADOR) === true);
+  readonly puedeModerar = this.sesion.esModerador;
 
   /** De qué vendedor se quiere saber si tiene sello. Lo fija el perfil al abrirse. */
   private readonly vendedor = signal<string | null>(null);

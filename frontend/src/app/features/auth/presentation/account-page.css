@@ -7,6 +7,37 @@
   margin-top: var(--esp-8);
 }
 
+/* Los atajos, como fichas que envuelven: en un telefono caen a dos o tres filas
+   sin encogerse por debajo de los 44px. Mismo aspecto que .accion, que es el
+   control de esta pantalla. */
+.atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  list-style: none;
+  padding: 0;
+  margin: var(--esp-16) 0 0;
+}
+
+.atajo {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+  padding: 0 var(--esp-16);
+  border: 1px solid var(--color-borde-control);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+/* El borde cambia con el relleno: el de control sobre --color-primario-suave da
+   2.96:1, por debajo del 3:1 de un control. */
+.atajo:hover {
+  background: var(--color-primario-suave);
+  border-color: var(--color-primario);
+}
+
 /* El bloque de cierre se distingue por el borde y por su titulo, no solo por el
    color: un color no puede ser el unico portador de informacion. */
 .peligro {
