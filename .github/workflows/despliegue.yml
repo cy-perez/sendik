@@ -321,7 +321,18 @@ jobs:
             --set-env-vars "LISTING_REVIEW_DAYS=${{ vars.LISTING_REVIEW_DAYS || 2 }}" \
             --set-env-vars "LEGAL_TERMS_VERSION=${{ vars.LEGAL_TERMS_VERSION }}" \
             --set-env-vars "LEGAL_PRIVACY_VERSION=${{ vars.LEGAL_PRIVACY_VERSION }}" \
-            --set-env-vars "LEGAL_COOKIES_VERSION=${{ vars.LEGAL_COOKIES_VERSION }}"
+            --set-env-vars "LEGAL_COOKIES_VERSION=${{ vars.LEGAL_COOKIES_VERSION }}" \
+            --set-env-vars "FEATURE_SELLER_VERIFICATION=${{ vars.FEATURE_SELLER_VERIFICATION || 'false' }}" \
+            --set-env-vars "FEATURE_PUBLISHING=${{ vars.FEATURE_PUBLISHING || 'false' }}" \
+            --set-env-vars "FEATURE_CATALOG=${{ vars.FEATURE_CATALOG || 'false' }}" \
+            --set-env-vars "FEATURE_SEARCH=${{ vars.FEATURE_SEARCH || 'false' }}"
+
+      # Las cuatro banderas de arriba son las mismas que recibe el backend, desde la
+      # misma variable del entorno de GitHub: el frontend no las usa para esconder
+      # rutas sino para decidir que enlaza —catalogo, vender, carrito, los atajos de
+      # /mi-cuenta— y que controles pinta —la caja de busqueda y los filtros—, y con
+      # ellas apagadas no pinta nada de eso (ADR-0041). `FEATURE_CHECKOUT` entra en
+      # los dos servicios a la vez cuando exista la compra.
 
       # Que el despliegue termine sin error no significa que el sitio responda.
       # Aquí se pide la portada y no una sonda: es la ruta que de verdad renderiza,

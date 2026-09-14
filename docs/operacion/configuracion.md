@@ -469,8 +469,26 @@ para `dev` y para `prod`.
 | `COMMISSION_RATE` | `0.05` | no, RN-026 por omisión |
 | `CLAIM_WINDOW_DAYS` | `3` | no, RN-051 por omisión |
 | `LISTING_REVIEW_DAYS` | `2` | no, 2 por omisión |
+| `FEATURE_CATALOG` | `true` en `dev` | no, apagada por omisión |
+| `FEATURE_CHECKOUT` | no se pasa todavía: apagada en `dev` y en `prod` | no, apagada por omisión |
+| `FEATURE_PUBLISHING` | `true` en `dev` | no, apagada por omisión |
+| `FEATURE_SELLER_VERIFICATION` | `true` en `dev` | no, apagada por omisión |
+| `FEATURE_SEARCH` | `true` en `dev` | no, apagada por omisión |
 
-Las dos últimas son las cifras que el sitio informativo **anuncia**: la comisión
+**Las cinco banderas son las mismas que lee el backend, con el mismo nombre**, y
+desde el 14 de septiembre de 2026 el frontend también las recibe (ADR-0041). No
+esconden rutas: deciden **qué se enlaza** y, en el caso de `FEATURE_SEARCH`, **qué
+controles se pintan**: apagada, el catálogo no muestra la caja de búsqueda ni los
+filtros, que es lo que cierra el estado roto descrito más abajo. Con `FEATURE_CATALOG` la cabecera y la
+portada enlazan el catálogo y `/mi-cuenta` los favoritos; con `FEATURE_CHECKOUT`, el
+carrito en la cabecera y el carrito y las direcciones en `/mi-cuenta`; con
+`FEATURE_PUBLISHING`, «Vender» en la cabecera y las publicaciones en `/mi-cuenta`; con
+`FEATURE_SELLER_VERIFICATION`, la verificación. Solo `true` enciende; ausente, en
+blanco o con otra cosa, la bandera queda apagada y el sitio se ve como se veía hasta
+ese día: las rutas existen y nada las enlaza. Una bandera mal escrita no tumba el
+arranque, a diferencia del backend, porque lo único que decide es un enlace.
+
+Las cifras que siguen son las que el sitio informativo **anuncia**: la comisión
 en el recorrido del vendedor y la ventana de reclamo en el del comprador
 (HU-005). Viajan al navegador porque las páginas las dicen en voz alta, y no son
 secretas: cualquiera que entre las lee.
@@ -561,7 +579,10 @@ viajan desde `despliegue.yml` como variables del entorno de GitHub, así que `de
 —`FEATURE_SELLER_VERIFICATION`, `FEATURE_PUBLISHING` y `FEATURE_CATALOG`— y
 `FEATURE_SEARCH`, que se sumó el 10 de septiembre de 2026 al integrar HU-014.
 `FEATURE_CHECKOUT` y `FEATURE_SPIN_VIEWER` ni siquiera se pasan: no hay nada que
-encender todavía.
+encender todavía. **Desde el 14 de septiembre de 2026 las tres de la Fase 2 y `FEATURE_SEARCH` se
+pasan también al servicio del frontend** (ADR-0041), desde la misma `vars.FEATURE_*`,
+para que la cabecera enlace lo que existe y el catálogo pinte solo lo que funciona; `FEATURE_CHECKOUT` entrará en los dos servicios
+a la vez el día que haya proceso de compra.
 
 **`FEATURE_SEARCH` está encendida en `dev` y apagada en `prod`**, que es donde
 estaban las tres anteriores. En `prod` lo está por omisión —la variable no existe
@@ -571,16 +592,13 @@ algo que nadie ha decidido.
 **No va emparejada, pero sí ordenada, y la dirección que importa es la contraria a la
 que parece.** Encender la búsqueda con el catálogo apagado no rompe nada: la ruta que
 las dos comparten responde 404 de todos modos, así que la búsqueda sola no se nota.
-Lo que sí deja pantalla rota es **el catálogo encendido con la búsqueda apagada**: el
-frontend no conoce las banderas —no hay mecanismo para ello y nunca lo ha habido—, así
-que pinta la caja de búsqueda y el panel de filtros igual, y en cuanto alguien los usa
-el backend responde 404, que la pantalla enseña como error.
-
-Por eso el orden al encenderlas en un entorno nuevo es: **la búsqueda se enciende con
-el catálogo o después, nunca el catálogo solo**. Hoy no afecta a nadie —en `dev` las
-cuatro están encendidas y `prod` no se ha desplegado— pero es justo el estado en el que
-quedaría `prod` el día que alguien encienda allí las tres de la Fase 2 siguiendo la
-tabla de `docs/operacion/despliegue.md`.
+Lo que dejaba pantalla rota era **el catálogo encendido con la búsqueda apagada**:
+el frontend no conocía `FEATURE_SEARCH`, así que pintaba la caja de búsqueda y el
+panel de filtros igual, y en cuanto alguien los usaba el backend respondía 404, que
+la pantalla enseñaba como error. **Desde el 14 de septiembre de 2026 ya no** (ADR-0041):
+el frontend recibe la misma bandera y, apagada, no pinta ni la caja ni los filtros.
+Sigue siendo razonable encender la búsqueda con el catálogo o después, pero el
+catálogo solo ya no es un estado roto, solo un catálogo sin buscador.
 
 Van con respaldo explícito (`${{ vars.X || 'false' }}`) y no a secas. Una variable
 que no está definida se expande a cadena vacía, y ahí el `${FEATURE_CATALOG:false}`

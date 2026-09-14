@@ -13,6 +13,7 @@ import { Meta } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
+import { APP_CONFIG } from '../../../core/config/app-config';
 import type { Category } from '../../../shared/domain/listing';
 import { CatalogStore } from '../application/catalog.store';
 import { categoriaPorSlugs, nombreDeCategoria } from '../domain/public-listing';
@@ -61,6 +62,14 @@ import { SearchBox } from './search-box';
 })
 export class CatalogPage {
   private readonly store = inject(CatalogStore);
+
+  /**
+   * Con FEATURE_SEARCH apagada no se pinta la caja de busqueda, los filtros ni las
+   * fichas: el backend responde 404 a cualquier parametro de busqueda (HU-014,
+   * criterio 26) y hasta ADR-0041 esta pantalla los pintaba igual y ensenaba el
+   * error en cuanto alguien los usaba.
+   */
+  protected readonly conBusqueda = inject(APP_CONFIG).features.search;
   private readonly idioma = inject(TranslocoService);
   private readonly ruta = inject(ActivatedRoute);
   private readonly router = inject(Router);

@@ -79,6 +79,14 @@
   margin: var(--esp-16) 0 0;
 }
 
+/* Un enlace suelto tambien es un destino tactil: 44px. El color lo pone
+   `.franja-tinta a` desde marca.css, que es quien sabe que aqui el fondo es tinta. */
+.enlace-catalogo {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
+}
+
 /* ---------- Bloques de contenido ---------- */
 
 .bloque {

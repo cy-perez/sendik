@@ -137,6 +137,12 @@ decida, y hasta entonces marcado como fuera de alcance.
     todos apuntan a rutas que existen. Ninguno lleva a catálogo, publicación ni
     búsqueda.
 
+    **Anotado el 14 de septiembre de 2026.** Se lee desde entonces como «mientras su
+    bandera esté apagada». La cabecera enlaza el catálogo, publicar y el carrito
+    cuando `FEATURE_CATALOG`, `FEATURE_PUBLISHING` y `FEATURE_CHECKOUT` están
+    encendidas, y no los enlaza cuando no, que es lo que este criterio protegía: un
+    enlace a un 404 servido desde todas las páginas (ADR-0041).
+
 ## Casos borde
 
 - **Dirección con fragmento inexistente** en preguntas frecuentes: la página

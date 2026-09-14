@@ -58,6 +58,13 @@ const CONFIG_BASE: AppConfig = {
     verificationReviewDays: 2,
     listingReviewDays: 2,
   },
+  features: {
+    catalog: true,
+    checkout: true,
+    publishing: true,
+    sellerVerification: true,
+    search: true,
+  },
 };
 
 describe('paginas informativas', () => {

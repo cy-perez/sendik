@@ -38,11 +38,13 @@ const enfocado = (page: Page): Promise<string> =>
 test.describe('foco atrapado en el menu compacto', () => {
   /**
    * La regresion que motiva ampliar la region atrapada a la barra entera. El
-   * selector de idioma esta VISIBLE en movil y vive fuera del panel.
+   * selector de idioma esta VISIBLE en movil y vive fuera del panel. Desde
+   * ADR-0041 el panel va al final del DOM, que es donde esta en pantalla, asi que
+   * el idioma se alcanza desde el boton del menu y no desde el ultimo enlace.
    */
   test('el idioma se alcanza con el tabulador sin cerrar el menu', async ({ page }) => {
     await abrirMenu(page);
-    await page.locator('#menu-principal a[href]').last().focus();
+    await page.getByRole('button', { name: /cerrar el men/i }).focus();
 
     await page.keyboard.press('Tab');
 
@@ -51,12 +53,22 @@ test.describe('foco atrapado en el menu compacto', () => {
 
   test('el conmutador de tema tambien entra en el ciclo', async ({ page }) => {
     await abrirMenu(page);
-    await page.locator('#menu-principal a[href]').last().focus();
+    await page.getByRole('button', { name: /cerrar el men/i }).focus();
 
     await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
 
     expect(await enfocado(page)).toMatch(/modo (oscuro|claro)/i);
+  });
+
+  /** Y el ciclo se cierra en el ultimo enlace del panel: de ahi se vuelve al logo. */
+  test('desde el ultimo enlace del panel se vuelve al principio de la barra', async ({ page }) => {
+    await abrirMenu(page);
+    await page.locator('#menu-principal a[href]').last().focus();
+
+    await page.keyboard.press('Tab');
+
+    expect(await enfocado(page)).toBe('Sendik, ir al inicio');
   });
 
   /**

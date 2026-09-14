@@ -14,6 +14,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
+import { APP_CONFIG } from '../../../core/config/app-config';
 import { LanguageService } from '../../../core/i18n/language.service';
 import { PAGINAS_DE_CONTENIDO, RUTAS_CONTENIDO } from '../../../core/routes/content-routes';
 import { ThemeService } from '../../../core/theme/theme.service';
@@ -36,7 +37,10 @@ const COMPACTO = `(max-width: ${ANCHO_COMPACTO - 0.02}px)`;
   // que abre el menu vive fuera del panel. Puesto en el `header` de dentro, el
   // linter pide hacerlo enfocable, y meter un contenedor en el orden de
   // tabulacion es una parada de mas para quien navega con teclado.
-  host: { '(keydown)': 'alPulsarTecla($event)' },
+  host: {
+    '(keydown)': 'alPulsarTecla($event)',
+    '[class.cabecera--tienda]': 'conTienda',
+  },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SiteHeader {
@@ -59,6 +63,23 @@ export class SiteHeader {
    * enlace a catalogo o busqueda: no estan en esa lista.
    */
   protected readonly paginas = PAGINAS_DE_CONTENIDO;
+
+  /**
+   * Las banderas deciden que se enlaza, no que existe. Las rutas del catalogo, de
+   * publicar y del carrito estan siempre; lo que HU-004 y HU-005 prohiben es un
+   * enlace que lleve a un 404, y eso es lo que pasa con la bandera apagada (ADR-0041).
+   */
+  protected readonly banderas = inject(APP_CONFIG).features;
+
+  /**
+   * Con la tienda enlazada la barra ya no cabe en una fila de escritorio: seis
+   * enlaces, el carrito, el idioma, el tema y la sesion pasan de los 1092px del
+   * carril en cuanto alguien entra. En vez de dejar que envuelva donde caiga, la
+   * navegacion pasa a su propia fila debajo de las utilidades, que es la forma
+   * clasica de una tienda. Sin tienda -las banderas apagadas- la cabecera es la
+   * de siempre, en una fila.
+   */
+  protected readonly conTienda = this.banderas.catalog || this.banderas.publishing;
 
   protected readonly abierto = signal(false);
 

@@ -161,15 +161,19 @@
         "about": "Sobre Sendik",
         "faq": "Preguntas frecuentes",
         "contact": "Contacto"
-      }
-    }
+      },
+      "catalog": "Catálogo",
+      "sell": "Vender"
+    },
+    "cart": "Carrito"
   },
   "home": {
     "hero": {
       "title": "Compra y vende de forma ágil y segura",
       "body": "El pago queda retenido hasta que confirmas que la prenda llegó como la viste.",
       "cta": "Crear cuenta",
-      "note": "Publicar es gratis. Solo cobramos cuando vendes."
+      "note": "Publicar es gratis. Solo cobramos cuando vendes.",
+      "browse": "Ver lo que se está vendiendo"
     },
     "steps": {
       "title": "Cómo funciona",
@@ -504,6 +508,18 @@
         "errors": {
           "confirmation": "Escribe tu correo exactamente como lo tienes registrado."
         }
+      },
+      "shortcuts": {
+        "title": "Tu actividad",
+        "body": "Lo tuyo en Sendik, en un solo sitio.",
+        "favorites": "Tus favoritos",
+        "cart": "Tu carrito",
+        "addresses": "Mis direcciones",
+        "listings": "Mis publicaciones",
+        "publish": "Publicar",
+        "verification": "Verificación de vendedor",
+        "moderationInbox": "Verificaciones por revisar",
+        "moderationQueue": "Publicaciones por revisar"
       }
     },
     "confirmEmail": {

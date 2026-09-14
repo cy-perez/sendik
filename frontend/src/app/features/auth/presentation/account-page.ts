@@ -9,9 +9,10 @@ import {
 import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
+import { APP_CONFIG } from '../../../core/config/app-config';
 import { SessionStore } from '../../../core/session/session.store';
 import { AuthStore } from '../application/auth.store';
 import { laConfirmacionCoincide } from '../domain/account';
@@ -34,10 +35,16 @@ import { TextField } from '../../../shared/ui/form/text-field';
  * <p>El cierre va al final y detras de una confirmacion escrita, no porque
  * estorbe sino porque no se deshace.
  */
+interface Atajo {
+  readonly clave: string;
+  readonly ruta: string;
+}
+
 @Component({
   selector: 'sendik-account-page',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     TranslocoPipe,
     DatePipe,
     TextField,
@@ -56,6 +63,39 @@ export class AccountPage {
   private readonly enElNavegador = isPlatformBrowser(inject(PLATFORM_ID));
 
   protected readonly sesion = inject(SessionStore);
+
+  private readonly banderas = inject(APP_CONFIG).features;
+
+  /**
+   * Los atajos a lo que es de la persona: favoritos, carrito, direcciones, lo que
+   * vende y, si modera, sus dos bandejas. Es el sitio natural que HU-016 les dio
+   * -«su sitio natural es /mi-cuenta»- y solo aparece lo que su bandera enciende,
+   * porque un enlace a una ruta apagada lleva a un 404 (ADR-0041).
+   */
+  protected readonly atajos = computed<readonly Atajo[]>(() => {
+    const lista: Atajo[] = [];
+    if (this.banderas.catalog) lista.push({ clave: 'favorites', ruta: '/mis-favoritos' });
+    if (this.banderas.checkout) {
+      lista.push({ clave: 'cart', ruta: '/carrito' });
+      lista.push({ clave: 'addresses', ruta: '/mis-direcciones' });
+    }
+    if (this.banderas.publishing) {
+      lista.push({ clave: 'listings', ruta: '/mis-publicaciones' });
+      lista.push({ clave: 'publish', ruta: '/publicar' });
+    }
+    if (this.banderas.sellerVerification) {
+      lista.push({ clave: 'verification', ruta: '/verificacion-de-vendedor' });
+    }
+    if (this.sesion.esModerador()) {
+      if (this.banderas.sellerVerification) {
+        lista.push({ clave: 'moderationInbox', ruta: '/moderacion/verificaciones' });
+      }
+      if (this.banderas.publishing) {
+        lista.push({ clave: 'moderationQueue', ruta: '/moderacion/publicaciones' });
+      }
+    }
+    return lista;
+  });
 
   protected readonly sesiones = this.store.sessions;
   protected readonly cierreDeSesion = this.store.sessionRevocation;

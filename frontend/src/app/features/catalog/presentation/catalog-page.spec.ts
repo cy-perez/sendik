@@ -11,7 +11,32 @@ import {
   errorInterceptor,
   languageInterceptor,
 } from '../../../core/http/interceptors';
+import { APP_CONFIG, type AppConfig } from '../../../core/config/app-config';
 import { CatalogPage } from './catalog-page';
+
+/** La configuracion de pruebas con la busqueda apagada. */
+const SIN_BUSQUEDA: AppConfig = {
+  apiBaseUrl: 'https://api.pruebas.sendik.co/api/v1',
+  defaultLocale: 'es',
+  availableLocales: ['es', 'en'],
+  enableDevtools: false,
+  sentryDsn: null,
+  legalVersions: { terms: 'borrador-local', privacy: 'borrador-local', cookies: 'borrador-local' },
+  company: { name: null, taxId: null, address: null, supportEmail: null },
+  business: {
+    commissionRate: 0.05,
+    claimWindowDays: 3,
+    verificationReviewDays: 2,
+    listingReviewDays: 2,
+  },
+  features: {
+    catalog: true,
+    checkout: true,
+    publishing: true,
+    sellerVerification: true,
+    search: false,
+  },
+};
 
 /**
  * El catálogo público. HU-009, criterios 1 a 10.
@@ -238,6 +263,38 @@ describe('CatalogPage', () => {
   // ------------------------------------------------------- la búsqueda. HU-014
 
   /** Criterio 15: lo que dice la dirección es lo que se le pide al servidor. */
+  /**
+   * Con FEATURE_SEARCH apagada la caja, los filtros y las fichas no existen: el backend
+   * respondería 404 a cualquiera de ellos (HU-014, criterio 26; ADR-0041). El listado y
+   * las categorías siguen ahí.
+   */
+  it('sin la bandera de búsqueda no pinta la caja ni los filtros, y el listado sigue', async () => {
+    TestBed.resetTestingModule();
+    consulta.next(convertToParamMap({ q: 'camisa', color: 'BEIGE' }));
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: { paramMap: parametros.asObservable(), queryParamMap: consulta.asObservable() },
+        },
+        provideHttpClient(
+          withInterceptors([apiUrlInterceptor, languageInterceptor, errorInterceptor]),
+        ),
+        provideHttpClientTesting(),
+        { provide: APP_CONFIG, useValue: SIN_BUSQUEDA },
+      ],
+    });
+    const { fixture } = await montar();
+    const raiz = fixture.nativeElement as HTMLElement;
+
+    expect(raiz.querySelector('sendik-search-box')).toBeNull();
+    expect(raiz.querySelector('sendik-catalog-filters')).toBeNull();
+    expect(raiz.querySelector('.catalogo__fichas')).toBeNull();
+    expect(raiz.querySelector('.catalogo__cuerpo--sin-filtros')).not.toBeNull();
+    expect(raiz.querySelector('#resultados')).not.toBeNull();
+  });
+
   it('lleva el texto y los filtros de la dirección a la petición', async () => {
     consulta.next(
       convertToParamMap({

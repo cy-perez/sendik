@@ -171,6 +171,12 @@
     grid-template-columns: minmax(var(--ancho-panel-filtros), max-content) 1fr;
     align-items: start;
   }
+
+  /* Sin FEATURE_SEARCH no hay panel: con la columna del panel definida y un solo
+     hijo, el listado caeria en la columna estrecha. */
+  .catalogo__cuerpo--sin-filtros {
+    grid-template-columns: 1fr;
+  }
 }
 
 /*

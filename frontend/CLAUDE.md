@@ -88,7 +88,10 @@ tabular-nums` sobre Inter. Tres pesos: 400, 500 y 600.
 - Medidas fijas del sistema: cabecera 72px en escritorio y 56px en móvil, logo a
   34px (y solo el isotipo a 32px por debajo de 640px, porque el lockup tiene un
   mínimo de 130px de ancho), ancho máximo de contenido 1140px, puntos de quiebre
-  en 640px y 1024px.
+  en 640px y 1024px. **En móvil la cabecera son siempre dos filas** —el logo, el
+  carrito y el menú arriba; idioma, tema y sesión debajo— y **no es pegajosa** por
+  debajo de 640px. **En escritorio son dos filas solo con la tienda enlazada**
+  (ADR-0041): utilidades arriba y navegación debajo, 108px en total.
 - Destinos táctiles de 44px como mínimo. Sin excepción.
 - **El bronce no es el botón.** El acento bronce aparece una sola vez por
   pantalla y siempre en lo mismo: la insignia de vendedor verificado

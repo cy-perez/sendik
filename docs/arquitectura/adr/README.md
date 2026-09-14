@@ -63,3 +63,4 @@ la referencia.
 | 0038 | La dirección del cliente se cuenta desde el final de `X-Forwarded-For` | Aceptada |
 | 0039 | La dirección de entrega vive en `identity`, y se cifra | Aceptada |
 | 0040 | El municipio se elige de una lista sembrada, no se escribe | Aceptada |
+| 0041 | Las banderas llegan al frontend y deciden qué se enlaza | Aceptada |

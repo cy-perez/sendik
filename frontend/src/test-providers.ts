@@ -41,6 +41,16 @@ const testConfig: AppConfig = {
     verificationReviewDays: 2,
     listingReviewDays: 2,
   },
+  // Todas encendidas, que es el estado de `dev` y el que deja ver la navegacion
+  // completa. La prueba que compruebe que un enlace desaparece con la bandera
+  // apagada sobrescribe APP_CONFIG en su propio TestBed.
+  features: {
+    catalog: true,
+    checkout: true,
+    publishing: true,
+    sellerVerification: true,
+    search: true,
+  },
 };
 
 const providers: (Provider | EnvironmentProviders)[] = [

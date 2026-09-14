@@ -36,6 +36,26 @@
       <img class="logo-oscuro isotipo" src="/isotipo-negativo.svg" alt="" width="32" height="32" />
     </a>
 
+    <!-- El carrito, a un toque desde cualquier pantalla. Va en el DOM entre el logo y el
+         boton del menu porque ese es tambien su sitio en pantalla: en movil, la primera
+         fila es logo, carrito y menu, y las acciones de idioma, tema y sesion bajan a la
+         segunda. El orden de tabulacion coincide asi con el visual (WCAG 2.4.3). Solo se
+         enlaza con FEATURE_CHECKOUT encendida (ADR-0041). -->
+    @if (banderas.checkout) {
+      <a
+        class="boton-icono enlace-carrito"
+        routerLink="/carrito"
+        routerLinkActive="activo"
+        ariaCurrentWhenActive="page"
+        [attr.aria-label]="'layout.cart' | transloco"
+      >
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 5h3l2.4 9.6h9L20 8H7" />
+          <path d="M9 19h.01M17 19h.01" />
+        </svg>
+      </a>
+    }
+
     <!-- Solo se ve por debajo de 640px. aria-expanded es lo que le dice al lector
          de pantalla si lo que controla esta desplegado o no.
 
@@ -66,31 +86,6 @@
         </svg>
       }
     </button>
-
-    <!-- Un solo panel para los dos tamanos: en escritorio es una fila, en movil
-         se despliega. No se duplican los enlaces porque el HTML servido tendria
-         cada pagina dos veces y el buscador ve dos navegaciones donde hay una. -->
-    <div id="menu-principal" class="panel" [class.desplegado]="abierto()">
-      <!-- aria-label porque hay mas de un nav en la pagina: este y los dos del
-           pie. Sin distinguirlos, un lector anuncia tres "navegacion" iguales. -->
-      <nav class="navegacion" [attr.aria-label]="'layout.nav.label' | transloco">
-        <ul class="lista-nav" role="list">
-          @for (pagina of paginas; track pagina) {
-            <li>
-              <a
-                class="enlace-nav tipo-secundario"
-                [routerLink]="rutaDe(pagina)"
-                routerLinkActive="activo"
-                ariaCurrentWhenActive="page"
-                (click)="cerrarMenu()"
-              >
-                {{ 'layout.nav.pages.' + pagina | transloco }}
-              </a>
-            </li>
-          }
-        </ul>
-      </nav>
-    </div>
 
     <!-- Fuera del panel a proposito: idioma, tema y sesion no son navegacion.
          Dentro quedaban escondidos tras la hamburguesa por debajo de 640px, y
@@ -136,6 +131,63 @@
            shared y no puede depender de la funcionalidad de cuentas; con
            ng-content ofrece el sitio sin tener que saber que se pone ahi. -->
       <ng-content />
+    </div>
+
+    <!-- Un solo panel para los dos tamanos: en escritorio es una fila, en movil
+         se despliega. Va al final del DOM porque es lo ultimo en pantalla: en movil se
+         despliega debajo de las acciones, y en escritorio con tienda es la segunda fila.
+         Sin tienda, en escritorio, se pinta entre el logo y las acciones por `order`.
+         No se duplican los enlaces porque el HTML servido tendria cada pagina dos veces
+         y el buscador ve dos navegaciones donde hay una. -->
+    <div id="menu-principal" class="panel" [class.desplegado]="abierto()">
+      <!-- aria-label porque hay mas de un nav en la pagina: este y los dos del
+           pie. Sin distinguirlos, un lector anuncia tres "navegacion" iguales. -->
+      <nav class="navegacion" [attr.aria-label]="'layout.nav.label' | transloco">
+        <ul class="lista-nav" role="list">
+          <!-- Lo que hace de Sendik una tienda va primero: comprar y vender. Solo se
+               enlazan si su bandera esta encendida, porque con ella apagada la API
+               responde 404 y HU-005 prohibe un enlace que lleve ahi (ADR-0041). -->
+          @if (banderas.catalog) {
+            <li>
+              <a
+                class="enlace-nav tipo-secundario"
+                routerLink="/catalogo"
+                routerLinkActive="activo"
+                ariaCurrentWhenActive="page"
+                (click)="cerrarMenu()"
+              >
+                {{ 'layout.nav.catalog' | transloco }}
+              </a>
+            </li>
+          }
+          @if (banderas.publishing) {
+            <li>
+              <a
+                class="enlace-nav tipo-secundario"
+                routerLink="/publicar"
+                routerLinkActive="activo"
+                ariaCurrentWhenActive="page"
+                (click)="cerrarMenu()"
+              >
+                {{ 'layout.nav.sell' | transloco }}
+              </a>
+            </li>
+          }
+          @for (pagina of paginas; track pagina) {
+            <li>
+              <a
+                class="enlace-nav tipo-secundario"
+                [routerLink]="rutaDe(pagina)"
+                routerLinkActive="activo"
+                ariaCurrentWhenActive="page"
+                (click)="cerrarMenu()"
+              >
+                {{ 'layout.nav.pages.' + pagina | transloco }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
     </div>
   </div>
 </header>

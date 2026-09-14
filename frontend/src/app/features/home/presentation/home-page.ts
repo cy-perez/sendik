@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
+
+import { APP_CONFIG } from '../../../core/config/app-config';
 
 /** Un paso del bloque de como funciona. El numero lo pinta la plantilla. */
 interface Paso {
@@ -31,6 +33,14 @@ interface Confianza {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage {
+  /**
+   * El enlace al catalogo solo se pinta con FEATURE_CATALOG encendida: HU-004 prohibe
+   * enlazar desde la portada lo que no funciona, y con la bandera apagada la API
+   * responde 404 (ADR-0041). Sigue habiendo una sola llamada a la accion con relleno
+   * -crear cuenta-; esto es un enlace de texto.
+   */
+  protected readonly banderas = inject(APP_CONFIG).features;
+
   /**
    * Publicar, vender, cobrar. En ese orden y siempre los tres.
    *

@@ -3,9 +3,34 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { APP_CONFIG, type AppConfig } from '../../../core/config/app-config';
 import { PAGINAS_DE_CONTENIDO, RUTAS_CONTENIDO } from '../../../core/routes/content-routes';
 import { SiteHeader } from './site-header';
 import { ThemeService } from '../../../core/theme/theme.service';
+
+/** La configuracion de pruebas con todas las banderas apagadas: el estado de `prod`. */
+const TODO_APAGADO: AppConfig = {
+  apiBaseUrl: 'https://api.pruebas.sendik.co/api/v1',
+  defaultLocale: 'es',
+  availableLocales: ['es', 'en'],
+  enableDevtools: false,
+  sentryDsn: null,
+  legalVersions: { terms: 'borrador-local', privacy: 'borrador-local', cookies: 'borrador-local' },
+  company: { name: null, taxId: null, address: null, supportEmail: null },
+  business: {
+    commissionRate: 0.05,
+    claimWindowDays: 3,
+    verificationReviewDays: 2,
+    listingReviewDays: 2,
+  },
+  features: {
+    catalog: false,
+    checkout: false,
+    publishing: false,
+    sellerVerification: false,
+    search: false,
+  },
+};
 
 /** Destino de relleno: aqui no se prueba a donde se llega, sino que se navegue. */
 @Component({
@@ -32,22 +57,38 @@ describe('SiteHeader', () => {
   const byLabel = (label: string): HTMLElement | null =>
     document.querySelector(`[aria-label="${label}"]`);
 
-  beforeEach(() => {
-    // Las rutas de contenido existen de verdad en el router de la prueba: pulsar
-    // un enlace del menu navega, y sin ellas el router lanza NG04002 y la prueba
-    // falla por un motivo que no tiene que ver con lo que comprueba.
+  /**
+   * Las rutas de contenido existen de verdad en el router de la prueba: pulsar
+   * un enlace del menu navega, y sin ellas el router lanza NG04002 y la prueba
+   * falla por un motivo que no tiene que ver con lo que comprueba.
+   *
+   * <p>Por omision con la configuracion de pruebas, que trae las banderas
+   * encendidas; la prueba que necesite verlas apagadas vuelve a configurar con
+   * `TODO_APAGADO`.
+   */
+  const configurar = (config?: AppConfig) => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
-        provideRouter(
-          PAGINAS_DE_CONTENIDO.map((pagina) => ({
+        provideRouter([
+          ...PAGINAS_DE_CONTENIDO.map((pagina) => ({
             path: RUTAS_CONTENIDO[pagina].slice(1),
             component: Destino,
           })),
-        ),
+          // Y las tres que entran con las banderas (ADR-0041), por lo mismo.
+          { path: 'catalogo', component: Destino },
+          { path: 'publicar', component: Destino },
+          { path: 'carrito', component: Destino },
+        ]),
+        ...(config ? [{ provide: APP_CONFIG, useValue: config }] : []),
       ],
     });
     document = TestBed.inject(DOCUMENT);
     document.documentElement.setAttribute('data-tema', 'claro');
+  };
+
+  beforeEach(() => {
+    configurar();
   });
 
   it('ofrece un enlace para saltar al contenido como primer elemento enfocable', async () => {
@@ -108,19 +149,21 @@ describe('SiteHeader', () => {
   });
 
   /**
-   * La navegacion principal. HU-005: lleva a las cuatro paginas informativas y a
-   * ninguna otra parte.
+   * La navegacion principal. HU-005: lleva a las cuatro paginas informativas; y
+   * desde ADR-0041, tambien a comprar y a vender cuando sus banderas lo permiten.
    */
   describe('navegacion principal', () => {
     const enlacesDeNav = (raiz: HTMLElement) => [
       ...raiz.querySelectorAll<HTMLAnchorElement>('.enlace-nav'),
     ];
 
-    it('enlaza las cuatro paginas informativas', async () => {
+    it('enlaza comprar, vender y las cuatro paginas informativas', async () => {
       const fixture = await render();
       const destinos = enlacesDeNav(fixture.nativeElement).map((a) => a.getAttribute('href'));
 
       expect(destinos).toEqual([
+        '/catalogo',
+        '/publicar',
         '/como-funciona',
         '/sobre-sendik',
         '/preguntas-frecuentes',
@@ -129,17 +172,37 @@ describe('SiteHeader', () => {
     });
 
     /**
-     * Criterio 25. Catalogo, publicacion y busqueda son de Fase 2 y 3: un enlace
-     * a cualquiera de las tres seria un 404 servido desde la cabecera de todas
-     * las paginas del sitio.
+     * Criterio 25 de HU-005, tal como lo deja ADR-0041: con las banderas apagadas
+     * un enlace al catalogo, a publicar o al carrito seria un 404 servido desde la
+     * cabecera de todas las paginas del sitio, asi que no se pinta ninguno.
      */
-    it('no lleva a catalogo, publicacion ni busqueda', async () => {
+    it('con las banderas apagadas no lleva a catalogo, publicar ni carrito', async () => {
+      configurar(TODO_APAGADO);
       const fixture = await render();
-      const destinos = enlacesDeNav(fixture.nativeElement).map((a) => a.getAttribute('href') ?? '');
+      const destinos = [
+        ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLAnchorElement>('a[href]'),
+      ].map((a) => a.getAttribute('href') ?? '');
 
+      expect(destinos).toEqual([
+        '#contenido',
+        '/',
+        '/como-funciona',
+        '/sobre-sendik',
+        '/preguntas-frecuentes',
+        '/contacto',
+      ]);
       for (const destino of destinos) {
         expect(destino).not.toMatch(/catalogo|productos|publicar|buscar|carrito/);
       }
+    });
+
+    /** El carrito va a un toque desde cualquier pantalla, fuera del menu compacto. */
+    it('ofrece el carrito fuera del panel cuando FEATURE_CHECKOUT esta encendida', async () => {
+      const fixture = await render();
+      const carrito = fixture.nativeElement.querySelector('[aria-label="Carrito"]');
+
+      expect(carrito?.getAttribute('href')).toBe('/carrito');
+      expect(carrito?.closest('#menu-principal')).toBeNull();
     });
 
     /**
@@ -150,7 +213,8 @@ describe('SiteHeader', () => {
     it('los enlaces estan en el documento con el menu cerrado', async () => {
       const fixture = await render();
 
-      expect(enlacesDeNav(fixture.nativeElement)).toHaveLength(4);
+      // Las cuatro informativas y las dos que entran con las banderas encendidas.
+      expect(enlacesDeNav(fixture.nativeElement)).toHaveLength(6);
     });
 
     it('el boton del menu anuncia si esta desplegado', async () => {
@@ -285,21 +349,32 @@ describe('SiteHeader', () => {
     });
 
     /**
-     * La regresion que motivo ampliar la region: el ciclo NO puede cerrarse en el
-     * ultimo enlace del panel. Aqui solo se puede comprobar que el componente no
-     * intercepta esa pulsacion —jsdom no mueve el foco con Tab—, asi que el
-     * recorrido de verdad lo comprueba `e2e/foco-cabecera.spec.ts`.
+     * La regresion que motivo ampliar la region (ADR-0033): el idioma, el tema y la
+     * sesion viven fuera del panel y tienen que estar dentro del ciclo. Desde
+     * ADR-0041 el panel va al final del DOM —es lo ultimo en pantalla— asi que el
+     * ciclo se cierra en su ultimo enlace, y lo que protege esta prueba es que el
+     * idioma y el tema esten entre el boton del menu y el panel, y que tabular desde
+     * ellos no se intercepte. jsdom no mueve el foco con Tab; el recorrido de verdad
+     * lo comprueba `e2e/foco-cabecera.spec.ts`.
      */
-    it('el ultimo enlace del panel ya no cierra el ciclo', async () => {
+    it('el idioma y el tema estan dentro del ciclo, entre el boton del menu y el panel', async () => {
       const { fixture } = await enCompacto();
-      const enlaces = [
-        ...(fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.panel a[href]'),
-      ];
-      const ultimoEnlace = enlaces[enlaces.length - 1]!;
+      const dentro = enfocablesDeLaBarra(fixture);
+      const boton = dentro.indexOf(byLabel('Cerrar el menú') as HTMLElement);
+      const idioma = dentro.indexOf(document.querySelector('#language-picker') as HTMLElement);
+      const tema = dentro.indexOf(byLabel('Cambiar a modo oscuro') as HTMLElement);
+      const primerEnlace = dentro.indexOf(
+        (fixture.nativeElement as HTMLElement).querySelector('.panel a[href]') as HTMLElement,
+      );
 
-      tabular(ultimoEnlace);
+      expect(boton).toBeGreaterThanOrEqual(0);
+      expect(idioma).toBe(boton + 1);
+      expect(tema).toBe(idioma + 1);
+      expect(primerEnlace).toBeGreaterThan(tema);
 
-      expect(document.activeElement).toBe(ultimoEnlace);
+      tabular(dentro[idioma]!);
+
+      expect(document.activeElement).toBe(dentro[idioma]);
     });
 
     // En escritorio el tabulador tiene que salir de la cabecera con normalidad.

@@ -1,4 +1,10 @@
-import type { AppConfig, BusinessFigures, CompanyInfo, LegalVersions } from './app-config';
+import type {
+  AppConfig,
+  BusinessFigures,
+  CompanyInfo,
+  FeatureFlags,
+  LegalVersions,
+} from './app-config';
 
 /** Solo la parte del entorno que nos interesa: asi la funcion es pura y se prueba sin Node. */
 export type EnvironmentVariables = Readonly<Record<string, string | undefined>>;
@@ -74,7 +80,31 @@ export function readAppConfig(env: EnvironmentVariables): AppConfig {
     legalVersions: leerVersionesLegales(env),
     company: leerEmpresa(env),
     business: leerCifrasDeNegocio(env),
+    features: leerBanderas(env),
   };
+}
+
+/**
+ * Las banderas de funcionalidad. Los mismos nombres que en el backend, y el mismo
+ * valor por omision: apagadas.
+ *
+ * <p>Solo `true` enciende, como `ENABLE_DEVTOOLS`: una variable ausente, en blanco o
+ * con cualquier otra cosa deja la bandera apagada. Aqui una bandera mal escrita no
+ * tumba el arranque, a diferencia del backend, porque lo unico que decide es si se
+ * pinta un enlace; el 404 lo sigue dando la API.
+ */
+function leerBanderas(env: EnvironmentVariables): FeatureFlags {
+  return {
+    catalog: encendida(env, 'FEATURE_CATALOG'),
+    checkout: encendida(env, 'FEATURE_CHECKOUT'),
+    publishing: encendida(env, 'FEATURE_PUBLISHING'),
+    sellerVerification: encendida(env, 'FEATURE_SELLER_VERIFICATION'),
+    search: encendida(env, 'FEATURE_SEARCH'),
+  };
+}
+
+function encendida(env: EnvironmentVariables, name: string): boolean {
+  return env[name]?.trim().toLowerCase() === 'true';
 }
 
 /**
@@ -306,6 +336,13 @@ export function readAppConfigForBootstrap(env: EnvironmentVariables): AppConfig 
         claimWindowDays: VENTANA_DE_RECLAMO_POR_OMISION,
         verificationReviewDays: REVISION_POR_OMISION,
         listingReviewDays: REVISION_DE_PUBLICACION,
+      },
+      features: {
+        catalog: false,
+        checkout: false,
+        publishing: false,
+        sellerVerification: false,
+        search: false,
       },
     };
   }

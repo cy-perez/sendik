@@ -16,7 +16,9 @@
 } @else {
   <p class="tipo-cuerpo catalogo__intro">{{ 'catalog.list.intro' | transloco }}</p>
 
-  <sendik-search-box [texto]="criterios().q" (buscar)="buscar($event)" />
+  @if (conBusqueda) {
+    <sendik-search-box [texto]="criterios().q" (buscar)="buscar($event)" />
+  }
 
   <!--
     La navegación por el árbol. Es un <nav> con su nombre porque son enlaces a otras
@@ -83,7 +85,7 @@
     Cada ficha es un botón que dice qué quita, no una etiqueta con un aspa al lado: el
     nombre accesible tiene que decir la acción completa.
   -->
-  @if (hayFiltros()) {
+  @if (conBusqueda && hayFiltros()) {
     <div class="catalogo__fichas">
       <h2 class="solo-lectores">{{ 'catalog.filters.applied' | transloco }}</h2>
       <ul class="catalogo__fichas-lista">
@@ -134,19 +136,22 @@
     {{ 'catalog.list.skipToResults' | transloco }}
   </a>
 
-  <div class="catalogo__cuerpo">
+  <div class="catalogo__cuerpo" [class.catalogo__cuerpo--sin-filtros]="!conBusqueda">
     <!--
       Panel lateral en escritorio y hoja en móvil, con el mismo marcado. Es una <section>
       con nombre y no un <aside>: `complementary` significa «tangencialmente relacionado»,
-      y unos controles que gobiernan el listado no lo son.
+      y unos controles que gobiernan el listado no lo son. Sin búsqueda no hay panel, y el
+      listado ocupa el ancho entero.
     -->
-    <section class="catalogo__filtros" [attr.aria-label]="'catalog.filters.title' | transloco">
-      <sendik-catalog-filters
-        [criterios]="criterios()"
-        [puestos]="fichas().length"
-        (cambiar)="filtrar($event)"
-      />
-    </section>
+    @if (conBusqueda) {
+      <section class="catalogo__filtros" [attr.aria-label]="'catalog.filters.title' | transloco">
+        <sendik-catalog-filters
+          [criterios]="criterios()"
+          [puestos]="fichas().length"
+          (cambiar)="filtrar($event)"
+        />
+      </section>
+    }
 
     <div id="resultados" class="catalogo__resultados" tabindex="-1" #resultados>
       @if (cargando()) {

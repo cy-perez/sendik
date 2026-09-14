@@ -83,6 +83,29 @@ export interface BusinessFigures {
   readonly listingReviewDays: number;
 }
 
+/**
+ * Las banderas de funcionalidad, tal como las ve el sitio.
+ *
+ * <p>Son las mismas que lee el backend y con los mismos nombres de variable
+ * (`docs/operacion/configuracion.md`). El frontend no las usa para esconder rutas
+ * —las rutas existen siempre y la API responde 404 cuando algo esta apagado— sino
+ * para no **enlazar** lo que no funciona: HU-004 y HU-005 prohiben un enlace que
+ * lleve a un 404, y hasta que estas banderas llegaron aqui la unica forma de
+ * cumplirlo era no enlazar nada (ADR-0041).
+ */
+export interface FeatureFlags {
+  readonly catalog: boolean;
+  readonly checkout: boolean;
+  readonly publishing: boolean;
+  readonly sellerVerification: boolean;
+  /**
+   * La unica que no decide un enlace sino un control: con ella apagada el catalogo
+   * no pinta la caja de busqueda ni los filtros, porque el backend responde 404 a
+   * cualquier parametro de busqueda (HU-014, criterio 26).
+   */
+  readonly search: boolean;
+}
+
 export interface AppConfig {
   /** Base de la API, incluida la version. Ejemplo: https://api.sendik.co/api/v1 */
   readonly apiBaseUrl: string;
@@ -93,6 +116,7 @@ export interface AppConfig {
   readonly legalVersions: LegalVersions;
   readonly company: CompanyInfo;
   readonly business: BusinessFigures;
+  readonly features: FeatureFlags;
 }
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('sendik.app-config');
