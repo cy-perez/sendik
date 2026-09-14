@@ -2,7 +2,6 @@
   display: block;
   grid-column: content;
   max-width: var(--ancho-max);
-  padding: var(--esp-24) var(--esp-16);
 }
 
 /* Dos columnas en escritorio, una en móvil. Las fotos mandan: la columna de datos se

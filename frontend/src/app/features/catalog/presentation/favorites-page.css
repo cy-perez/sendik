@@ -5,7 +5,6 @@
   display: block;
   grid-column: content;
   max-width: var(--ancho-max);
-  padding: var(--esp-24) var(--esp-16);
 }
 
 .favoritos__intro {
@@ -14,15 +13,21 @@
   margin-bottom: var(--esp-24);
 }
 
-/* La misma rejilla fluida del catalogo: mismas tarjetas, mismo minimo, mismo numero de
-   columnas segun el ancho. No se estrena nada. */
+/* La misma rejilla del catalogo: dos columnas en un telefono y fluida desde 640px.
+   Mismas tarjetas, mismo minimo, mismo numero de columnas segun el ancho. */
 .favoritos__rejilla {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--esp-24) var(--esp-16);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@media (min-width: 640px) {
+  .favoritos__rejilla {
+    grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  }
 }
 
 .favoritos__esqueleto {

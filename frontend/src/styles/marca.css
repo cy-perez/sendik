@@ -74,9 +74,13 @@
 
   /* Ancho minimo de una cifra del panel del vendedor (HU-012).
      En `ch` y no en pixeles a proposito: la caja tiene que crecer con el texto. Con una
-     medida fija, «revision» -la palabra mas larga de los siete estados- se sale de su caja
-     a 360px con el texto al 200%, que es lo que WCAG 1.4.4 y 1.4.10 prohiben. */
-  --medida-cifra: 8ch;
+     medida fija, la palabra mas larga de los siete estados se sale de su caja a 360px
+     con el texto al 200%, que es lo que WCAG 1.4.4 y 1.4.10 prohiben.
+
+     Diez y no ocho: la mas larga no es «revision» sino «Publicada» y «Rechazada», de
+     nueve letras, y con 8ch se partian en «Publicad-a» a 360px sin ampliar nada. A 10ch
+     caben tres cifras por fila desde unos 400px de ventana y dos por debajo. */
+  --medida-cifra: 10ch;
 
   /* La silueta y la cuadricula del asistente de captura (HU-003, criterio 2).
 
@@ -94,9 +98,10 @@
   --color-guia-camara-contorno: #14162b;
 
   /* Ancho minimo de una tarjeta de producto en la rejilla del catalogo (HU-009).
-     La rejilla es fluida -- `auto-fill` con este minimo -- asi que este numero es
-     lo unico que decide cuantas columnas caben: dos en movil y cuatro o cinco en
-     los 1140px del carril de contenido, sin una sola media query.
+     Desde 640px la rejilla es fluida -- `auto-fill` con este minimo -- asi que este
+     numero es lo unico que decide cuantas columnas caben: cuatro o cinco en los 1140px
+     del carril de contenido. Por debajo de 640px no manda: ahi son dos columnas fijas,
+     porque con este minimo un telefono se quedaba en una.
 
      Sale de la foto y no al reves: con la proporcion 3:4 de RN-018, por debajo de
      este ancho la toma se ve como una miniatura y el titulo no cabe en dos lineas. */

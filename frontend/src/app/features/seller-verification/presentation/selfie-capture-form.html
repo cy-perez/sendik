@@ -1,4 +1,7 @@
-<div class="formulario">
+<!-- Un formulario con su boton de envio, como los del documento y la cuenta: el boton
+     de antes llevaba una clase que esta hoja no define y se pintaba con el aspecto del
+     navegador, a 27px de alto. -->
+<form class="formulario" (submit)="guardar($event)" novalidate>
   @if (errorDelServidor(); as error) {
     <p class="error tipo-cuerpo" role="alert">{{ error | transloco }}</p>
   } @else if (envio.isSuccess()) {
@@ -17,12 +20,8 @@
     <p class="error-campo tipo-secundario" role="alert">{{ error | transloco }}</p>
   }
 
-  <button
-    type="button"
-    class="accion tipo-secundario"
-    [disabled]="envio.isPending()"
-    (click)="guardar()"
-  >
-    {{ 'sellerVerification.selfieForm.submit' | transloco }}
-  </button>
-</div>
+  <sendik-submit-button
+    labelKey="sellerVerification.selfieForm.submit"
+    [loading]="envio.isPending()"
+  />
+</form>

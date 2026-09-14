@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 
+import { SubmitButton } from '../../../shared/ui/form/submit-button';
 import { VerificationStore } from '../application/verification.store';
 import { CaptureField } from './capture-field';
 
@@ -15,7 +16,7 @@ import { CaptureField } from './capture-field';
  */
 @Component({
   selector: 'sendik-selfie-capture-form',
-  imports: [TranslocoPipe, CaptureField],
+  imports: [TranslocoPipe, CaptureField, SubmitButton],
   templateUrl: './selfie-capture-form.html',
   styleUrl: './bank-account-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,7 +38,13 @@ export class SelfieCaptureForm {
     return fallo === null ? null : VerificationStore.claveDeError(fallo);
   });
 
-  protected guardar(): void {
+  /**
+   * Sobre el evento nativo y no sobre `ngSubmit`: ese lo emite la directiva de
+   * formularios, que aqui no hay porque no hay nada que escribir. Sin `preventDefault`
+   * el navegador recargaria la pagina.
+   */
+  protected guardar(evento: Event): void {
+    evento.preventDefault();
     this.intentado.set(true);
 
     const imagen = this.foto();

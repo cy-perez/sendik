@@ -6,7 +6,6 @@
   display: block;
   grid-column: content;
   max-width: var(--ancho-max);
-  padding: var(--esp-24) var(--esp-16);
 }
 
 .catalogo__intro {
@@ -32,12 +31,15 @@
 }
 
 /* Los destinos táctiles de la navegación llegan a 44px por el relleno vertical, no por
-   una altura fija: así crecen con el texto cuando alguien agranda la letra. */
+   una altura fija: así crecen con el texto cuando alguien agranda la letra. El ancho
+   mínimo es para «Todo», que con sus cuatro letras se quedaba en 39px. */
 .catalogo__ramas a,
 .catalogo__hojas a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--destino-tactil);
+  min-width: var(--destino-tactil);
   padding: var(--esp-8) 0;
   color: inherit;
 }
@@ -56,19 +58,28 @@
   border-left: 1px solid var(--color-borde);
 }
 
-/* Rejilla fluida: el número de columnas lo decide el ancho disponible y no un punto de
-   quiebre. Con `auto-fill` y un mínimo, en móvil salen dos columnas y en escritorio
-   cuatro o cinco sin escribir ninguna media query.
+/* Dos columnas en un teléfono, siempre. Con `auto-fill` y el mínimo de 220px la rejilla
+   caía a **una** columna por debajo de 470px —una foto 3:4 de 300px de alto por
+   tarjeta, y cuatro productos por pantalla—, que es lo contrario de lo que un catálogo
+   necesita en el aparato desde el que más se mira. Medido el 14 de septiembre de 2026
+   en el recorrido del sitio a 360px.
 
-   El mínimo es una medida del sistema y no un número suelto: es el ancho de tarjeta con
-   el que la foto 3:4 sigue siendo legible. */
+   Desde 640px vuelve a ser fluida: el número de columnas lo decide el ancho disponible y
+   no un punto de quiebre, y el mínimo es una medida del sistema, no un número suelto: es
+   el ancho de tarjeta con el que la foto 3:4 sigue siendo legible. */
 .catalogo__rejilla {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--esp-24) var(--esp-16);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@media (min-width: 640px) {
+  .catalogo__rejilla {
+    grid-template-columns: repeat(auto-fill, minmax(var(--ancho-tarjeta-min), 1fr));
+  }
 }
 
 .catalogo__esqueleto {
@@ -175,7 +186,9 @@
   position: absolute;
   z-index: 5;
   left: var(--esp-8);
-  transform: translateY(-250%);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--destino-tactil);
   padding: var(--esp-8) var(--esp-16);
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-md);
@@ -184,8 +197,20 @@
   text-decoration: none;
 }
 
-.catalogo__salto:focus {
-  transform: translateY(0);
+/* Fuera de la vista hasta que recibe el foco, con la misma tecnica de .solo-lectores y
+   no con un desplazamiento hacia arriba: el de la cabecera funciona porque esta pegado
+   al borde superior de la pagina, pero este vive en mitad del catalogo y un
+   `translateY(-250%)` lo dejaba flotando sobre la lista de categorias, visible para
+   todo el mundo. Se vio el 14 de septiembre de 2026 en el recorrido del sitio. */
+.catalogo__salto:not(:focus) {
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .catalogo__resultados:focus {

@@ -63,11 +63,6 @@ describe('formularios de captura', () => {
     }
   };
 
-  const boton = (fixture: { nativeElement: HTMLElement }, texto: string) =>
-    [...fixture.nativeElement.querySelectorAll('button')].find((candidato) =>
-      candidato.textContent?.includes(texto),
-    ) as HTMLButtonElement | undefined;
-
   /**
    * Toma una foto en el primer campo que todavía no la tenga.
    *
@@ -262,7 +257,7 @@ describe('formularios de captura', () => {
     it('no envía sin foto y lo dice', async () => {
       const { fixture, backend } = await montar();
 
-      boton(fixture, 'Guardar la foto')?.click();
+      enviarFormulario(fixture);
       await asentar(fixture);
 
       backend.expectNone((enviada) => enviada.url === `${API}/users/me/verification/selfie`);
@@ -273,7 +268,7 @@ describe('formularios de captura', () => {
       const { fixture, backend } = await montar();
 
       await capturar(fixture);
-      boton(fixture, 'Guardar la foto')?.click();
+      enviarFormulario(fixture);
       await fixture.whenStable();
 
       const peticion = backend.expectOne(
