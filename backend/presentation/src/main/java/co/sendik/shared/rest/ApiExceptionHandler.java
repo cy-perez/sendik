@@ -411,7 +411,10 @@ public class ApiExceptionHandler {
                     // RN-100: el municipio no esta en la division vigente, o el DANE lo
                     // suprimio. 422 y codigo propio, como la entidad financiera y la
                     // categoria: lo que hay que decirle es que elija otro de la lista.
-                    USER_UNKNOWN_MUNICIPALITY -> HttpStatus.UNPROCESSABLE_CONTENT;
+                    USER_UNKNOWN_MUNICIPALITY,
+                    // HU-017: el perfil no tiene telefono y el remitente lo necesita. 422 y no
+                    // 400: la peticion esta bien formada; lo que falta vive en otro sitio.
+                    USER_PHONE_REQUIRED -> HttpStatus.UNPROCESSABLE_CONTENT;
             // 415: el contenido no es de un tipo que el servidor sepa manejar. Es
             // exactamente lo que significa, y le dice al cliente que el problema es
             // el formato y no lo que hay dentro. Se decide por los bytes de
