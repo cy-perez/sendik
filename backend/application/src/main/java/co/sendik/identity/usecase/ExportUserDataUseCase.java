@@ -6,6 +6,7 @@ import co.sendik.identity.model.Role;
 import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
 import co.sendik.identity.port.out.ConsentRepository;
+import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
 import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.UserCart;
@@ -35,6 +36,7 @@ public class ExportUserDataUseCase {
     private final UserFavorites favoritos;
     private final UserCart carrito;
     private final ShippingAddressRepository direcciones;
+    private final OriginAddressRepository origenes;
     private final GeographicDivision division;
     private final Clock reloj;
 
@@ -45,6 +47,7 @@ public class ExportUserDataUseCase {
             UserFavorites favoritos,
             UserCart carrito,
             ShippingAddressRepository direcciones,
+            OriginAddressRepository origenes,
             GeographicDivision division,
             Clock reloj) {
         this.usuarios = usuarios;
@@ -53,6 +56,7 @@ public class ExportUserDataUseCase {
         this.favoritos = favoritos;
         this.carrito = carrito;
         this.direcciones = direcciones;
+        this.origenes = origenes;
         this.division = division;
         this.reloj = reloj;
     }
@@ -124,6 +128,20 @@ public class ExportUserDataUseCase {
                                 direccion.codigoPostal(),
                                 direccion.predeterminada(),
                                 direccion.guardadaEl()))
-                        .toList());
+                        .toList(),
+                // Y la direccion de origen (HU-017, criterio 18): tambien de este contexto,
+                // tambien con nombres y no con codigos. Nula cuando no hay, y se emite igual:
+                // «no tenemos tu origen» es una respuesta al derecho a conocer.
+                origenes.deCuenta(usuario)
+                        .map(origen -> ReadOriginAddressUseCase.conLaDivision(origen, cuenta, division))
+                        .map(origen -> new UserDataExport.Origen(
+                                origen.departamentoNombre(),
+                                origen.municipioNombre(),
+                                origen.linea(),
+                                origen.complemento(),
+                                origen.indicaciones(),
+                                origen.codigoPostal(),
+                                origen.guardadaEl()))
+                        .orElse(null));
     }
 }

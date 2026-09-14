@@ -16,6 +16,7 @@ import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
 import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.port.out.MailSender;
+import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
 import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.UserCart;
@@ -62,6 +63,9 @@ class CloseAccountUseCaseTest {
     @Mock
     private ShippingAddressRepository direcciones;
 
+    @Mock
+    private OriginAddressRepository origenes;
+
     private CloseAccountUseCase caso;
     private User usuario;
 
@@ -75,6 +79,7 @@ class CloseAccountUseCaseTest {
                 favoritos,
                 carrito,
                 direcciones,
+                origenes,
                 Clock.fixed(AHORA, ZoneOffset.UTC));
 
         usuario = User.registrar(
@@ -136,6 +141,18 @@ class CloseAccountUseCaseTest {
         orden.verify(usuarios).cerrarYAnonimizar(usuario.id(), AHORA);
     }
 
+    /** HU-017, criterio 19: la direccion de origen se va con la cuenta, y antes de anonimizar. */
+    @Test
+    void deberia_borrar_la_direccion_de_origen_antes_de_anonimizar() {
+        conCuenta();
+
+        caso.execute(new CloseAccountCommand(usuario.id(), "ana@correo.co"));
+
+        InOrder orden = inOrder(origenes, usuarios);
+        orden.verify(origenes).borrar(usuario.id());
+        orden.verify(usuarios).cerrarYAnonimizar(usuario.id(), AHORA);
+    }
+
     /** Si la confirmacion no coincide no se cierra nada, y las direcciones se quedan. */
     @Test
     void no_deberia_tocar_las_direcciones_si_la_confirmacion_no_coincide() {
@@ -145,6 +162,7 @@ class CloseAccountUseCaseTest {
                 .isInstanceOf(CloseConfirmationMismatchException.class);
 
         verifyNoInteractions(direcciones);
+        verifyNoInteractions(origenes);
     }
 
     /**

@@ -7,12 +7,14 @@ import static org.mockito.Mockito.when;
 
 import co.sendik.identity.dto.UserDataExport;
 import co.sendik.identity.exception.AccountNoLongerExistsException;
+import co.sendik.identity.model.AddressLine;
 import co.sendik.identity.model.BirthDate;
 import co.sendik.identity.model.City;
 import co.sendik.identity.model.Consent;
 import co.sendik.identity.model.ConsentDocument;
 import co.sendik.identity.model.DisplayName;
 import co.sendik.identity.model.Email;
+import co.sendik.identity.model.OriginAddress;
 import co.sendik.identity.model.Phone;
 import co.sendik.identity.model.RefreshToken;
 import co.sendik.identity.model.Role;
@@ -21,11 +23,16 @@ import co.sendik.identity.model.UserId;
 import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.model.UserStatus;
 import co.sendik.identity.port.out.ConsentRepository;
+import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
 import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.UserCart;
 import co.sendik.identity.port.out.UserFavorites;
 import co.sendik.identity.port.out.UserRepository;
+import co.sendik.shared.geo.Department;
+import co.sendik.shared.geo.DepartmentCode;
+import co.sendik.shared.geo.Municipality;
+import co.sendik.shared.geo.MunicipalityCode;
 import co.sendik.shared.port.out.GeographicDivision;
 import java.time.Clock;
 import java.time.Duration;
@@ -77,6 +84,9 @@ class ExportUserDataUseCaseTest {
     private ShippingAddressRepository direcciones;
 
     @Mock
+    private OriginAddressRepository origenes;
+
+    @Mock
     private GeographicDivision division;
 
     private ExportUserDataUseCase caso;
@@ -91,6 +101,7 @@ class ExportUserDataUseCaseTest {
                 favoritos,
                 carrito,
                 direcciones,
+                origenes,
                 division,
                 Clock.fixed(AHORA, ZoneOffset.UTC));
         usuario = UserId.nuevo();
@@ -159,6 +170,36 @@ class ExportUserDataUseCaseTest {
 
         assertThat(cuenta.ciudad()).isNull();
         assertThat(cuenta.telefono()).isNull();
+    }
+
+    /** HU-017, criterio 18: el origen sale entero y con nombres, no con codigos. */
+    @Test
+    void deberia_incluir_la_direccion_de_origen_con_los_nombres_del_municipio_y_del_departamento() {
+        hayCuentaCon(null, new Phone("3001234567"));
+        MunicipalityCode medellin = new MunicipalityCode("05001");
+        when(origenes.deCuenta(usuario))
+                .thenReturn(Optional.of(OriginAddress.nueva(
+                        usuario, medellin, new AddressLine("Carrera 70 # 45-12"), null, null, null, AHORA)));
+        when(division.buscarMunicipio(medellin)).thenReturn(Optional.of(new Municipality(medellin, "Medellín", true)));
+        when(division.departamentos()).thenReturn(List.of(new Department(new DepartmentCode("05"), "Antioquia")));
+
+        UserDataExport.Origen origen = caso.execute(usuario).origen();
+
+        assertThat(origen).isNotNull();
+        assertThat(origen.departamento()).isEqualTo("Antioquia");
+        assertThat(origen.municipio()).isEqualTo("Medellín");
+        assertThat(origen.linea()).isEqualTo("Carrera 70 # 45-12");
+        assertThat(origen.complemento()).isNull();
+        assertThat(origen.guardadaEl()).isEqualTo(AHORA);
+    }
+
+    /** Nulo y no clave ausente, por lo mismo que la ciudad. */
+    @Test
+    void deberia_emitir_el_origen_nulo_cuando_no_hay() {
+        hayCuentaCon(null, null);
+        when(origenes.deCuenta(usuario)).thenReturn(Optional.empty());
+
+        assertThat(caso.execute(usuario).origen()).isNull();
     }
 
     /** La evidencia con su version y su fecha: es lo que prueba a que dijo que si. */
