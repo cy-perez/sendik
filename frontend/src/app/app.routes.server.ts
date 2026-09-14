@@ -78,6 +78,7 @@ export const serverRoutes: ServerRoute[] = [
   // servido no puede llevar dentro donde vive alguien, asi que sale el esqueleto y la
   // libreta llega al hidratar.
   { path: 'mis-direcciones', renderMode: RenderMode.Server },
+  { path: 'mi-direccion-de-origen', renderMode: RenderMode.Server },
   // HU-003, el asistente de captura. Cuelga del formulario y se renderiza en servidor por
   // lo mismo que el: APP_CONFIG llega por el estado transferido y sin el no arranca.
   { path: 'publicar/:id/capturar', renderMode: RenderMode.Server },

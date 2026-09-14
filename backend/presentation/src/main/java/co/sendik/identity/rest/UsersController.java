@@ -2,13 +2,13 @@ package co.sendik.identity.rest;
 
 import co.sendik.identity.dto.ActiveSession;
 import co.sendik.identity.dto.CloseAccountCommand;
+import co.sendik.identity.dto.ProfileView;
 import co.sendik.identity.dto.RequestEmailChangeCommand;
 import co.sendik.identity.dto.RequestEmailVerificationCommand;
 import co.sendik.identity.dto.UpdateAvatarCommand;
 import co.sendik.identity.dto.UpdateProfileCommand;
 import co.sendik.identity.dto.UserDataExport;
 import co.sendik.identity.model.TokenFamilyId;
-import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
 import co.sendik.identity.rest.dto.ActiveSessionResponse;
 import co.sendik.identity.rest.dto.ChangeEmailRequest;
@@ -18,7 +18,7 @@ import co.sendik.identity.rest.dto.UpdateProfileRequest;
 import co.sendik.identity.usecase.CloseAccountUseCase;
 import co.sendik.identity.usecase.ExportUserDataUseCase;
 import co.sendik.identity.usecase.ListSessionsUseCase;
-import co.sendik.identity.usecase.ReadProfileUseCase;
+import co.sendik.identity.usecase.ReadProfileViewUseCase;
 import co.sendik.identity.usecase.RemoveAvatarUseCase;
 import co.sendik.identity.usecase.RequestEmailChangeUseCase;
 import co.sendik.identity.usecase.RequestEmailVerificationUseCase;
@@ -70,7 +70,7 @@ public class UsersController {
     private final RevokeSessionUseCase casoDeRevocacion;
     private final ExportUserDataUseCase casoDeExportacion;
     private final CloseAccountUseCase casoDeCierre;
-    private final ReadProfileUseCase casoDeLectura;
+    private final ReadProfileViewUseCase casoDeLectura;
     private final UpdateProfileUseCase casoDePerfil;
     private final RequestEmailChangeUseCase casoDeCambioDeCorreo;
     private final UpdateAvatarUseCase casoDeAvatar;
@@ -91,7 +91,7 @@ public class UsersController {
             RevokeSessionUseCase casoDeRevocacion,
             ExportUserDataUseCase casoDeExportacion,
             CloseAccountUseCase casoDeCierre,
-            ReadProfileUseCase casoDeLectura,
+            ReadProfileViewUseCase casoDeLectura,
             UpdateProfileUseCase casoDePerfil,
             RequestEmailChangeUseCase casoDeCambioDeCorreo,
             UpdateAvatarUseCase casoDeAvatar,
@@ -122,7 +122,12 @@ public class UsersController {
         return ResponseEntity.accepted().build();
     }
 
-    /** Criterio 21: el perfil tal como esta ahora. */
+    /**
+     * Criterio 21: el perfil tal como esta ahora.
+     *
+     * <p>Desde HU-017 lo arma {@code ReadProfileViewUseCase} y no la cuenta directa: la
+     * ciudad puede venir del origen (ADR-0042), y resolverlo es del caso de uso.
+     */
     @GetMapping
     public ProfileResponse perfil(@AuthenticationPrincipal Jwt token) {
         return comoPerfil(casoDeLectura.execute(usuarioDe(token)), almacen);
@@ -138,10 +143,12 @@ public class UsersController {
     @PutMapping
     public ProfileResponse guardarPerfil(
             @AuthenticationPrincipal Jwt token, @Valid @RequestBody UpdateProfileRequest peticion) {
-        User guardado = casoDePerfil.execute(
+        casoDePerfil.execute(
                 new UpdateProfileCommand(usuarioDe(token), peticion.displayName(), peticion.city(), peticion.phone()));
 
-        return comoPerfil(guardado, almacen);
+        // Se relee en vez de traducir lo que devolvio el caso de uso: la ciudad que se
+        // muestra puede no ser la que se guardo, si hay direccion de origen (HU-017).
+        return comoPerfil(casoDeLectura.execute(usuarioDe(token)), almacen);
     }
 
     /**
@@ -208,9 +215,9 @@ public class UsersController {
     public ResponseEntity<ProfileResponse> ponerAvatar(
             @AuthenticationPrincipal Jwt token, @RequestPart("archivo") MultipartFile archivo) throws IOException {
 
-        User actualizada = casoDeAvatar.execute(new UpdateAvatarCommand(usuarioDe(token), archivo.getBytes()));
+        casoDeAvatar.execute(new UpdateAvatarCommand(usuarioDe(token), archivo.getBytes()));
 
-        return ResponseEntity.ok(comoPerfil(actualizada, almacen));
+        return ResponseEntity.ok(comoPerfil(casoDeLectura.execute(usuarioDe(token)), almacen));
     }
 
     /**
@@ -222,7 +229,9 @@ public class UsersController {
      */
     @DeleteMapping("/avatar")
     public ResponseEntity<ProfileResponse> quitarAvatar(@AuthenticationPrincipal Jwt token) {
-        return ResponseEntity.ok(comoPerfil(casoDeQuitarAvatar.execute(usuarioDe(token)), almacen));
+        casoDeQuitarAvatar.execute(usuarioDe(token));
+
+        return ResponseEntity.ok(comoPerfil(casoDeLectura.execute(usuarioDe(token)), almacen));
     }
 
     /**
@@ -262,16 +271,17 @@ public class UsersController {
      * El almacen entra por parametro para componer la direccion de la foto. Sigue
      * siendo estatico: asi no puede leer nada del controlador por accidente.
      */
-    private static ProfileResponse comoPerfil(User usuario, PublicFileStore almacen) {
+    private static ProfileResponse comoPerfil(ProfileView vista, PublicFileStore almacen) {
         return new ProfileResponse(
-                usuario.email().value(),
-                usuario.tieneElCorreoVerificado(),
-                usuario.displayName().value(),
-                usuario.city() == null ? null : usuario.city().value(),
-                usuario.phone() == null ? null : usuario.phone().value(),
-                usuario.avatarKey() == null
+                vista.cuenta().email().value(),
+                vista.cuenta().tieneElCorreoVerificado(),
+                vista.cuenta().displayName().value(),
+                vista.ciudad(),
+                vista.ciudadEditable(),
+                vista.cuenta().phone() == null ? null : vista.cuenta().phone().value(),
+                vista.cuenta().avatarKey() == null
                         ? null
-                        : almacen.direccionDe(usuario.avatarKey()).toString());
+                        : almacen.direccionDe(vista.cuenta().avatarKey()).toString());
     }
 
     private static UserId usuarioDe(Jwt token) {

@@ -112,6 +112,14 @@ public class JdbcUserRepository implements UserRepository {
                 .update();
     }
 
+    /** Una columna y solo sobre una cuenta activa: nunca sobre una fila ya anonimizada. */
+    @Override
+    public void limpiarCiudad(UserId usuario) {
+        jdbc.sql("UPDATE users SET city = NULL, updated_at = now() WHERE id = :id AND status = 'ACTIVE'")
+                .param("id", usuario.value())
+                .update();
+    }
+
     /**
      * El unico UPDATE que toca la columna del correo. Criterio 21.
      *

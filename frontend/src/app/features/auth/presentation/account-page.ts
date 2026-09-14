@@ -78,6 +78,9 @@ export class AccountPage {
     if (this.banderas.checkout) {
       lista.push({ clave: 'cart', ruta: '/carrito' });
       lista.push({ clave: 'addresses', ruta: '/mis-direcciones' });
+      // HU-017. Con la misma bandera que la libreta: las dos direcciones nacen para el
+      // mismo proceso de compra y se encienden juntas.
+      lista.push({ clave: 'originAddress', ruta: '/mi-direccion-de-origen' });
     }
     if (this.banderas.publishing) {
       lista.push({ clave: 'listings', ruta: '/mis-publicaciones' });

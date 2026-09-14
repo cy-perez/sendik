@@ -491,6 +491,44 @@ de mil: mandar el árbol entero para pintar el primer selector es mandar cuarent
 veces lo que se necesita. Un departamento que no existe devuelve una lista vacía y
 no un 404: el código viene de la lista de arriba, que la pantalla acaba de pedir.
 
+## La dirección de origen del vendedor
+
+Tres rutas, todas detrás de `FEATURE_CHECKOUT`, la misma bandera de la libreta. HU-017.
+
+| Método y ruta | Quién | Respuesta |
+|---|---|---|
+| `GET /api/v1/users/me/origin-address` | Autenticado | `200` con el origen; **`204` sin cuerpo** si no hay |
+| `PUT /api/v1/users/me/origin-address` | Autenticado | `200` con el guardado, creado o reemplazado |
+| `DELETE /api/v1/users/me/origin-address` | Autenticado | `204`, también si no había |
+
+**Es un recurso singular de la persona**, como `default-address`: no lleva
+identificador en la ruta y no hay forma de pedir el de otra cuenta. `PUT` crea o
+reemplaza —escribir un recurso singular es reemplazar su valor— y por eso no hay
+`POST` ni `201`.
+
+**El `GET` sin origen responde 204 y no 404.** Con la bandera apagada las tres rutas
+ya responden 404 con `COMMON_NOT_FOUND`, y la pantalla tiene que distinguir «no tengo
+origen» de «esto no está disponible».
+
+El cuerpo de escritura es el de la libreta sin quien recibe ni teléfono:
+
+```json
+{ "municipalityCode": "11001", "line": "Carrera 15 # 93-47",
+  "complement": "Local 3", "instructions": null, "postalCode": null }
+```
+
+La respuesta lleva el departamento por código y nombre, `municipalityActive`, y el
+remitente —`senderName` y `senderPhone`— tomado del perfil (RN-106). `senderPhone`
+puede venir nulo si se quitó del perfil después de guardar.
+
+Códigos propios: `USER_UNKNOWN_MUNICIPALITY` (422, RN-100) y **`USER_PHONE_REQUIRED`**
+(422, RN-106): el perfil no tiene teléfono y el remitente lo necesita. 422 y no 400
+porque la petición está bien formada; lo que falta vive en otro sitio.
+
+**`GET /api/v1/users/me` gana `cityEditable`** (ADR-0042): falso cuando hay origen, y
+entonces `city` es el municipio del origen con su departamento al lado y no se edita
+desde el perfil. `PUT /api/v1/users/me` ignora `city` en ese caso.
+
 ## Autenticación
 
 - `Authorization: Bearer <token de acceso>` en toda ruta protegida.

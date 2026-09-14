@@ -21,14 +21,30 @@
       [errorKey]="nombreError()"
     />
 
-    <sendik-text-field
-      fieldId="ciudad"
-      autocomplete="address-level2"
-      labelKey="auth.account.profile.fields.city"
-      hintKey="auth.account.profile.hints.optional"
-      [control]="control('city')"
-      [errorKey]="ciudadError()"
-    />
+    @if (ciudadEditable()) {
+      <sendik-text-field
+        fieldId="ciudad"
+        autocomplete="address-level2"
+        labelKey="auth.account.profile.fields.city"
+        hintKey="auth.account.profile.hints.optional"
+        [control]="control('city')"
+        [errorKey]="ciudadError()"
+      />
+    } @else {
+      <!-- HU-017, criterio 11: la ciudad viene del origen y se cambia alli. Texto con
+           enlace y no campo deshabilitado: un campo apagado con un dato dentro se lee como
+           algo roto. -->
+      <div class="ciudad-derivada">
+        <p class="tipo-secundario">{{ 'auth.account.profile.fields.city' | transloco }}</p>
+        <p class="tipo-cuerpo">{{ ciudadDerivada() }}</p>
+        <p class="tipo-leyenda">
+          {{ 'auth.account.profile.cityFromOrigin' | transloco }}
+          <a routerLink="/mi-direccion-de-origen">
+            {{ 'auth.account.profile.changeCity' | transloco }}
+          </a>
+        </p>
+      </div>
+    }
 
     <sendik-text-field
       fieldId="telefono"

@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 import { AuthStore } from '../application/auth.store';
@@ -33,7 +34,7 @@ import { TextField } from '../../../shared/ui/form/text-field';
  */
 @Component({
   selector: 'sendik-profile-form',
-  imports: [ReactiveFormsModule, TranslocoPipe, TextField, SubmitButton],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, TextField, SubmitButton],
   templateUrl: './profile-form.html',
   styleUrl: './profile-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,6 +82,14 @@ export class ProfileForm {
       });
     });
   }
+
+  /**
+   * HU-017, criterios 10 a 12: con direccion de origen la ciudad es el municipio del origen
+   * y se pinta como texto con enlace, no como campo. Un campo deshabilitado con un dato
+   * dentro se lee como algo roto.
+   */
+  protected readonly ciudadEditable = computed(() => this.perfil.data()?.cityEditable ?? true);
+  protected readonly ciudadDerivada = computed(() => this.perfil.data()?.city ?? null);
 
   protected readonly nombreError = computed(() =>
     this.errorSi(
@@ -136,8 +145,9 @@ export class ProfileForm {
     this.guardado.mutate(
       {
         displayName: valores.displayName.trim(),
-        // Vaciar un campo es quitar el dato, no dejarlo en blanco.
-        city: comoDatoOpcional(valores.city),
+        // Vaciar un campo es quitar el dato, no dejarlo en blanco. Con origen no hay campo
+        // y se manda nulo: el servidor la ignora igual (HU-017).
+        city: this.ciudadEditable() ? comoDatoOpcional(valores.city) : null,
         phone: comoDatoOpcional(valores.phone),
       },
       {

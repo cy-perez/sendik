@@ -28,3 +28,11 @@
   gap: var(--esp-8);
   margin-top: var(--esp-8);
 }
+
+/* `.error` no es global: cada componente la define. Sin esto los avisos salen en el color
+   del texto corriente, y el del telefono que falta (criterio 5) parecia una pista. Lo cazo
+   la revision de accesibilidad. */
+.error {
+  color: var(--color-error);
+  margin: 0;
+}

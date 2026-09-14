@@ -44,4 +44,21 @@ final class DireccionesDePrueba {
                 null,
                 AHORA);
     }
+
+    /** El origen de HU-017: desde donde despacha quien vende, con los tres opcionales. */
+    static OriginAddress origen(UserId duena) {
+        return OriginAddress.nueva(
+                duena,
+                BOGOTA,
+                new AddressLine("Carrera 15 # 93-47"),
+                new AddressComplement("Local 3"),
+                new PickupInstructions("Entrar por el parqueadero, preguntar por Nubia"),
+                new PostalCode("110221"),
+                AHORA);
+    }
+
+    /** Sin complemento, sin indicaciones y sin codigo postal. */
+    static OriginAddress origenMinimo(UserId duena) {
+        return OriginAddress.nueva(duena, MEDELLIN, new AddressLine("Carrera 70 # 45-12"), null, null, null, AHORA);
+    }
 }

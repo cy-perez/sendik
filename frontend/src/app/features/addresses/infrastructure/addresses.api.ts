@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
+import type { OriginAddress, OriginDraft, Sender } from '../domain/origin-address';
 import type { AddressDraft, Place, ShippingAddress } from '../domain/shipping-address';
 
 interface AddressBookResponse {
@@ -14,6 +15,12 @@ interface DepartmentsResponse {
 
 interface MunicipalitiesResponse {
   readonly municipalities: readonly Place[];
+}
+
+/** Lo que del perfil necesita el bloque del remitente. El resto de `GET /users/me` se ignora. */
+interface SenderResponse {
+  readonly displayName: string;
+  readonly phone: string | null;
 }
 
 /**
@@ -68,6 +75,33 @@ export class AddressesApi {
    */
   async marcarPredeterminada(id: string): Promise<void> {
     await firstValueFrom(this.http.put<void>('users/me/default-address', { addressId: id }));
+  }
+
+  /**
+   * La dirección de origen, o nula si no hay. HU-017.
+   *
+   * <p><strong>204 y no 404 cuando no hay</strong>: con la bandera apagada la ruta ya
+   * responde 404, y la pantalla tiene que distinguir «no tengo origen» de «esto no está
+   * disponible». `HttpClient` entrega el cuerpo de un 204 como `null`.
+   */
+  async origen(): Promise<OriginAddress | null> {
+    return firstValueFrom(this.http.get<OriginAddress | null>('users/me/origin-address'));
+  }
+
+  /** Guarda o reemplaza. `PUT` sobre un recurso singular: escribir es reemplazar su valor. */
+  async guardarOrigen(datos: OriginDraft): Promise<OriginAddress> {
+    return firstValueFrom(this.http.put<OriginAddress>('users/me/origin-address', datos));
+  }
+
+  /** Lo borra. Idempotente: borrar lo que no está responde 204 igual. */
+  async borrarOrigen(): Promise<void> {
+    await firstValueFrom(this.http.delete<void>('users/me/origin-address'));
+  }
+
+  /** El remitente: nombre y teléfono del perfil, tal como están ahora. */
+  async remitente(): Promise<Sender> {
+    const perfil = await firstValueFrom(this.http.get<SenderResponse>('users/me'));
+    return { name: perfil.displayName, phone: perfil.phone };
   }
 
   /** Los treinta y tres departamentos, ordenados por nombre. */

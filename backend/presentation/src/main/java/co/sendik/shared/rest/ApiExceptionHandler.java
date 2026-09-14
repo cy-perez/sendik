@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -154,6 +155,27 @@ public class ApiExceptionHandler {
         problema.setProperty("errors", errores);
 
         return ResponseEntity.badRequest().body(problema);
+    }
+
+    /**
+     * Un cuerpo que no se puede leer: JSON roto, un tipo que no casa. 400 con
+     * {@code ProblemDetail}, como todo lo demas.
+     *
+     * <p>Sin manejador, esto lo resolvia {@code DefaultHandlerExceptionResolver}: un 400
+     * <strong>sin cuerpo</strong> —contra el contrato— y un {@code WARN} de Spring con el
+     * mensaje de Jackson, que incluye el token que no pudo leer. Ese token puede ser un
+     * trozo de la linea de una direccion. Lo cazo la revision de seguridad de HU-017.
+     *
+     * <p>Se registra solo el {@code traceId}, nunca {@code e.getMessage()}. Y sin
+     * {@code errors}: no hay campo que senalar cuando el documento entero no se entiende.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> deCuerpoIlegible(HttpMessageNotReadableException e) {
+        String traceId = nuevoTraceId();
+        LOG.info("Cuerpo ilegible traceId={}", traceId);
+
+        return ResponseEntity.badRequest()
+                .body(construir(HttpStatus.BAD_REQUEST, ErrorCode.COMMON_VALIDATION_FAILED, traceId));
     }
 
     /**
@@ -411,7 +433,10 @@ public class ApiExceptionHandler {
                     // RN-100: el municipio no esta en la division vigente, o el DANE lo
                     // suprimio. 422 y codigo propio, como la entidad financiera y la
                     // categoria: lo que hay que decirle es que elija otro de la lista.
-                    USER_UNKNOWN_MUNICIPALITY -> HttpStatus.UNPROCESSABLE_CONTENT;
+                    USER_UNKNOWN_MUNICIPALITY,
+                    // HU-017: el perfil no tiene telefono y el remitente lo necesita. 422 y no
+                    // 400: la peticion esta bien formada; lo que falta vive en otro sitio.
+                    USER_PHONE_REQUIRED -> HttpStatus.UNPROCESSABLE_CONTENT;
             // 415: el contenido no es de un tipo que el servidor sepa manejar. Es
             // exactamente lo que significa, y le dice al cliente que el problema es
             // el formato y no lo que hay dentro. Se decide por los bytes de

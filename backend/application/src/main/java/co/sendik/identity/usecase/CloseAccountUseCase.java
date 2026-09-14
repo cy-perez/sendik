@@ -5,6 +5,7 @@ import co.sendik.identity.exception.AccountNoLongerExistsException;
 import co.sendik.identity.exception.CloseConfirmationMismatchException;
 import co.sendik.identity.model.User;
 import co.sendik.identity.port.out.MailSender;
+import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.RefreshTokenRepository;
 import co.sendik.identity.port.out.ShippingAddressRepository;
 import co.sendik.identity.port.out.UserCart;
@@ -42,6 +43,7 @@ public class CloseAccountUseCase {
     private final UserFavorites favoritos;
     private final UserCart carrito;
     private final ShippingAddressRepository direcciones;
+    private final OriginAddressRepository origenes;
     private final Clock reloj;
 
     public CloseAccountUseCase(
@@ -52,6 +54,7 @@ public class CloseAccountUseCase {
             UserFavorites favoritos,
             UserCart carrito,
             ShippingAddressRepository direcciones,
+            OriginAddressRepository origenes,
             Clock reloj) {
         this.usuarios = usuarios;
         this.refrescos = refrescos;
@@ -60,6 +63,7 @@ public class CloseAccountUseCase {
         this.favoritos = favoritos;
         this.carrito = carrito;
         this.direcciones = direcciones;
+        this.origenes = origenes;
         this.reloj = reloj;
     }
 
@@ -99,6 +103,11 @@ public class CloseAccountUseCase {
         // Ademas, cuando quien recibe no era el titular, lo que quedaria vivo seria el
         // nombre y el telefono de un tercero que nunca abrio una cuenta (RN-104).
         direcciones.borrarDe(cuenta.id());
+
+        // Y la direccion de origen (HU-017, criterio 19), por la misma razon: es donde
+        // despacha una persona, y es la ultima fila con dato personal que el token vivo
+        // podria alcanzar.
+        origenes.borrar(cuenta.id());
 
         usuarios.cerrarYAnonimizar(cuenta.id(), ahora);
 

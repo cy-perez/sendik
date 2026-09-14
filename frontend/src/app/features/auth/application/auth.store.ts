@@ -158,6 +158,11 @@ export class AuthStore {
    *
    * <p>Sin tiempo de frescura, como las sesiones: un correo confirmado desde otro
    * dispositivo tiene que aparecer al mirar, no un minuto despues.
+   *
+   * <p><strong>Y desde HU-017 la ciudad depende de este cero.</strong> Guardar o borrar la
+   * direccion de origen cambia la ciudad del perfil, y `features/addresses` no puede
+   * invalidar esta consulta sin importar de `features/auth`: se apoya en que al volver a
+   * `/mi-cuenta` se vuelve a pedir. Subir `staleTime` dejaria la ciudad vieja en pantalla.
    */
   readonly profile = injectQuery(() => ({
     queryKey: queryKeys.profile,

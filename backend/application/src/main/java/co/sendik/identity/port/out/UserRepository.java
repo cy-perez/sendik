@@ -36,6 +36,17 @@ public interface UserRepository {
     void actualizar(User usuario);
 
     /**
+     * Deja la ciudad escrita a mano en nulo. HU-017, criterio 11.
+     *
+     * <p>Una operacion minima y no {@link #actualizar}, a proposito: aquella reescribe la
+     * fila entera desde una instantanea de la cuenta, y si el cierre de cuenta se colara
+     * entre leer y escribir, restauraria nombre, telefono y estado sobre una fila ya
+     * anonimizada. Esto toca una columna y solo sobre una cuenta activa. Lo cazo la
+     * revision de seguridad.
+     */
+    void limpiarCiudad(UserId usuario);
+
+    /**
      * El unico metodo que escribe el correo. Criterio 21.
      *
      * <p>Escribe tambien la fecha de verificacion, porque el correo nuevo llega ya

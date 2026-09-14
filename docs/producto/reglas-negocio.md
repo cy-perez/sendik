@@ -826,6 +826,51 @@ guarda.
   Sendik no puede verificar la autorización de ninguna de las dos formas
   (`docs/operacion/datos-personales.md`).
 
+### La dirección de origen del vendedor
+
+Nacen con HU-017, el 14 de septiembre de 2026. Es la pareja de la libreta al otro
+extremo del envío: desde dónde sale lo que alguien vende. RN-039 la necesita para
+cotizar y RN-078 para que el vendedor sea el remitente de la guía.
+
+- **RN-105** **Una cuenta tiene como mucho una dirección de origen.** RN-039 habla
+  de «la ciudad de origen del vendedor», en singular: una persona despacha desde un
+  sitio. Guardar otra reemplaza la anterior y nunca quedan dos; lo garantiza la base,
+  no el orden de dos escrituras. Si un vendedor real despacha desde más de un sitio,
+  esta regla se quedó corta y entonces se parece a la libreta.
+
+- **RN-106** **El remitente es el titular de la cuenta, con el nombre y el teléfono
+  de su perfil.** Desarrolla RN-078 hacia dentro: el origen no lleva nombre ni
+  teléfono propios, porque aquí no hay tercero. Por eso **guardar el origen exige que
+  el perfil tenga teléfono**: un remitente sin teléfono no es remitente, y se dice
+  antes de que nadie escriba nada. Quitar el teléfono después de guardar el origen
+  hoy no se impide; es el caso a cerrar cuando exista la guía.
+
+- **RN-107** **Con dirección de origen, la ciudad del perfil es el municipio del
+  origen con su departamento al lado**, elegido de la división del DANE (RN-100). Lo
+  escrito a mano se conserva mientras no haya origen y se descarta al guardarlo; se
+  lee uniendo y no se copia, así que un municipio renombrado sale con el nombre nuevo.
+  Al borrar el origen la ciudad queda vacía y vuelve a poder escribirse. Con origen,
+  la ciudad no se edita desde el perfil (ADR-0042).
+
+- **RN-108** **El origen no se exige todavía.** No se pide al verificarse, no se pide
+  al publicar y no bloquea nada. La exigencia llega con la cotización: sin origen no
+  hay tarifa y RN-040 ya dice que sin cotización no hay compra.
+
+- **RN-109** **Guardar el origen no comprueba que haya cobertura de recogida**, y
+  ninguna pantalla lo insinúa. Es RN-103 al otro extremo del envío: la cobertura sigue
+  sin comprobar (RN-080) y se sabrá al cotizar.
+
+- **RN-110** **Cerrar la cuenta borra la dirección de origen en el acto**, en la
+  misma transacción que anonimiza, con las direcciones de entrega, los favoritos y el
+  carrito. Extiende RN-102 por la misma razón: es donde despacha una persona.
+
+- **RN-111** **Cualquier cuenta puede guardar dirección de origen, tenga o no el
+  sello.** En el código el rol de vendedor lo otorga aprobar la verificación y lo
+  quita revocarla, así que «vendedor sin sello» no existe como rol; y se decidió que
+  el origen se pueda dejar listo antes del sello. Una cuenta que nunca vende puede
+  tener origen igual que una que nunca compra puede tener libreta. Revocar el sello no
+  lo borra: es de la persona, no del sello.
+
 ## Datos personales
 
 - **RN-046** La cédula, la selfie y la cuenta bancaria se guardan cifradas y solo

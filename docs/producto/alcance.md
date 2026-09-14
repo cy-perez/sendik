@@ -469,6 +469,27 @@ publicado.
 
   Lo que queda para cuando lleguen las integraciones está en la línea siguiente.
 
+- **La dirección de origen del vendedor. Hecho: HU-017, implementada el 14 de
+  septiembre de 2026.** Desde dónde despacha quien vende, con el municipio elegido
+  del DANE, detrás de `FEATURE_CHECKOUT`. Trajo siete reglas, RN-105 a RN-111, y
+  una decisión: ADR-0042.
+
+  **Se sacó de la línea de Skydropx por el mismo criterio que partió el carrito y la
+  libreta**: RN-039 la necesita para cotizar y RN-078 para emitir la guía, pero guardar
+  desde dónde sale algo no necesita al agregador. Era lo único de la fase que no
+  esperaba a nadie, y la pareja del dato que HU-016 produjo: con las dos, el día que
+  Skydropx conteste hay con qué cotizar por los dos extremos.
+
+  **Una por cuenta y el remitente es el titular** (RN-105, RN-106): sin teléfono en el
+  perfil no se guarda. **La ciudad del perfil pasa a ser el municipio del origen**
+  (RN-107, ADR-0042), y con eso deja de haber dos verdades sobre de dónde sale un
+  producto. **No se exige todavía** (RN-108): la exigencia llega con la cotización.
+
+  Escribirla destapó que «rol de vendedor» y «sello» son lo mismo en el código, y que
+  la ciudad del perfil está clasificada como pública sin que ninguna respuesta pública
+  la muestre. Lo primero lo fija RN-111; lo segundo queda anotado en
+  `datos-personales.md` como decisión pendiente.
+
 - **El proceso de compra**: crear el pedido y el paso a pagar. Es lo que queda de
   la línea anterior y espera a las dos integraciones. Con el pedido llega además
   una decisión que HU-016 no pudo tomar: que el pedido **copie** la dirección en
@@ -477,10 +498,10 @@ publicado.
 - Pago con Wompi: PSE, Nequi, tarjetas, Bancolombia a la mano y Addi.
 - División del pago y retención de la comisión del 5%.
 - Cotización de envíos con **Skydropx Colombia**, el agregador (ADR-0034, RN-038).
-  Una integración, no una por transportadora. Le falta además **la dirección de
-  origen del vendedor**, que RN-039 necesita y que HU-016 dejó fuera a propósito:
-  hoy el perfil solo tiene `city`, texto libre y opcional, y el origen completo
-  existe para emitir la guía (RN-078), que es Skydropx entero.
+  Una integración, no una por transportadora. ~~Le falta además **la dirección de
+  origen del vendedor**~~ **La trajo HU-017 el 14 de septiembre de 2026**: RN-039 ya
+  tiene los dos extremos y RN-078 tiene remitente con dirección. Lo que sigue
+  faltando es el agregador.
 - **Precio base y costo de envío como cifras separadas**, con el envío a cargo del
   comprador y el total a la vista antes de pagar (RN-076, RN-077).
 - **Seguimiento del envío**: guía y eventos visibles para comprador y vendedor, y

@@ -142,6 +142,16 @@ public enum ErrorCode {
     USER_UNKNOWN_MUNICIPALITY,
 
     /**
+     * HU-017: guardar la direccion de origen exige que el perfil tenga telefono, porque
+     * el remitente de la guia es el titular de la cuenta (RN-078).
+     *
+     * <p>422 y no 400: la peticion esta bien formada; lo que falta es un dato que vive
+     * en otro sitio, el perfil, y lo que hay que decirle a quien la manda es que vaya
+     * alli.
+     */
+    USER_PHONE_REQUIRED,
+
+    /**
      * Lo que se subio no es una imagen de un tipo aceptado.
      *
      * <p>Se decide por los bytes de cabecera, no por la extension ni por el

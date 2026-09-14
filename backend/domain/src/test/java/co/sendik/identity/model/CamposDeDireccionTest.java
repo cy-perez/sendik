@@ -91,6 +91,16 @@ class CamposDeDireccionTest {
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
+        /** HU-017: las de recogida son otro tipo con el mismo tope y la misma limpieza. */
+        @Test
+        void deberia_acotar_y_limpiar_las_indicaciones_de_recogida_igual_que_las_de_entrega() {
+            assertThat(new PickupInstructions("  Entrar por el parqueadero  ").value())
+                    .isEqualTo("Entrar por el parqueadero");
+            assertThatThrownBy(() -> new PickupInstructions("x".repeat(201)))
+                    .isInstanceOf(IllegalArgumentException.class);
+            assertThatThrownBy(() -> new PickupInstructions("   ")).isInstanceOf(IllegalArgumentException.class);
+        }
+
         @Test
         void deberia_aceptar_un_codigo_postal_de_seis_digitos_con_o_sin_espacios() {
             assertThat(new PostalCode("110111").value()).isEqualTo("110111");

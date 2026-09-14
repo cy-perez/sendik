@@ -10,6 +10,7 @@ import co.sendik.identity.port.out.FinancialInstitutions;
 import co.sendik.identity.port.out.LegalDocuments;
 import co.sendik.identity.port.out.LoginAttemptRecorder;
 import co.sendik.identity.port.out.MailSender;
+import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.PasswordHasher;
 import co.sendik.identity.port.out.RefreshTokenRepository;
 import co.sendik.identity.port.out.SellerVerificationRepository;
@@ -24,6 +25,7 @@ import co.sendik.identity.usecase.AddShippingAddressUseCase;
 import co.sendik.identity.usecase.ApproveVerificationUseCase;
 import co.sendik.identity.usecase.CloseAccountUseCase;
 import co.sendik.identity.usecase.ConfirmEmailChangeUseCase;
+import co.sendik.identity.usecase.DeleteOriginAddressUseCase;
 import co.sendik.identity.usecase.EditShippingAddressUseCase;
 import co.sendik.identity.usecase.ExportUserDataUseCase;
 import co.sendik.identity.usecase.ForgotPasswordUseCase;
@@ -35,7 +37,9 @@ import co.sendik.identity.usecase.ListSessionsUseCase;
 import co.sendik.identity.usecase.ListShippingAddressesUseCase;
 import co.sendik.identity.usecase.LoginUseCase;
 import co.sendik.identity.usecase.LogoutUseCase;
+import co.sendik.identity.usecase.ReadOriginAddressUseCase;
 import co.sendik.identity.usecase.ReadProfileUseCase;
+import co.sendik.identity.usecase.ReadProfileViewUseCase;
 import co.sendik.identity.usecase.ReadPublicProfileUseCase;
 import co.sendik.identity.usecase.ReadSellerVerificationUseCase;
 import co.sendik.identity.usecase.RefreshSessionUseCase;
@@ -49,6 +53,7 @@ import co.sendik.identity.usecase.ResendVerificationUseCase;
 import co.sendik.identity.usecase.ResetPasswordUseCase;
 import co.sendik.identity.usecase.RevokeSessionUseCase;
 import co.sendik.identity.usecase.RevokeVerificationUseCase;
+import co.sendik.identity.usecase.SaveOriginAddressUseCase;
 import co.sendik.identity.usecase.SetDefaultShippingAddressUseCase;
 import co.sendik.identity.usecase.StartSellerVerificationUseCase;
 import co.sendik.identity.usecase.SubmitBankAccountUseCase;
@@ -250,10 +255,11 @@ public class IdentityWiring {
             UserFavorites favoritos,
             UserCart carrito,
             ShippingAddressRepository direcciones,
+            OriginAddressRepository origenes,
             GeographicDivision division,
             Clock reloj) {
         return new ExportUserDataUseCase(
-                usuarios, consentimientos, refrescos, favoritos, carrito, direcciones, division, reloj);
+                usuarios, consentimientos, refrescos, favoritos, carrito, direcciones, origenes, division, reloj);
     }
 
     @Bean
@@ -265,8 +271,40 @@ public class IdentityWiring {
             UserFavorites favoritos,
             UserCart carrito,
             ShippingAddressRepository direcciones,
+            OriginAddressRepository origenes,
             Clock reloj) {
-        return new CloseAccountUseCase(usuarios, refrescos, correo, almacen, favoritos, carrito, direcciones, reloj);
+        return new CloseAccountUseCase(
+                usuarios, refrescos, correo, almacen, favoritos, carrito, direcciones, origenes, reloj);
+    }
+
+    // --- La direccion de origen del vendedor. HU-017. ---
+
+    @Bean
+    ReadOriginAddressUseCase readOriginAddressUseCase(
+            OriginAddressRepository origenes, UserRepository usuarios, GeographicDivision division) {
+        return new ReadOriginAddressUseCase(origenes, usuarios, division);
+    }
+
+    @Bean
+    SaveOriginAddressUseCase saveOriginAddressUseCase(
+            OriginAddressRepository origenes, GeographicDivision division, UserRepository usuarios, Clock reloj) {
+        return new SaveOriginAddressUseCase(origenes, division, usuarios, reloj);
+    }
+
+    @Bean
+    DeleteOriginAddressUseCase deleteOriginAddressUseCase(OriginAddressRepository origenes, UserRepository usuarios) {
+        return new DeleteOriginAddressUseCase(origenes, usuarios);
+    }
+
+    /**
+     * Distinto de {@code readProfileUseCase}, y los dos hacen falta: aquel devuelve la cuenta
+     * y es la puerta publica por la que {@code catalog} pregunta; este arma lo que ve la
+     * duena, con la ciudad resuelta desde el origen (ADR-0042).
+     */
+    @Bean
+    ReadProfileViewUseCase readProfileViewUseCase(
+            UserRepository usuarios, OriginAddressRepository origenes, GeographicDivision division) {
+        return new ReadProfileViewUseCase(usuarios, origenes, division);
     }
 
     // --- La libreta de direcciones de entrega. HU-016. ---
@@ -482,8 +520,8 @@ public class IdentityWiring {
     }
 
     @Bean
-    UpdateProfileUseCase updateProfileUseCase(UserRepository usuarios) {
-        return new UpdateProfileUseCase(usuarios);
+    UpdateProfileUseCase updateProfileUseCase(UserRepository usuarios, OriginAddressRepository origenes) {
+        return new UpdateProfileUseCase(usuarios, origenes);
     }
 
     @Bean

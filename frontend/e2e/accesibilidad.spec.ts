@@ -77,6 +77,8 @@ const RUTAS_PUBLICAS: readonly { readonly ruta: string; readonly nombre: string 
   // que en `/mis-favoritos` y `/mis-publicaciones`: la libreta no existe sin cuenta. Se
   // quedo fuera de esta lista al escribirla y lo cazaron las dos revisiones.
   { ruta: '/mis-direcciones', nombre: 'mis direcciones' },
+  // HU-017. Sin sesion, la invitacion a entrar del criterio 14, como la libreta.
+  { ruta: '/mi-direccion-de-origen', nombre: 'mi direccion de origen' },
   // HU-014. Sin backend, lo que axe recorre del catalogo es su estado de error, y sobre
   // todo **la caja de busqueda y el panel de filtros**, que se pintan igual: se ven antes
   // de que llegue nada y son la interfaz nueva de esta historia.

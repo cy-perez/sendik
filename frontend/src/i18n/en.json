@@ -122,6 +122,10 @@
     "addresses": {
       "title": "My addresses · Sendik",
       "description": "Save where you want your purchases delivered."
+    },
+    "originAddress": {
+      "title": "My origin address · Sendik",
+      "description": "Tell us where you ship what you sell from."
     }
   },
   "layout": {
@@ -255,7 +259,8 @@
       "CATALOG_UNKNOWN_CATEGORY": "That category is no longer available. Pick another one.",
       "CATALOG_SELF_MODERATION_FORBIDDEN": "You cannot decide on your own listing.",
       "USER_ADDRESS_BOOK_FULL": "No more addresses fit. Remove one to add another.",
-      "USER_UNKNOWN_MUNICIPALITY": "That municipality is no longer on the official list. Choose another one."
+      "USER_UNKNOWN_MUNICIPALITY": "That municipality is no longer on the official list. Choose another one.",
+      "USER_PHONE_REQUIRED": "Your profile has no phone number and the sender needs one. Add it in your account and try again."
     }
   },
   "form": {
@@ -442,6 +447,8 @@
           "optional": "Optional. Leave it empty to remove it.",
           "phone": "Optional. Include the country code if it is not Colombian, for example +57 300 123 4567."
         },
+        "cityFromOrigin": "It comes from your origin address.",
+        "changeCity": "Change it in my origin address",
         "errors": {
           "displayName": "Enter a name between 2 and 80 characters.",
           "city": "City cannot be longer than 80 characters.",
@@ -515,6 +522,7 @@
         "favorites": "Your favourites",
         "cart": "Your cart",
         "addresses": "My addresses",
+        "originAddress": "My origin address",
         "listings": "My listings",
         "publish": "Sell something",
         "verification": "Seller verification",
@@ -1575,5 +1583,63 @@
       "full": "You already have {{tope}} saved addresses, which is the maximum. Remove one to add another.",
       "stale": "The change was made, but we couldn't reload the list. Reload the page."
     }
+  },
+  "originAddress": {
+    "title": "My origin address",
+    "loading": "Loading your origin address",
+    "error": "We couldn't load your origin address.",
+    "retry": "Try again",
+    "signedOut": {
+      "body": "Sign in to tell us where you ship what you sell from.",
+      "action": "Sign in"
+    },
+    "empty": {
+      "title": "You don't have an origin address yet",
+      "body": "It's where what you sell will ship from: it will be used to quote shipping and to list you as the sender on the label once shipping exists.",
+      "action": "Add my origin address"
+    },
+    "card": {
+      "title": "You ship from here",
+      "edit": "Edit",
+      "delete": "Remove",
+      "municipalityGone": "This municipality is no longer on the official list. You'll have to pick another one when you edit."
+    },
+    "sender": {
+      "title": "Sender",
+      "change": "Change name or phone in my account",
+      "missingPhone": "Your profile has no phone number and the sender needs one. Add it in your account before saving.",
+      "missingPhoneShort": "No phone number in the profile."
+    },
+    "form": {
+      "newTitle": "New origin address",
+      "editTitle": "Edit origin address",
+      "save": "Save origin address",
+      "cancel": "Cancel",
+      "line": {
+        "label": "Address",
+        "hint": "For example: Carrera 15 # 93-47",
+        "error": "Type the address, between 5 and 120 characters."
+      },
+      "complement": {
+        "label": "Unit (optional)",
+        "hint": "Shop, warehouse, office or apartment",
+        "error": "The unit can't be longer than 60 characters."
+      },
+      "instructions": {
+        "label": "Pickup notes (optional)",
+        "hint": "Anything that helps the carrier pick up",
+        "error": "The notes can't be longer than 200 characters."
+      },
+      "postalCode": {
+        "label": "Postal code (optional)",
+        "hint": "Six digits, if you know it",
+        "error": "Colombian postal codes have six digits."
+      }
+    },
+    "notices": {
+      "saved": "Origin address saved.",
+      "removed": "Origin address removed."
+    },
+    "noPromise": "Saving it doesn't check that a carrier picks up there. That will be known when quoting."
   }
 }

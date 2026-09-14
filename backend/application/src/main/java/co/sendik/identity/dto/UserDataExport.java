@@ -34,7 +34,8 @@ public record UserDataExport(
         List<Sesion> sesiones,
         List<Favorito> favoritos,
         List<ProductoEnCarrito> carrito,
-        List<Direccion> direcciones) {
+        List<Direccion> direcciones,
+        @Nullable Origen origen) {
 
     /**
      * No imprime nada de lo que hay dentro.
@@ -169,6 +170,29 @@ public record UserDataExport(
         @Override
         public String toString() {
             return "Direccion[sin imprimir]";
+        }
+    }
+
+    /**
+     * Desde donde despacha esta persona. HU-017, criterio 18.
+     *
+     * <p>Con los nombres del municipio y del departamento y no con sus codigos, por lo mismo
+     * que {@link Direccion}. Sin nombre ni telefono del remitente: son los del perfil y ya
+     * salen en {@link Cuenta}.
+     */
+    public record Origen(
+            String departamento,
+            String municipio,
+            String linea,
+            @Nullable String complemento,
+            @Nullable String indicaciones,
+            @Nullable String codigoPostal,
+            Instant guardadaEl) {
+
+        /** No imprime nada de lo que hay dentro (criterio 17). */
+        @Override
+        public String toString() {
+            return "Origen[sin imprimir]";
         }
     }
 }

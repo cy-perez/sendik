@@ -6,15 +6,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.sendik.identity.dto.UpdateProfileCommand;
+import co.sendik.identity.model.AddressLine;
 import co.sendik.identity.model.BirthDate;
 import co.sendik.identity.model.City;
 import co.sendik.identity.model.DisplayName;
 import co.sendik.identity.model.Email;
+import co.sendik.identity.model.OriginAddress;
 import co.sendik.identity.model.Phone;
 import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
 import co.sendik.identity.model.UserLocale;
+import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.UserRepository;
+import co.sendik.shared.geo.MunicipalityCode;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -35,12 +39,15 @@ class UpdateProfileUseCaseTest {
     @Mock
     private UserRepository usuarios;
 
+    @Mock
+    private OriginAddressRepository origenes;
+
     private UpdateProfileUseCase caso;
     private User usuario;
 
     @BeforeEach
     void prepararCaso() {
-        caso = new UpdateProfileUseCase(usuarios);
+        caso = new UpdateProfileUseCase(usuarios, origenes);
 
         usuario = User.registrar(
                 UserId.nuevo(),
@@ -99,6 +106,29 @@ class UpdateProfileUseCaseTest {
         caso.execute(new UpdateProfileCommand(usuario.id(), "Ana", "Medellin", null));
 
         assertThat(guardado().email()).isEqualTo(new Email("ana@correo.co"));
+    }
+
+    /**
+     * HU-017, criterio 11: con direccion de origen la ciudad es el municipio del origen y no
+     * se edita desde aqui. Lo que llegue se descarta y el campo queda en nulo (ADR-0042).
+     */
+    @Test
+    void deberia_ignorar_la_ciudad_si_la_cuenta_tiene_direccion_de_origen() {
+        when(origenes.deCuenta(usuario.id()))
+                .thenReturn(Optional.of(OriginAddress.nueva(
+                        usuario.id(),
+                        new MunicipalityCode("05001"),
+                        new AddressLine("Carrera 70 # 45-12"),
+                        null,
+                        null,
+                        null,
+                        AHORA)));
+
+        caso.execute(new UpdateProfileCommand(usuario.id(), "Ana", "Medellin", "3001234567"));
+
+        assertThat(guardado().city()).isNull();
+        assertThat(guardado().displayName()).isEqualTo(new DisplayName("Ana"));
+        assertThat(guardado().phone()).isEqualTo(new Phone("3001234567"));
     }
 
     @Test
