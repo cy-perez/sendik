@@ -77,7 +77,11 @@ test.describe('direccion de origen', () => {
     });
     await page.getByRole('button', { name: 'Guardar dirección de origen' }).click();
 
-    await expect(page.getByRole('status')).toContainText('Dirección de origen guardada');
+    // Filtrado por texto: mientras el formulario se cierra hay dos regiones vivas en la
+    // pagina -la suya y la del selector de municipio- y sin filtro el localizador es ambiguo.
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Dirección de origen guardada' }),
+    ).toHaveCount(1);
     await expect(page.getByText('Carrera 15 # 93-47')).toBeVisible();
     await expect(page.getByText('Bogotá, D.C., Bogotá, D.C.')).toBeVisible();
     await expect(page.getByText('110221')).toBeVisible();
@@ -106,7 +110,9 @@ test.describe('direccion de origen', () => {
 
     // Criterio 12: borrar deja la ciudad vacía y otra vez editable.
     await page.getByRole('button', { name: 'Quitar' }).click();
-    await expect(page.getByRole('status')).toContainText('Dirección de origen quitada');
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Dirección de origen quitada' }),
+    ).toHaveCount(1);
     await expect(page.getByText('Todavía no tienes dirección de origen')).toBeVisible();
 
     await page.goto('/mi-cuenta');
