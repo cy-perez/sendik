@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import co.sendik.identity.dto.ActiveSession;
 import co.sendik.identity.dto.CloseAccountCommand;
+import co.sendik.identity.dto.ProfileView;
 import co.sendik.identity.dto.RequestEmailChangeCommand;
 import co.sendik.identity.dto.UpdateAvatarCommand;
 import co.sendik.identity.dto.UpdateProfileCommand;
@@ -35,7 +36,7 @@ import co.sendik.identity.model.UserLocale;
 import co.sendik.identity.usecase.CloseAccountUseCase;
 import co.sendik.identity.usecase.ExportUserDataUseCase;
 import co.sendik.identity.usecase.ListSessionsUseCase;
-import co.sendik.identity.usecase.ReadProfileUseCase;
+import co.sendik.identity.usecase.ReadProfileViewUseCase;
 import co.sendik.identity.usecase.RemoveAvatarUseCase;
 import co.sendik.identity.usecase.RequestEmailChangeUseCase;
 import co.sendik.identity.usecase.RequestEmailVerificationUseCase;
@@ -90,7 +91,7 @@ class UsersControllerTest {
     private final RevokeSessionUseCase revocacion = mock(RevokeSessionUseCase.class);
     private final ExportUserDataUseCase exportacion = mock(ExportUserDataUseCase.class);
     private final CloseAccountUseCase cierre = mock(CloseAccountUseCase.class);
-    private final ReadProfileUseCase lectura = mock(ReadProfileUseCase.class);
+    private final ReadProfileViewUseCase lectura = mock(ReadProfileViewUseCase.class);
     private final UpdateProfileUseCase perfil = mock(UpdateProfileUseCase.class);
     private final RequestEmailChangeUseCase cambioDeCorreo = mock(RequestEmailChangeUseCase.class);
     private final UpdateAvatarUseCase avatar = mock(UpdateAvatarUseCase.class);
@@ -260,7 +261,10 @@ class UsersControllerTest {
                                 null,
                                 "110111",
                                 true,
-                                AHORA))));
+                                AHORA)),
+                        // HU-017: y la direccion de origen, con nombres y no con codigos.
+                        new UserDataExport.Origen(
+                                "Antioquia", "Medellín", "Carrera 70 # 45-12", null, null, null, AHORA)));
 
         MvcResult resultado = mvc.perform(get("/api/v1/users/me/export"))
                 .andExpect(status().isOk())
@@ -271,6 +275,7 @@ class UsersControllerTest {
                 // no del sistema, y el derecho a conocer los alcanza.
                 .andExpect(jsonPath("$.cuenta.ciudad").value("Medellin"))
                 .andExpect(jsonPath("$.cuenta.telefono").value("+57 300 000 0000"))
+                .andExpect(jsonPath("$.origen.municipio").value("Medellín"))
                 // La evidencia con su version: es lo que prueba a que dijo que si.
                 .andExpect(jsonPath("$.consentimientos[0].version").value("2026-08-01"))
                 // Y los favoritos, que son dato personal (HU-011, RN-070). Se afirma el
@@ -357,15 +362,29 @@ class UsersControllerTest {
 
     @Test
     void deberia_devolver_el_perfil_criterio_21() throws Exception {
-        when(lectura.execute(USUARIO)).thenReturn(conPerfil("Medellin", "3001234567"));
+        when(lectura.execute(USUARIO))
+                .thenReturn(new ProfileView(conPerfil("Medellin", "3001234567"), "Medellin", true));
 
         mvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.displayName").value("Ana Maria"))
                 .andExpect(jsonPath("$.city").value("Medellin"))
+                .andExpect(jsonPath("$.cityEditable").value(true))
                 .andExpect(jsonPath("$.phone").value("3001234567"))
                 .andExpect(jsonPath("$.email").value("ana@correo.co"))
                 .andExpect(jsonPath("$.emailVerified").value(false));
+    }
+
+    /** HU-017, criterio 11: con origen, la ciudad viene del municipio y no se edita. */
+    @Test
+    void deberia_decir_que_la_ciudad_viene_del_origen_y_no_se_edita() throws Exception {
+        when(lectura.execute(USUARIO))
+                .thenReturn(new ProfileView(conPerfil(null, "3001234567"), "Medellín, Antioquia", false));
+
+        mvc.perform(get("/api/v1/users/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.city").value("Medellín, Antioquia"))
+                .andExpect(jsonPath("$.cityEditable").value(false));
     }
 
     /**
@@ -375,6 +394,8 @@ class UsersControllerTest {
     @Test
     void deberia_guardar_el_perfil_y_devolver_lo_normalizado_criterio_21() throws Exception {
         when(perfil.execute(any())).thenReturn(conPerfil("Medellin", "+573001234567"));
+        when(lectura.execute(USUARIO))
+                .thenReturn(new ProfileView(conPerfil("Medellin", "+573001234567"), "Medellin", true));
 
         mvc.perform(put("/api/v1/users/me").contentType("application/json").content("""
                         {"displayName":"Ana Maria","city":"Medellin","phone":"+57 300 123 4567"}
@@ -392,6 +413,7 @@ class UsersControllerTest {
     @Test
     void deberia_dejar_quitar_la_ciudad_y_el_telefono_criterio_21() throws Exception {
         when(perfil.execute(any())).thenReturn(conPerfil(null, null));
+        when(lectura.execute(USUARIO)).thenReturn(new ProfileView(conPerfil(null, null), null, true));
 
         mvc.perform(put("/api/v1/users/me").contentType("application/json").content("""
                         {"displayName":"Ana Maria","city":null,"phone":null}
@@ -472,6 +494,7 @@ class UsersControllerTest {
         FileKey clave = new FileKey("avatares/la-foto.png");
 
         when(avatar.execute(any())).thenReturn(cuentaCon(clave));
+        when(lectura.execute(USUARIO)).thenReturn(new ProfileView(cuentaCon(clave), "Medellin", true));
         when(almacen.direccionDe(clave)).thenReturn(URI.create("https://archivos.sendik.co/avatares/la-foto.png"));
 
         mvc.perform(multipart("/api/v1/users/me/avatar")
@@ -494,7 +517,7 @@ class UsersControllerTest {
     @Test
     void nunca_deberia_devolver_la_clave_del_archivo() throws Exception {
         FileKey clave = new FileKey("avatares/la-foto.png");
-        when(lectura.execute(USUARIO)).thenReturn(cuentaCon(clave));
+        when(lectura.execute(USUARIO)).thenReturn(new ProfileView(cuentaCon(clave), "Medellin", true));
         when(almacen.direccionDe(clave)).thenReturn(URI.create("https://archivos.sendik.co/avatares/la-foto.png"));
 
         MvcResult resultado =
@@ -506,6 +529,7 @@ class UsersControllerTest {
     @Test
     void deberia_quitar_la_foto_de_perfil_criterio_21() throws Exception {
         when(quitarAvatar.execute(USUARIO)).thenReturn(cuentaCon(null));
+        when(lectura.execute(USUARIO)).thenReturn(new ProfileView(cuentaCon(null), "Medellin", true));
 
         mvc.perform(delete("/api/v1/users/me/avatar"))
                 .andExpect(status().isOk())

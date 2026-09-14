@@ -13,11 +13,17 @@ import org.jspecify.annotations.Nullable;
  * guardada. La clave es un detalle del almacen y el cliente no la necesita para
  * nada: lo que hace con la foto es pintarla. La compone el almacen, que es quien
  * conoce su configuracion (ADR-0018).
+ *
+ * <p><strong>La ciudad tiene dos fuentes desde HU-017</strong> (ADR-0042): lo escrito a
+ * mano mientras no hay direccion de origen, y el municipio del origen con su departamento
+ * al lado cuando la hay. {@code cityEditable} dice cual es el caso, y con ello la pantalla
+ * sabe si pintar un campo o un texto con enlace al origen (criterios 10 a 12).
  */
 public record ProfileResponse(
         String email,
         boolean emailVerified,
         String displayName,
         @Nullable String city,
+        boolean cityEditable,
         @Nullable String phone,
         @Nullable String avatarUrl) {}
