@@ -313,6 +313,114 @@ junto a las publicaciones», y hoy no aparece en ninguna respuesta pública.
 **Posible ADR**, a criterio del plan: que la ciudad del perfil deje de ser texto libre cuando
 hay origen, porque revierte un argumento escrito en `City`.
 
+## Cómo quedó
+
+**Hecha el 14 de septiembre de 2026.** Los veinticuatro criterios están implementados y
+probados. Las siete reglas que la historia obligaba a escribir, RN-105 a RN-111, están en
+`reglas-negocio.md`; el glosario estrena **Dirección de origen** / `OriginAddress`,
+**Remitente** / `Sender` y **Ciudad del perfil** / `City`; y la decisión quedó en
+**ADR-0042**.
+
+### Lo que la historia daba por hecho al revés
+
+- **Existía ya un `ReadProfileUseCase`**, y devuelve `User` porque es la puerta por la que
+  `catalog` pregunta nombre y correo para sus avisos. La historia proponía cambiarlo y se
+  sobrescribió por error al implementar; se restauró y la vista del perfil con la ciudad
+  resuelta es otro caso de uso, `ReadProfileViewUseCase`. Los dos hacen falta y no se
+  unifican: unificarlos acoplaría `catalog` a la resolución de la ciudad.
+- **El botón de guardar no se deshabilita sin teléfono.** La historia lo decía dos veces; el
+  proyecto ya había fijado en `account-page` que un botón deshabilitado no dice por qué lo
+  está. Sigue activo, y al pulsarlo el foco va al aviso y no se llama al servidor. El servidor
+  rechaza igual con `USER_PHONE_REQUIRED`.
+- **El criterio 7 tiene una mitad que no existe.** «Un municipio que no pertenece al
+  departamento enviado» no es un caso distinguible: el cuerpo no lleva departamento (RN-100),
+  así que el par incoherente no puede existir. Queda la otra mitad, el código que no está en
+  la división.
+
+### Las decisiones que se tomaron al implementarla
+
+- **Guardar el origen limpia la ciudad con una operación mínima**, `limpiarCiudad`, y no
+  reescribiendo la cuenta desde su instantánea. Lo cazó la revisión de seguridad: `actualizar`
+  escribe la fila entera de `users`, y si el cierre de cuenta se colara entre leer y escribir,
+  restauraría nombre, teléfono y estado sobre una fila ya anonimizada. La operación toca una
+  columna y solo sobre una cuenta activa. `UpdateProfileUseCase` tiene el mismo patrón desde
+  HU-001 y no se tocó aquí: es otra tarea.
+- **Leer el origen con una cuenta cerrada y token vivo responde 401**, no un 204 que la
+  pantalla leería como «no tienes origen» mientras `GET /users/me` responde 401. La cuenta ya
+  se cargaba para el remitente, así que comprobarla no costaba nada.
+- **El JSON ilegible sale como `ProblemDetail`.** Hasta hoy lo resolvía Spring con un 400 sin
+  cuerpo —contra el contrato— y un `WARN` con el mensaje de Jackson, que lleva el token que no
+  pudo leer: un trozo de la línea de una dirección. Es transversal y preexistente, y era el
+  único camino por el que el cuerpo crudo podía llegar a un registro. Ahora hay manejador,
+  registra solo el `traceId`, y la prueba de registros manda JSON roto con la línea dentro.
+- **`ArchitectureTest` gana una regla**: `@Transactional` solo en `..usecase..`, en clases y en
+  métodos. `backend/CLAUDE.md` lo decía y nada lo comprobaba. Se vio fallar con una anotación
+  puesta a propósito en un repositorio antes de darla por buena.
+- **El remitente viaja dos veces a la misma pantalla**: en `OriginAddressResponse` y por una
+  segunda lectura de `GET /users/me` desde `AddressesApi.remitente()`, porque el formulario
+  lo necesita cuando todavía no hay origen y `features/addresses` no puede importar el store
+  de `features/auth`. Es defendible y está acotado. La alternativa mejor la dejó escrita el
+  arquitecto para cuando se toque el contrato: que `GET /users/me/origin-address` responda
+  siempre `200` con `{ address | null, sender }`, y desaparezcan la segunda lectura, su clave
+  y su consulta.
+- **La ciudad del perfil se pinta con departamento al lado también en Bogotá**, así que quien
+  despacha desde allí ve «Bogotá, D.C., Bogotá, D.C.». Es lo mismo que la libreta decidió con
+  su criterio 24 y tres pruebas lo fijan. Merece decisión de producto si molesta; no se cambió
+  aquí para no divergir de HU-016.
+
+### Lo que encontraron los cuatro revisores, y que estaba mal de verdad
+
+Se lanzaron los cuatro: `arquitecto`, `revisor-pruebas`, `revisor-seguridad` y
+`revisor-accesibilidad`. Ningún hallazgo crítico ni alto de seguridad; ninguna violación de
+capas. Lo que sí:
+
+- **Dos enlaces sin destino táctil de 44px** —el del remitente en la tarjeta y en el
+  formulario— y **los mensajes de error sin el color de error del sistema**: `.error` no es
+  global y las dos hojas nuevas no la definían, así que el aviso del teléfono que falta, el
+  aviso central del criterio 5, se pintaba como una pista en gris a 12px. Las dos hojas de
+  HU-016 tenían el mismo hueco y se cerró en el mismo commit.
+- **La prueba de registros hacía siete peticiones sin afirmar que llegaran.** Un 401 por
+  cualquier motivo la habría dejado en verde sin recorrer el camino que registra. Cada
+  `perform` afirma ahora su estado, y se comprueba además que el canal `DEBUG` de Spring
+  estuvo abierto: sin eso, subir `org.springframework.web` a `INFO` dejaría la prueba
+  mirando nada.
+- **Faltaban las pruebas de foco** que la historia pedía: al abrir, al cancelar, al quitar, al
+  primer campo con error y al aviso del teléfono. Y el criterio 13 tenía sin cubrir la mitad
+  del perfil: que la ciudad derivada siga leyéndose con un municipio suprimido, y que el
+  nombre nuevo salga cuando el DANE renombra, que solo se puede probar contra la base.
+- **La prueba unitaria del criterio 12 no protegía nada**: arrancaba sin ciudad, así que la
+  aserción de «queda vacía» pasaba hiciera lo que hiciera el caso de uso. Se quitó; el
+  criterio lo prueba `OriginAddressSecurityTest` contra PostgreSQL.
+- **`ReadProfileViewUseCase` repetía literalmente el cruce con la división** de
+  `ReadOriginAddressUseCase.conLaDivision`, con los dos mensajes incluidos. Ahora lo llama.
+- **«Remitente» tenía dos nombres en inglés en el glosario**, `Sender` y `Shipper`, en dos
+  filas. Una sola, con `Sender`, que es como se llama en el código.
+- **Un par de contraste sin listar**: los botones «Editar» y «Quitar» dentro de la tarjeta
+  son texto primario sobre superficie, y `PARES` solo lo tenía como borde a 3:1. Viene de
+  HU-016 y no se estaba comprobando. Entró en los dos sitios.
+- **El enlace «Cambiarla allí»** no se entendía fuera de contexto. Es «Cambiarla en mi
+  dirección de origen».
+- Los `IllegalStateException` inalcanzables llevaban el código del municipio en el mensaje;
+  `ProfileResponse` no tenía `toString` seguro; el aviso de fallo del formulario nacía con el
+  texto dentro; el bloque del remitente no partía nombres largos a 360px; un stub muerto en
+  `UsersControllerTest`; la prueba de la bandera apagada decía «byte por byte» y comparaba
+  cuatro campos. Todo corregido.
+
+### Lo que queda anotado y no se tocó
+
+- **`OriginAddressLeakTest` no cubre la ficha de producto**: consulta `/listings` para una
+  cuenta sin publicaciones, así que esa afirmación es vacía. Cubrirla exige publicar y aprobar
+  una publicación dentro de la prueba. Es el mismo hueco de `ShippingAddressLeakTest`.
+- **Ningún guardián comprueba que aprobar o revocar el sello deje el origen intacto.** Hoy
+  ningún código lo toca, así que es cierto por ausencia; la prueba sería barata.
+- **«Misma transacción» del criterio 19** se prueba por el resultado final y por el orden,
+  no con un fallo forzado en `cerrarYAnonimizar`. Deuda compartida con HU-016.
+- **`UpdateProfileUseCase` sigue reescribiendo la cuenta desde su instantánea**, con la misma
+  ventana que el hallazgo de seguridad cerró aquí. Es de HU-001 y es otra tarea.
+- **axe no ve la tarjeta ni el formulario**: `e2e/accesibilidad.spec.ts` audita la ruta sin
+  sesión, como todas las privadas. La cobertura con sesión vive solo en
+  `accesibilidad-del-panel.spec.ts` para el panel del vendedor.
+
 ## Cuándo revisar
 
 - **Cuando Skydropx conteste** y se sepa qué campos exige del remitente. Si pide algo que el
