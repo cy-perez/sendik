@@ -1,0 +1,109 @@
+<form class="formulario-origen" [formGroup]="form" (ngSubmit)="guardar()">
+  <h2 class="tipo-titulo-tarjeta" tabindex="-1" #titulo>
+    {{ (editando() ? 'originAddress.form.editTitle' : 'originAddress.form.newTitle') | transloco }}
+  </h2>
+
+  <!--
+    Criterio 4: el remitente se lee del perfil y se cambia alli. Va arriba, antes de los
+    campos, porque es lo que decide si se puede guardar: sin telefono no hay remitente
+    (criterio 5), y eso se dice antes de que nadie escriba nada.
+  -->
+  <div class="formulario-origen__remitente">
+    <p class="tipo-secundario">{{ 'originAddress.sender.title' | transloco }}</p>
+    @if (remitente(); as quien) {
+      <p class="tipo-cuerpo">{{ quien.name }}</p>
+      @if (quien.phone) {
+        <p class="tipo-cuerpo">{{ quien.phone }}</p>
+      }
+    }
+    <!-- Se pinta siempre y el texto cambia dentro, para que el lector lo anuncie. -->
+    <p class="error tipo-leyenda" role="alert" tabindex="-1" #avisoDelTelefono>
+      @if (faltaElTelefono()) {
+        {{ 'originAddress.sender.missingPhone' | transloco }}
+      }
+    </p>
+    <a class="tipo-secundario" routerLink="/mi-cuenta">
+      {{ 'originAddress.sender.change' | transloco }}
+    </a>
+  </div>
+
+  <sendik-select-field
+    fieldId="origen-departamento"
+    labelKey="addresses.form.department.label"
+    placeholderKey="addresses.form.department.choose"
+    [control]="form.controls.departmentCode"
+    [options]="departamentos()"
+    [errorKey]="departmentError()"
+  />
+
+  <p class="error tipo-leyenda" role="alert">
+    @if (divisionFallo()) {
+      {{ 'addresses.form.divisionFailed' | transloco }}
+    }
+  </p>
+
+  <p class="solo-lectores" role="status">
+    @if (anuncioDeMunicipios(); as anuncio) {
+      {{ anuncio | transloco: { cuantos: municipios().length } }}
+    }
+  </p>
+
+  <sendik-select-field
+    fieldId="origen-municipio"
+    labelKey="addresses.form.municipality.label"
+    [placeholderKey]="municipioPlaceholder()"
+    [control]="form.controls.municipalityCode"
+    [options]="municipioDisponible() ? municipios() : []"
+    [errorKey]="municipalityError()"
+  />
+
+  <sendik-text-field
+    fieldId="origen-linea"
+    labelKey="originAddress.form.line.label"
+    hintKey="originAddress.form.line.hint"
+    autocomplete="street-address"
+    [control]="form.controls.line"
+    [errorKey]="lineError()"
+  />
+
+  <sendik-text-field
+    fieldId="origen-complemento"
+    labelKey="originAddress.form.complement.label"
+    hintKey="originAddress.form.complement.hint"
+    [control]="form.controls.complement"
+    [errorKey]="complementError()"
+  />
+
+  <sendik-text-field
+    fieldId="origen-indicaciones"
+    labelKey="originAddress.form.instructions.label"
+    hintKey="originAddress.form.instructions.hint"
+    [control]="form.controls.instructions"
+    [errorKey]="instructionsError()"
+  />
+
+  <sendik-text-field
+    fieldId="origen-codigo-postal"
+    labelKey="originAddress.form.postalCode.label"
+    hintKey="originAddress.form.postalCode.hint"
+    autocomplete="postal-code"
+    [control]="form.controls.postalCode"
+    [errorKey]="postalCodeError()"
+  />
+
+  <!-- Criterio 24: sin promesa de recogida. -->
+  <p class="formulario-origen__sin-promesa tipo-leyenda">
+    {{ 'originAddress.noPromise' | transloco }}
+  </p>
+
+  @if (fallo(); as mensaje) {
+    <p class="error tipo-leyenda" role="alert">{{ mensaje | transloco }}</p>
+  }
+
+  <div class="formulario-origen__acciones">
+    <sendik-submit-button [loading]="guardando()" labelKey="originAddress.form.save" />
+    <button type="button" class="btn btn-secundario" (click)="cancelar()">
+      {{ 'originAddress.form.cancel' | transloco }}
+    </button>
+  </div>
+</form>

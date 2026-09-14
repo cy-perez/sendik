@@ -136,6 +136,7 @@ describe('AccountPage', () => {
       '/mis-favoritos',
       '/carrito',
       '/mis-direcciones',
+      '/mi-direccion-de-origen',
       '/mis-publicaciones',
       '/publicar',
       '/verificacion-de-vendedor',

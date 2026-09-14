@@ -122,6 +122,17 @@ export const routes: Routes = [
       import('./features/addresses/presentation/addresses-page').then((m) => m.AddressesPage),
   },
   {
+    // La direccion de origen del vendedor. HU-017. Sin guard y existiendo con la bandera
+    // apagada, por lo mismo que la libreta.
+    path: 'mi-direccion-de-origen',
+    title: 'meta.originAddress.title',
+    data: { descriptionKey: 'meta.originAddress.description' },
+    loadComponent: () =>
+      import('./features/addresses/presentation/origin-address-page').then(
+        (m) => m.OriginAddressPage,
+      ),
+  },
+  {
     path: 'registro',
     title: 'meta.register.title',
     data: { descriptionKey: 'meta.register.description' },

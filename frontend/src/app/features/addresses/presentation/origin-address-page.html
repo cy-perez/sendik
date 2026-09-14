@@ -1,0 +1,116 @@
+<!-- `tabindex="-1"` para recoger el foco cuando se destruye lo que se acaba de pulsar:
+     borrar el origen o cerrar el formulario. Es lo que hace `addresses-page`. -->
+<h1 class="tipo-h1" tabindex="-1" #titulo>{{ 'originAddress.title' | transloco }}</h1>
+
+<!-- La region viva se pinta siempre y el texto cambia dentro: una que aparece con texto
+     ya puesto no la anuncia ningun lector. -->
+<p class="solo-lectores" role="status">
+  @if (cargando()) {
+    {{ 'originAddress.loading' | transloco }}
+  } @else if (aviso(); as mensaje) {
+    {{ mensaje | transloco }}
+  }
+</p>
+
+<p class="error tipo-cuerpo" role="alert">
+  @if (falloDeAccion(); as fallo) {
+    {{ fallo | transloco }}
+  }
+</p>
+
+@if (cargando()) {
+  <p class="esqueleto origen__esqueleto" aria-hidden="true"></p>
+} @else if (!haySesion()) {
+  <!-- Se explica y se ofrece entrar; no se redirige (criterio 14). -->
+  <p class="tipo-cuerpo">{{ 'originAddress.signedOut.body' | transloco }}</p>
+  <p>
+    <a class="btn btn-primario" routerLink="/ingresar">
+      {{ 'originAddress.signedOut.action' | transloco }}
+    </a>
+  </p>
+} @else if (fallo()) {
+  <div role="alert">
+    <p class="tipo-cuerpo">{{ 'originAddress.error' | transloco }}</p>
+    <button type="button" class="btn btn-secundario" (click)="reintentar()">
+      {{ 'originAddress.retry' | transloco }}
+    </button>
+  </div>
+} @else {
+  @if (aviso(); as mensaje) {
+    <p class="origen__aviso tipo-cuerpo">{{ mensaje | transloco }}</p>
+  }
+
+  @if (formularioAbierto()) {
+    <sendik-origin-address-form
+      [origen]="origen()"
+      [remitente]="remitente()"
+      (guardada)="alGuardar()"
+      (cancelada)="cerrarFormulario()"
+    />
+  } @else if (vacio()) {
+    <!--
+      Criterio 1: el vacio es una pantalla. Habla en futuro de lo que el origen servira y
+      no afirma que ya sirva para nada (criterio 24).
+    -->
+    <div class="vacio origen__vacio">
+      <h2 class="tipo-titulo-tarjeta">{{ 'originAddress.empty.title' | transloco }}</h2>
+      <p class="tipo-cuerpo">{{ 'originAddress.empty.body' | transloco }}</p>
+      <p>
+        <button type="button" class="btn btn-primario" (click)="abrirFormulario()">
+          {{ 'originAddress.empty.action' | transloco }}
+        </button>
+      </p>
+    </div>
+  } @else if (origen(); as actual) {
+    <div class="origen__tarjeta">
+      <h2 class="tipo-titulo-tarjeta">{{ 'originAddress.card.title' | transloco }}</h2>
+
+      <p class="tipo-cuerpo">{{ actual.line }}</p>
+      @if (actual.complement) {
+        <p class="tipo-cuerpo">{{ actual.complement }}</p>
+      }
+      <!-- El municipio nunca se lee solo. -->
+      <p class="tipo-cuerpo">{{ comoSeLee(actual) }}</p>
+      @if (actual.postalCode) {
+        <p class="tipo-secundario">{{ actual.postalCode }}</p>
+      }
+      @if (actual.instructions) {
+        <p class="tipo-leyenda origen__indicaciones">{{ actual.instructions }}</p>
+      }
+
+      @if (!actual.municipalityActive) {
+        <!-- Criterio 13: el DANE lo suprimio. Se lee igual; al editar hay que elegir otro. -->
+        <p class="origen__obsoleto tipo-leyenda">
+          {{ 'originAddress.card.municipalityGone' | transloco }}
+        </p>
+      }
+
+      <!-- Criterio 4: el remitente se lee del perfil y se cambia alli. -->
+      <div class="origen__remitente">
+        <p class="tipo-secundario">{{ 'originAddress.sender.title' | transloco }}</p>
+        <p class="tipo-cuerpo">{{ actual.senderName }}</p>
+        @if (actual.senderPhone) {
+          <p class="tipo-cuerpo">{{ actual.senderPhone }}</p>
+        } @else {
+          <p class="tipo-leyenda">{{ 'originAddress.sender.missingPhoneShort' | transloco }}</p>
+        }
+        <a class="tipo-secundario" routerLink="/mi-cuenta">
+          {{ 'originAddress.sender.change' | transloco }}
+        </a>
+      </div>
+
+      <!-- Criterio 24: sin promesa de recogida. -->
+      <p class="tipo-leyenda origen__sin-promesa">{{ 'originAddress.noPromise' | transloco }}</p>
+
+      <div class="origen__acciones">
+        <button type="button" class="btn btn-secundario" (click)="abrirFormulario()">
+          {{ 'originAddress.card.edit' | transloco }}
+        </button>
+        <!-- El borrado no va junto a la accion principal y no estrena dialogo. -->
+        <button type="button" class="btn btn-texto origen__quitar" (click)="borrar()">
+          {{ 'originAddress.card.delete' | transloco }}
+        </button>
+      </div>
+    </div>
+  }
+}

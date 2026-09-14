@@ -1,0 +1,74 @@
+/* `grid-column` es obligatorio: <main> es una rejilla y sin asignar carril la pagina cae
+   en el de sangria. Lo mismo que la libreta. */
+:host {
+  display: block;
+  grid-column: content;
+  max-width: var(--ancho-max);
+}
+
+/* La misma caja y el mismo borde que las tarjetas de la libreta. No estrena nada. */
+.origen__tarjeta {
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  max-width: var(--medida);
+  margin-top: var(--esp-24);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.origen__indicaciones,
+.origen__obsoleto,
+.origen__sin-promesa,
+.origen__aviso {
+  color: var(--color-texto-suave);
+}
+
+.origen__obsoleto,
+.origen__sin-promesa {
+  margin-top: var(--esp-8);
+}
+
+.origen__aviso {
+  margin-top: var(--esp-16);
+}
+
+/* El remitente es un bloque aparte dentro de la tarjeta: se lee, no se edita aqui. */
+.origen__remitente {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  margin-top: var(--esp-12);
+  padding-top: var(--esp-12);
+  border-top: 1px solid var(--color-borde);
+}
+
+.origen__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  margin-top: var(--esp-12);
+}
+
+.origen__quitar {
+  margin-inline-start: auto;
+}
+
+.origen__esqueleto {
+  height: var(--alto-esqueleto-direccion);
+  width: 100%;
+  max-width: var(--medida);
+  margin-top: var(--esp-24);
+}
+
+.origen__vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-16);
+  max-width: var(--medida);
+  margin: var(--esp-24) auto 0;
+}

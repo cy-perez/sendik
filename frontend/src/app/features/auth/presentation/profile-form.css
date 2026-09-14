@@ -26,3 +26,12 @@
   max-width: 320px;
   margin-top: var(--esp-16);
 }
+
+/* HU-017: la ciudad derivada del origen se lee, no se edita. Ocupa el sitio del campo
+   y se separa igual que uno, para que el formulario no cambie de ritmo. */
+.ciudad-derivada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  margin-top: var(--esp-16);
+}

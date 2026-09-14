@@ -101,6 +101,36 @@ describe('ProfileForm', () => {
     expect(campo(fixture, 'telefono').value).toBe('');
   });
 
+  /**
+   * HU-017, criterio 11: con direccion de origen la ciudad viene del municipio, se pinta
+   * como texto con enlace al origen y no como campo, y al guardar viaja nula.
+   */
+  it('pinta la ciudad derivada del origen como texto con enlace y la manda nula', async () => {
+    const { fixture, backend } = await montar({
+      ...PERFIL,
+      city: 'Medellín, Antioquia',
+      cityEditable: false,
+    });
+
+    expect(campo(fixture, 'ciudad')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Medellín, Antioquia');
+    expect(fixture.nativeElement.textContent).toContain('Viene de tu dirección de origen');
+    expect(fixture.nativeElement.querySelector('a[href="/mi-direccion-de-origen"]')).not.toBeNull();
+
+    escribir(fixture, 'nombre-visible', 'Ana');
+    enviar(fixture);
+    await fixture.whenStable();
+
+    const peticion = backend.expectOne(
+      (enviada) => enviada.method === 'PUT' && enviada.url === `${API}/users/me`,
+    );
+    expect(peticion.request.body).toEqual({
+      displayName: 'Ana',
+      city: null,
+      phone: '3001234567',
+    });
+  });
+
   it('guarda lo escrito criterio_21', async () => {
     const { fixture, backend } = await montar();
 

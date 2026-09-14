@@ -122,6 +122,10 @@
     "addresses": {
       "title": "Mis direcciones · Sendik",
       "description": "Guarda a dónde quieres que te llegue lo que compras."
+    },
+    "originAddress": {
+      "title": "Mi dirección de origen · Sendik",
+      "description": "Di desde dónde despachas lo que vendes."
     }
   },
   "layout": {
@@ -255,7 +259,8 @@
       "CATALOG_UNKNOWN_CATEGORY": "Esa categoría ya no está disponible. Elige otra.",
       "CATALOG_SELF_MODERATION_FORBIDDEN": "No puedes decidir sobre tu propia publicación.",
       "USER_ADDRESS_BOOK_FULL": "Ya no caben más direcciones. Quita una para agregar otra.",
-      "USER_UNKNOWN_MUNICIPALITY": "Ese municipio ya no está en la lista oficial. Elige otro."
+      "USER_UNKNOWN_MUNICIPALITY": "Ese municipio ya no está en la lista oficial. Elige otro.",
+      "USER_PHONE_REQUIRED": "Tu perfil no tiene teléfono y el remitente lo necesita. Ponlo en tu cuenta y vuelve a intentarlo."
     }
   },
   "form": {
@@ -442,6 +447,8 @@
           "optional": "Opcional. Déjalo vacío para no tenerlo.",
           "phone": "Opcional. Con indicativo si es de otro país, por ejemplo +57 300 123 4567."
         },
+        "cityFromOrigin": "Viene de tu dirección de origen.",
+        "changeCity": "Cambiarla allí",
         "errors": {
           "displayName": "Escribe un nombre de entre 2 y 80 caracteres.",
           "city": "La ciudad no puede pasar de 80 caracteres.",
@@ -515,6 +522,7 @@
         "favorites": "Tus favoritos",
         "cart": "Tu carrito",
         "addresses": "Mis direcciones",
+        "originAddress": "Mi dirección de origen",
         "listings": "Mis publicaciones",
         "publish": "Publicar",
         "verification": "Verificación de vendedor",
@@ -1575,5 +1583,63 @@
       "full": "Ya tienes {{tope}} direcciones guardadas, que es el máximo. Quita una para agregar otra.",
       "stale": "Se hizo el cambio, pero no pudimos volver a cargar la lista. Recarga la página."
     }
+  },
+  "originAddress": {
+    "title": "Mi dirección de origen",
+    "loading": "Cargando tu dirección de origen",
+    "error": "No pudimos cargar tu dirección de origen.",
+    "retry": "Reintentar",
+    "signedOut": {
+      "body": "Entra a tu cuenta para decir desde dónde despachas lo que vendes.",
+      "action": "Entrar"
+    },
+    "empty": {
+      "title": "Todavía no tienes dirección de origen",
+      "body": "Es desde donde saldrá lo que vendas: servirá para cotizar el envío y para que figures como remitente de la guía cuando el envío exista.",
+      "action": "Agregar mi dirección de origen"
+    },
+    "card": {
+      "title": "Desde aquí despachas",
+      "edit": "Editar",
+      "delete": "Quitar",
+      "municipalityGone": "Este municipio ya no está en la lista oficial. Al editar tendrás que elegir otro."
+    },
+    "sender": {
+      "title": "Remitente",
+      "change": "Cambiar nombre o teléfono en mi cuenta",
+      "missingPhone": "Tu perfil no tiene teléfono y el remitente lo necesita. Ponlo en tu cuenta antes de guardar.",
+      "missingPhoneShort": "Sin teléfono en el perfil."
+    },
+    "form": {
+      "newTitle": "Nueva dirección de origen",
+      "editTitle": "Editar dirección de origen",
+      "save": "Guardar dirección de origen",
+      "cancel": "Cancelar",
+      "line": {
+        "label": "Dirección",
+        "hint": "Por ejemplo: Carrera 15 # 93-47",
+        "error": "Escribe la dirección, entre 5 y 120 caracteres."
+      },
+      "complement": {
+        "label": "Complemento (opcional)",
+        "hint": "Local, bodega, oficina o apartamento",
+        "error": "El complemento no puede pasar de 60 caracteres."
+      },
+      "instructions": {
+        "label": "Indicaciones para la recogida (opcional)",
+        "hint": "Lo que ayude a la transportadora a recoger",
+        "error": "Las indicaciones no pueden pasar de 200 caracteres."
+      },
+      "postalCode": {
+        "label": "Código postal (opcional)",
+        "hint": "Seis dígitos, si lo sabes",
+        "error": "El código postal colombiano son seis dígitos."
+      }
+    },
+    "notices": {
+      "saved": "Dirección de origen guardada.",
+      "removed": "Dirección de origen quitada."
+    },
+    "noPromise": "Guardarla no comprueba que una transportadora recoja allí. Eso se sabrá al cotizar."
   }
 }

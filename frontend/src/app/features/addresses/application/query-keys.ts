@@ -30,4 +30,21 @@ export const queryKeys = {
    * anterior.
    */
   municipalities: (departamento: string) => ['addresses', 'municipalities', departamento] as const,
+
+  /**
+   * La dirección de origen propia. HU-017.
+   *
+   * <p>Sin de quién es, por lo mismo que la libreta: la ruta responde siempre la de quien
+   * tiene el token, y al cerrar sesión `QueryClient` se limpia entera.
+   */
+  origin: ['addresses', 'origin'] as const,
+
+  /**
+   * El remitente: nombre y teléfono del perfil, para el bloque de solo lectura del origen.
+   *
+   * <p>Es una segunda lectura de `GET /users/me` con clave propia y no la del perfil de
+   * `auth`: `features/x` no importa de `features/y`, y lo que esta pantalla necesita del
+   * perfil son dos campos.
+   */
+  sender: ['addresses', 'sender'] as const,
 } as const;

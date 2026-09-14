@@ -14,6 +14,11 @@ export interface Profile {
   readonly displayName: string;
   /** Nulos cuando la persona no los tiene puestos: no se piden al registrarse. */
   readonly city: string | null;
+  /**
+   * Falso cuando la ciudad viene de la direccion de origen (HU-017, ADR-0042): entonces es
+   * el municipio con su departamento al lado y se cambia desde el origen, no desde aqui.
+   */
+  readonly cityEditable: boolean;
   readonly phone: string | null;
   /** Nula mientras no haya foto. */
   readonly avatarUrl: string | null;

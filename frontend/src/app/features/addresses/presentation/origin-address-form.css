@@ -1,0 +1,34 @@
+/* Una sola columna, como el formulario de la libreta y por lo mismo. */
+.formulario-origen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-16);
+  max-width: var(--medida-formulario);
+  margin-top: var(--esp-24);
+  padding: var(--esp-16);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+/* El remitente es un bloque de solo lectura y se ve como tal: sin campo, con el enlace
+   para cambiarlo donde siempre. */
+.formulario-origen__remitente {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  padding-bottom: var(--esp-12);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.formulario-origen__sin-promesa {
+  color: var(--color-texto-suave);
+  margin: 0;
+}
+
+.formulario-origen__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-8);
+  margin-top: var(--esp-8);
+}
