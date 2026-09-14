@@ -3,12 +3,16 @@ package co.sendik.identity.model;
 import java.util.Objects;
 
 /**
- * Ciudad de la persona. Dato personal de nivel publico: aparece junto a las
- * publicaciones de un vendedor (docs/operacion/datos-personales.md).
+ * Ciudad de la persona, escrita a mano. Dato personal de nivel publico
+ * (docs/operacion/datos-personales.md).
  *
- * <p>Texto libre y no una lista cerrada de municipios. Una lista obliga a
- * mantenerla y deja fuera a quien viva donde no se penso; para lo que este dato
- * hace, que es dar una idea de donde sale el producto, el texto libre basta.
+ * <p><strong>Es texto libre solo mientras la cuenta no tiene direccion de origen.</strong>
+ * Este comentario defendia el texto libre porque "para dar una idea de donde sale el
+ * producto basta"; HU-017 le dio a esa idea un uso concreto, cotizar el envio, y con
+ * "bogota" no hay tarifa. Desde entonces, cuando hay {@link OriginAddress} la ciudad
+ * del perfil es el municipio del origen, elegido de la division del DANE, y este campo
+ * queda en nulo: no se copia, se lee uniendo (ADR-0042). Lo escrito a mano se conserva
+ * solo hasta que la persona guarde su origen.
  */
 public record City(String value) {
 
