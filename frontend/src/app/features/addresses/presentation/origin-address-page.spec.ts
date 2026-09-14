@@ -198,6 +198,27 @@ describe('OriginAddressPage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Dirección de origen quitada');
     expect(fixture.nativeElement.textContent).toContain('Todavía no tienes dirección de origen');
+    // El boton pulsado ya no existe: el foco vuelve al encabezado.
+    expect(document.activeElement?.tagName).toBe('H1');
+  });
+
+  /** Abrir y cerrar el formulario mueven el foco: al h2 al abrir, al h1 al cancelar. */
+  it('devuelve el foco al encabezado al cancelar el formulario', async () => {
+    const { fixture, backend } = await montar(true);
+    await responder(fixture, backend, null);
+
+    botonLlamado(fixture, 'Agregar mi dirección de origen')?.click();
+    await bombear(fixture);
+    backend
+      .match((llamada) => llamada.url === `${API}/locations/departments`)
+      .forEach((llamada) => llamada.flush({ departments: [] }));
+    await bombear(fixture);
+    expect(document.activeElement?.tagName).toBe('H2');
+
+    botonLlamado(fixture, 'Cancelar')?.click();
+    await bombear(fixture);
+
+    expect(document.activeElement?.tagName).toBe('H1');
   });
 
   /** Un fallo al quitar se dice y la tarjeta se queda. */

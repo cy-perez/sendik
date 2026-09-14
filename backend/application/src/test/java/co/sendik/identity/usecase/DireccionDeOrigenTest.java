@@ -5,7 +5,6 @@ import static co.sendik.identity.usecase.LibretaEnMemoria.INEXISTENTE;
 import static co.sendik.identity.usecase.LibretaEnMemoria.MEDELLIN;
 import static co.sendik.identity.usecase.LibretaEnMemoria.SUPRIMIDO;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -46,7 +45,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -202,18 +200,19 @@ class DireccionDeOrigenTest {
             assertThatThrownBy(() -> guardarEn(BOGOTA)).isInstanceOf(AccountNoLongerExistsException.class);
         }
 
-        /** Criterio 11: guardar el origen descarta la ciudad escrita a mano (ADR-0042). */
+        /**
+         * Criterio 11: guardar el origen descarta la ciudad escrita a mano (ADR-0042), con la
+         * operacion minima y no reescribiendo la cuenta: `actualizar` desde una instantanea
+         * resucitaria una fila que el cierre acabara de anonimizar.
+         */
         @Test
-        void deberia_descartar_la_ciudad_escrita_a_mano() {
+        void deberia_descartar_la_ciudad_escrita_a_mano_sin_reescribir_la_cuenta() {
             conCuenta(new City("bogota"), new Phone("3001234567"));
 
             guardarEn(BOGOTA);
 
-            ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-            verify(usuarios).actualizar(captor.capture());
-            assertThat(captor.getValue().city()).isNull();
-            assertThat(captor.getValue().phone()).isEqualTo(new Phone("3001234567"));
-            assertThat(captor.getValue().displayName()).isEqualTo(new DisplayName("Ana María"));
+            verify(usuarios).limpiarCiudad(alguien);
+            verify(usuarios, never()).actualizar(any());
         }
 
         @Test
@@ -222,6 +221,7 @@ class DireccionDeOrigenTest {
 
             guardarEn(BOGOTA);
 
+            verify(usuarios, never()).limpiarCiudad(any());
             verify(usuarios, never()).actualizar(any());
         }
 
@@ -250,13 +250,12 @@ class DireccionDeOrigenTest {
             assertThat(leer.execute(alguien)).isEmpty();
         }
 
+        /** Criterio 15 tambien al leer: 401 y no un 204 que la pantalla leeria como «no tienes». */
         @Test
-        void deberia_no_haber_nada_para_una_cuenta_que_ya_no_existe() {
+        void deberia_rechazar_la_lectura_si_la_cuenta_ya_no_existe() {
             when(usuarios.buscarPorId(alguien)).thenReturn(Optional.empty());
-            origenes.guardar(OriginAddress.nueva(
-                    alguien, BOGOTA, new AddressLine("Carrera 15 # 93-47"), null, null, null, AHORA));
 
-            assertThat(leer.execute(alguien)).isEmpty();
+            assertThatThrownBy(() -> leer.execute(alguien)).isInstanceOf(AccountNoLongerExistsException.class);
         }
 
         /** Criterio 13: un municipio que el DANE suprimio se sigue leyendo. */
@@ -298,9 +297,11 @@ class DireccionDeOrigenTest {
             guardarEn(BOGOTA);
 
             borrar.execute(alguien);
-
             assertThat(leer.execute(alguien)).isEmpty();
-            assertThatCode(() -> borrar.execute(alguien)).doesNotThrowAnyException();
+
+            // Criterio 9: repetirse responde lo mismo, y «lo mismo» es que sigue sin haber.
+            borrar.execute(alguien);
+            assertThat(leer.execute(alguien)).isEmpty();
         }
 
         @Test
@@ -319,6 +320,7 @@ class DireccionDeOrigenTest {
             borrar.execute(alguien);
 
             verify(usuarios, never()).actualizar(any());
+            verify(usuarios, never()).limpiarCiudad(any());
         }
     }
 
@@ -360,17 +362,17 @@ class DireccionDeOrigenTest {
             assertThat(vista.ciudadEditable()).isFalse();
         }
 
-        /** Criterio 12: borrado el origen, la ciudad queda vacia y vuelve a ser editable. */
+        /** Criterio 13 en el perfil: un municipio que el DANE suprimio se sigue leyendo. */
         @Test
-        void deberia_quedar_sin_ciudad_y_editable_al_borrar_el_origen() {
+        void deberia_seguir_derivando_la_ciudad_de_un_municipio_suprimido() {
             conCuenta(null, new Phone("3001234567"));
-            guardarEn(MEDELLIN);
-            borrar.execute(alguien);
+            origenes.guardar(OriginAddress.nueva(
+                    alguien, SUPRIMIDO, new AddressLine("Carrera 15 # 93-47"), null, null, null, AHORA));
 
             ProfileView vista = perfil.execute(alguien);
 
-            assertThat(vista.ciudad()).isNull();
-            assertThat(vista.ciudadEditable()).isTrue();
+            assertThat(vista.ciudad()).isEqualTo("Un municipio que el DANE suprimio, Antioquia");
+            assertThat(vista.ciudadEditable()).isFalse();
         }
 
         @Test

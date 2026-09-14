@@ -93,7 +93,7 @@ test.describe('direccion de origen', () => {
     await expect(page.getByText('Viene de tu dirección de origen')).toBeVisible();
 
     // Criterio 3: reemplazar deja uno, y la ciudad lo sigue.
-    await page.getByRole('link', { name: 'Cambiarla allí' }).click();
+    await page.getByRole('link', { name: 'Cambiarla en mi dirección de origen' }).click();
     await page.getByRole('button', { name: 'Editar' }).click();
     await escribirOrigen(page, {
       departamento: 'Antioquia',

@@ -1,12 +1,12 @@
 package co.sendik.identity.usecase;
 
+import co.sendik.identity.dto.OriginAddressView;
 import co.sendik.identity.dto.ProfileView;
 import co.sendik.identity.exception.AccountNoLongerExistsException;
 import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
 import co.sendik.identity.port.out.OriginAddressRepository;
 import co.sendik.identity.port.out.UserRepository;
-import co.sendik.shared.geo.Municipality;
 import co.sendik.shared.port.out.GeographicDivision;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,20 +47,16 @@ public class ReadProfileViewUseCase {
     public ProfileView execute(UserId usuario) {
         User cuenta = usuarios.buscarPorId(usuario).orElseThrow(AccountNoLongerExistsException::new);
 
+        // El cruce con la division es el mismo que hace el origen, y vive en un solo sitio.
         return origenes.deCuenta(usuario)
-                .map(origen -> {
-                    Municipality municipio = division.buscarMunicipio(origen.municipio())
-                            .orElseThrow(() -> new IllegalStateException(
-                                    "El origen de " + usuario + " apunta a un municipio que no existe"));
-                    String departamento = division.departamentos().stream()
-                            .filter(candidato -> candidato.codigo().equals(origen.departamento()))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalStateException(
-                                    "El municipio " + municipio.codigo() + " apunta a un departamento que no existe"))
-                            .nombre();
-                    return new ProfileView(cuenta, municipio.nombre() + ", " + departamento, false);
-                })
+                .map(origen -> ReadOriginAddressUseCase.conLaDivision(origen, cuenta, division))
+                .map(vista -> new ProfileView(cuenta, comoCiudad(vista), false))
                 .orElseGet(() -> new ProfileView(
                         cuenta, cuenta.city() == null ? null : cuenta.city().value(), true));
+    }
+
+    /** El municipio con su departamento al lado: hay mas de un San Pedro (RN-107). */
+    private static String comoCiudad(OriginAddressView origen) {
+        return origen.municipioNombre() + ", " + origen.departamentoNombre();
     }
 }

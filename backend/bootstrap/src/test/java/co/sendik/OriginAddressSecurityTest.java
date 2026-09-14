@@ -228,6 +228,67 @@ class OriginAddressSecurityTest {
                             .content(cuerpo("11001")))
                     .andExpect(status().isUnauthorized());
             mvc.perform(delete(RUTA).header("Authorization", token)).andExpect(status().isUnauthorized());
+            // Tambien al leer: no un 204 que la pantalla leeria como «no tienes origen».
+            mvc.perform(get(RUTA).header("Authorization", token)).andExpect(status().isUnauthorized());
+        }
+
+        /** JSON roto: 400 con ProblemDetail y sin ningun trozo del cuerpo en el registro. */
+        @Test
+        void deberia_responder_400_con_problem_detail_a_un_cuerpo_ilegible() throws Exception {
+            mvc.perform(put(RUTA)
+                            .header("Authorization", tokenNuevo("3001234567", null))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"municipalityCode\":\"11001\",\"line\":" + LINEA + "}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("COMMON_VALIDATION_FAILED"))
+                    .andExpect(jsonPath("$.traceId").isNotEmpty());
+        }
+    }
+
+    @Nested
+    class LoQueCambiaPorDebajo {
+
+        /** Criterio 13, la mitad que solo se ve contra la base: el DANE renombra y el perfil lo lee. */
+        @Test
+        void deberia_leer_el_nombre_nuevo_si_el_dane_renombra_el_municipio() throws Exception {
+            String token = tokenNuevo("3001234567", null);
+            mvc.perform(put(RUTA)
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("05001")))
+                    .andExpect(status().isOk());
+
+            jdbc.sql("UPDATE municipalities SET name = 'Medellín (renombrado)' WHERE code = '05001'")
+                    .update();
+            try {
+                mvc.perform(get("/api/v1/users/me").header("Authorization", token))
+                        .andExpect(jsonPath("$.city").value("Medellín (renombrado), Antioquia"));
+                mvc.perform(get(RUTA).header("Authorization", token))
+                        .andExpect(jsonPath("$.municipalityName").value("Medellín (renombrado)"));
+            } finally {
+                jdbc.sql("UPDATE municipalities SET name = 'Medellín' WHERE code = '05001'")
+                        .update();
+            }
+        }
+
+        /** Borrar en una pestana mientras otra edita: la segunda guarda igual, como uno nuevo. */
+        @Test
+        void deberia_admitir_guardar_despues_de_que_otra_pestana_lo_borrara() throws Exception {
+            String token = tokenNuevo("3001234567", null);
+            mvc.perform(put(RUTA)
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("11001")))
+                    .andExpect(status().isOk());
+
+            mvc.perform(delete(RUTA).header("Authorization", token)).andExpect(status().isNoContent());
+
+            mvc.perform(put(RUTA)
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("05001")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.municipalityCode").value("05001"));
         }
     }
 
@@ -248,35 +309,55 @@ class OriginAddressSecurityTest {
         try {
             String token = tokenNuevo("3001234567", null);
 
+            // Cada peticion afirma su estado: sin eso, un 401 o un 400 por cualquier motivo
+            // dejaria la prueba en verde sin haber recorrido el camino que registra.
             mvc.perform(put(RUTA)
-                    .header("Authorization", token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(cuerpo("11001")));
-            mvc.perform(get(RUTA).header("Authorization", token));
-            mvc.perform(get("/api/v1/users/me").header("Authorization", token));
-            mvc.perform(get("/api/v1/users/me/export").header("Authorization", token));
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("11001")))
+                    .andExpect(status().isOk());
+            mvc.perform(get(RUTA).header("Authorization", token)).andExpect(status().isOk());
+            mvc.perform(get("/api/v1/users/me").header("Authorization", token)).andExpect(status().isOk());
+            mvc.perform(get("/api/v1/users/me/export").header("Authorization", token))
+                    .andExpect(status().isOk());
 
             // El rechazo de negocio, que pasa por el manejador de DomainException.
             mvc.perform(put(RUTA)
-                    .header("Authorization", token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(cuerpo("99999")));
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("99999")))
+                    .andExpect(status().isUnprocessableContent());
 
-            // No hay aqui ningun camino que llegue al manejador de IllegalArgumentException:
-            // el borde mide exactamente lo mismo que el dominio. Lo que si se fuerza es que
-            // Spring registre en DEBUG el cuerpo deserializado, con un guardado mas.
+            // El JSON roto, que antes lo resolvia Spring con un WARN que llevaba el token que no
+            // pudo leer: un trozo de la linea. Es el unico camino por el que el cuerpo crudo
+            // podia llegar a un registro.
             mvc.perform(put(RUTA)
-                    .header("Authorization", token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(cuerpo("05001")));
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"municipalityCode\":\"11001\",\"line\":" + LINEA + "}"))
+                    .andExpect(status().isBadRequest());
 
-            mvc.perform(delete(RUTA).header("Authorization", token));
+            // No hay ningun camino que llegue al manejador de IllegalArgumentException: el borde
+            // mide exactamente lo mismo que el dominio. Un guardado mas para que Spring registre
+            // en DEBUG el cuerpo deserializado.
+            mvc.perform(put(RUTA)
+                            .header("Authorization", token)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(cuerpo("05001")))
+                    .andExpect(status().isOk());
+
+            mvc.perform(delete(RUTA).header("Authorization", token)).andExpect(status().isNoContent());
         } finally {
             raiz.detachAppender(capturadas);
             raiz.setLevel(nivelAnterior);
         }
 
         assertThat(capturadas.list).isNotEmpty();
+        // Y que el canal que registra los cuerpos deserializados estuvo abierto: sin esto, un
+        // `org.springframework.web: INFO` en el perfil dejaria la prueba mirando nada.
+        assertThat(capturadas.list)
+                .anyMatch(evento -> evento.getLevel() == Level.DEBUG
+                        && evento.getLoggerName().startsWith("org.springframework.web"));
 
         String todo = capturadas.list.stream()
                 .map(OriginAddressSecurityTest::todoElTexto)

@@ -96,9 +96,13 @@
     {{ 'originAddress.noPromise' | transloco }}
   </p>
 
-  @if (fallo(); as mensaje) {
-    <p class="error tipo-leyenda" role="alert">{{ mensaje | transloco }}</p>
-  }
+  <!-- Persistente y el texto cambia dentro, como el aviso de la division: una region viva
+       que nace con el contenido puesto no la anuncia ningun lector. -->
+  <p class="error tipo-leyenda" role="alert">
+    @if (fallo(); as mensaje) {
+      {{ mensaje | transloco }}
+    }
+  </p>
 
   <div class="formulario-origen__acciones">
     <sendik-submit-button [loading]="guardando()" labelKey="originAddress.form.save" />

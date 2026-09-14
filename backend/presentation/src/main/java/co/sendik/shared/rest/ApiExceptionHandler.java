@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -154,6 +155,27 @@ public class ApiExceptionHandler {
         problema.setProperty("errors", errores);
 
         return ResponseEntity.badRequest().body(problema);
+    }
+
+    /**
+     * Un cuerpo que no se puede leer: JSON roto, un tipo que no casa. 400 con
+     * {@code ProblemDetail}, como todo lo demas.
+     *
+     * <p>Sin manejador, esto lo resolvia {@code DefaultHandlerExceptionResolver}: un 400
+     * <strong>sin cuerpo</strong> —contra el contrato— y un {@code WARN} de Spring con el
+     * mensaje de Jackson, que incluye el token que no pudo leer. Ese token puede ser un
+     * trozo de la linea de una direccion. Lo cazo la revision de seguridad de HU-017.
+     *
+     * <p>Se registra solo el {@code traceId}, nunca {@code e.getMessage()}. Y sin
+     * {@code errors}: no hay campo que senalar cuando el documento entero no se entiende.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> deCuerpoIlegible(HttpMessageNotReadableException e) {
+        String traceId = nuevoTraceId();
+        LOG.info("Cuerpo ilegible traceId={}", traceId);
+
+        return ResponseEntity.badRequest()
+                .body(construir(HttpStatus.BAD_REQUEST, ErrorCode.COMMON_VALIDATION_FAILED, traceId));
     }
 
     /**

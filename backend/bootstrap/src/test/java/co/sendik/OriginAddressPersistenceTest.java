@@ -1,7 +1,6 @@
 package co.sendik;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import co.sendik.identity.model.AddressComplement;
@@ -130,7 +129,10 @@ class OriginAddressPersistenceTest {
 
         assertThat(origenes.deCuenta(alguien)).isEmpty();
         assertThat(origenes.deCuenta(otraPersona)).isPresent();
-        assertThatCode(() -> origenes.borrar(alguien)).doesNotThrowAnyException();
+
+        origenes.borrar(alguien);
+        assertThat(origenes.deCuenta(alguien)).isEmpty();
+        assertThat(origenes.deCuenta(otraPersona)).isPresent();
     }
 
     /** Lo que queda en la columna no se puede leer: el cifrado ocurre de verdad. */

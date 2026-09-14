@@ -169,6 +169,21 @@ class OriginAddressControllerTest {
                 .andExpect(jsonPath("$.errors[*].field", Matchers.hasItems("municipalityCode", "line")));
     }
 
+    /** Criterio 8, «se pasa de su longitud»: cada tope, con su campo senalado. */
+    @Test
+    void deberia_marcar_el_campo_que_se_pasa_de_su_tope() throws Exception {
+        String linea = "x".repeat(121);
+        String complemento = "x".repeat(61);
+        String indicaciones = "x".repeat(201);
+
+        mvc.perform(put("/api/v1/users/me/origin-address")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"municipalityCode\":\"11001\",\"line\":\"" + linea + "\",\"complement\":\""
+                                + complemento + "\",\"instructions\":\"" + indicaciones + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[*].field", Matchers.hasItems("line", "complement", "instructions")));
+    }
+
     /** El borde mide lo mismo que el dominio: «Cl  7» son cuatro caracteres, no cinco. */
     @Test
     void deberia_normalizar_antes_de_medir() throws Exception {

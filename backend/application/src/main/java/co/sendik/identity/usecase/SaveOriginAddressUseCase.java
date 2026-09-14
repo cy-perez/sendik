@@ -71,8 +71,10 @@ public class SaveOriginAddressUseCase {
 
         // Criterio 11: con origen, la ciudad del perfil es el municipio del origen. El texto
         // libre se descarta aqui y no se copia nada: la ciudad se lee uniendo (ADR-0042).
+        // Con una operacion minima y no reescribiendo la cuenta desde la instantanea: si el
+        // cierre se colara entre leer y escribir, `actualizar` resucitaria la fila.
         if (cuenta.city() != null) {
-            usuarios.actualizar(cuenta.conPerfil(cuenta.displayName(), null, cuenta.phone()));
+            usuarios.limpiarCiudad(comando.usuario());
         }
 
         return ReadOriginAddressUseCase.conLaDivision(origen, cuenta, division);

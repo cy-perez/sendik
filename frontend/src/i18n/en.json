@@ -448,7 +448,7 @@
           "phone": "Optional. Include the country code if it is not Colombian, for example +57 300 123 4567."
         },
         "cityFromOrigin": "It comes from your origin address.",
-        "changeCity": "Change it there",
+        "changeCity": "Change it in my origin address",
         "errors": {
           "displayName": "Enter a name between 2 and 80 characters.",
           "city": "City cannot be longer than 80 characters.",

@@ -7,6 +7,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.codeUnits;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noFields;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.domain.JavaCodeUnit;
@@ -126,6 +127,33 @@ class ArchitectureTest {
                 .allowEmptyShould(true);
 
         regla.check(todasLasClases());
+    }
+
+    /**
+     * «{@code @Transactional} va aqui, nunca en el controlador ni en el repositorio»
+     * (backend/CLAUDE.md). Hasta HU-017 se cumplia por disciplina y ninguna regla lo miraba.
+     * Se vio fallar con una anotacion puesta a proposito en un repositorio antes de darla
+     * por buena.
+     */
+    @Test
+    void la_transaccion_se_abre_solo_en_un_caso_de_uso() {
+        ArchRule clases = noClasses()
+                .that()
+                .resideOutsideOfPackage("co.sendik..usecase..")
+                .should()
+                .beAnnotatedWith(org.springframework.transaction.annotation.Transactional.class)
+                .because("@Transactional va en el caso de uso, nunca en el controlador ni en el repositorio");
+
+        ArchRule metodos = noMethods()
+                .that()
+                .areDeclaredInClassesThat()
+                .resideOutsideOfPackage("co.sendik..usecase..")
+                .should()
+                .beAnnotatedWith(org.springframework.transaction.annotation.Transactional.class)
+                .because("@Transactional va en el caso de uso, nunca en el controlador ni en el repositorio");
+
+        clases.check(todasLasClases());
+        metodos.check(todasLasClases());
     }
 
     @Test

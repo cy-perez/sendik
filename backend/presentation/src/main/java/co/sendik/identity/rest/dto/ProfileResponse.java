@@ -26,4 +26,11 @@ public record ProfileResponse(
         @Nullable String city,
         boolean cityEditable,
         @Nullable String phone,
-        @Nullable String avatarUrl) {}
+        @Nullable String avatarUrl) {
+
+    /** No imprime nada: lleva correo, telefono y, desde HU-017, el municipio de origen. */
+    @Override
+    public String toString() {
+        return "ProfileResponse[sin imprimir]";
+    }
+}

@@ -72,3 +72,22 @@
   max-width: var(--medida);
   margin: var(--esp-24) auto 0;
 }
+
+/* `.error` no es global: cada componente la define. Sin esto los avisos salen en el color
+   del texto corriente, y el del telefono que falta (criterio 5) parecia una pista. Lo cazo
+   la revision de accesibilidad. */
+.error {
+  color: var(--color-error);
+  margin: 0;
+}
+
+/* Los 44px tambien en el enlace al perfil: es hijo directo de una columna, no un enlace
+   dentro de un parrafo, asi que no le aplica la excepcion de los enlaces en linea. Es lo que
+   ya hace `.enlace-legal a` en form-field.css. El color explicito, por lo mismo que alli. */
+.origen__remitente a {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--destino-tactil);
+  color: var(--color-primario);
+}

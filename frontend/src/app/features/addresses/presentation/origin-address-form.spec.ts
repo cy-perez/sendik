@@ -159,6 +159,50 @@ describe('OriginAddressForm', () => {
     await guardar(fixture);
 
     backend.expectNone((llamada) => llamada.method === 'PUT');
+    // El foco va al aviso, que es lo que distingue «no se mando» de «no paso nada».
+    expect(document.activeElement?.getAttribute('role')).toBe('alert');
+    expect(document.activeElement?.textContent).toContain('no tiene teléfono');
+  });
+
+  /** El foco entra al formulario: el botón que lo abrió deja de existir. */
+  it('recoge el foco en su encabezado al abrirse', async () => {
+    const { fixture } = await montar(conTelefono);
+    await bombear(fixture);
+
+    expect(document.activeElement?.tagName).toBe('H2');
+  });
+
+  /** Criterio 6: se puebla al elegir departamento y se vacía al cambiarlo. */
+  it('puebla los municipios al elegir departamento y vacía el elegido al cambiarlo', async () => {
+    const { fixture, backend } = await montar(conTelefono);
+
+    await escribir(fixture, 'origen-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+
+    const municipio = campo(fixture, 'origen-municipio') as HTMLSelectElement;
+    expect(municipio.options.length).toBe(2);
+    expect(municipio.options[1]?.textContent).toContain('Un municipio');
+
+    await escribir(fixture, 'origen-municipio', '11001');
+    await escribir(fixture, 'origen-departamento', '05');
+    await responderMunicipios(fixture, backend, '05');
+
+    expect((campo(fixture, 'origen-municipio') as HTMLSelectElement).value).toBe('');
+  });
+
+  /** Criterio 8: el foco va al primer campo con error, en el orden en que se leen. */
+  it('lleva el foco al primer campo con error', async () => {
+    const { fixture, backend } = await montar(conTelefono);
+
+    await guardar(fixture);
+    expect(document.activeElement?.id).toBe('origen-departamento');
+
+    await escribir(fixture, 'origen-departamento', '11');
+    await responderMunicipios(fixture, backend, '11');
+    await escribir(fixture, 'origen-municipio', '11001');
+    await guardar(fixture);
+
+    expect(document.activeElement?.id).toBe('origen-linea');
   });
 
   /** Criterio 6: el selector de municipio no adivina. */

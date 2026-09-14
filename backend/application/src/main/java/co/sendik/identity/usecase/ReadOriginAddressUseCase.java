@@ -1,6 +1,7 @@
 package co.sendik.identity.usecase;
 
 import co.sendik.identity.dto.OriginAddressView;
+import co.sendik.identity.exception.AccountNoLongerExistsException;
 import co.sendik.identity.model.OriginAddress;
 import co.sendik.identity.model.User;
 import co.sendik.identity.model.UserId;
@@ -19,8 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
  * ruta con identificador porque el origen es un recurso singular de la cuenta: no hay
  * forma de pedir el de otra persona.
  *
- * <p>Sin comprobar que la cuenta siga viva, como {@code ListShippingAddressesUseCase}:
- * solo lee, y el origen de una cuenta cerrada ya no existe porque el cierre lo borro.
+ * <p><strong>Una cuenta cerrada con token vivo responde 401 tambien al leer</strong>, y no
+ * un 204 que la pantalla leeria como «no tienes origen» mientras {@code GET /users/me}
+ * responde 401 en la misma sesion. La cuenta ya se carga aqui para el remitente, asi
+ * que la comprobacion no cuesta nada. Lo cazo la revision de seguridad.
  *
  * <p><strong>Aqui vive ademas el cruce con la division y con el perfil</strong>, que
  * comparte con {@code SaveOriginAddressUseCase}. Es el patron de
@@ -44,13 +47,11 @@ public class ReadOriginAddressUseCase {
      * division- y conviene que se armen con una sola instantanea. Sin readOnly = true, por lo
      * mismo que ExportUserDataUseCase.
      */
+    /** @throws AccountNoLongerExistsException si la cuenta del token ya se cerro */
     @Transactional
     public Optional<OriginAddressView> execute(UserId usuario) {
-        Optional<User> cuenta = usuarios.buscarPorId(usuario);
-        if (cuenta.isEmpty()) {
-            return Optional.empty();
-        }
-        return origenes.deCuenta(usuario).map(origen -> conLaDivision(origen, cuenta.get(), division));
+        User cuenta = usuarios.buscarPorId(usuario).orElseThrow(AccountNoLongerExistsException::new);
+        return origenes.deCuenta(usuario).map(origen -> conLaDivision(origen, cuenta, division));
     }
 
     /**
@@ -59,7 +60,8 @@ public class ReadOriginAddressUseCase {
      *
      * <p>Un municipio que no este en la division es imposible: la clave foranea de V22 lo
      * impide y {@code buscarMunicipio} devuelve tambien los inactivos. Se afirma en vez de
-     * suponerse.
+     * suponerse, <strong>y el mensaje no lleva el municipio</strong>: sale en {@code ERROR}
+     * con traza, y en que municipio despacha alguien no va a ningun registro.
      */
     static OriginAddressView conLaDivision(OriginAddress origen, User remitente, GeographicDivision division) {
         Municipality municipio = division.buscarMunicipio(origen.municipio())
@@ -70,7 +72,7 @@ public class ReadOriginAddressUseCase {
                 .filter(candidato -> candidato.codigo().equals(origen.departamento()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(
-                        "El municipio " + municipio.codigo() + " apunta a un departamento que no existe"));
+                        "El origen de " + origen.duena() + " apunta a un departamento que no existe"));
 
         return new OriginAddressView(
                 departamento.codigo().value(),

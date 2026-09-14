@@ -111,6 +111,7 @@ def paletas():
 PARES = [
     ("Texto principal sobre el fondo",        "--color-texto",          "--color-fondo",          AA_TEXTO),
     ("Texto principal sobre tarjeta",         "--color-texto",          "--color-superficie",     AA_TEXTO),
+    ("Texto de boton secundario sobre tarjeta", "--color-primario",     "--color-superficie",     AA_TEXTO),
     ("Texto secundario sobre el fondo",       "--color-texto-suave",    "--color-fondo",          AA_TEXTO),
     ("Texto secundario sobre tarjeta",        "--color-texto-suave",    "--color-superficie",     AA_TEXTO),
     ("Enlace y estructura sobre el fondo",    "--color-primario",       "--color-fondo",          AA_TEXTO),

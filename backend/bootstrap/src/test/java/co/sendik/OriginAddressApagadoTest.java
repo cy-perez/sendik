@@ -1,5 +1,6 @@
 package co.sendik;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -95,7 +96,12 @@ class OriginAddressApagadoTest {
                 .andExpect(content().contentType(inventada.getContentType()))
                 .andExpect(jsonPath("$.type").value(sinTraza(inventada.getContentAsString(), "type")))
                 .andExpect(jsonPath("$.title").value(sinTraza(inventada.getContentAsString(), "title")))
-                .andExpect(jsonPath("$.code").value(sinTraza(inventada.getContentAsString(), "code")));
+                .andExpect(jsonPath("$.code").value(sinTraza(inventada.getContentAsString(), "code")))
+                .andExpect(jsonPath("$.status").value(inventada.getStatus()))
+                .andExpect(jsonPath("$.detail").doesNotExist());
+        // Lo unico que difiere es el traceId, distinto en cada respuesta por definicion, y el
+        // `instance`, que es la ruta.
+        assertThat(inventada.getContentAsString()).doesNotContain("\"detail\"");
     }
 
     private static String sinTraza(String cuerpo, String campo) {

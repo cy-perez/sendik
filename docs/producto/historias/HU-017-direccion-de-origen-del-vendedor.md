@@ -182,8 +182,10 @@ No entra:
   acciones —editar y borrar—. Reutiliza la tarjeta y el formulario de HU-016; no estrena
   componente.
 - **El remitente se muestra como bloque de solo lectura** con el enlace «cambiar en mi cuenta».
-  Si falta el teléfono, ese bloque es donde se dice, con el mismo enlace, y el botón de guardar
-  queda deshabilitado con motivo anunciado.
+  Si falta el teléfono, ese bloque es donde se dice, con el mismo enlace. ~~El botón de guardar
+  queda deshabilitado con motivo anunciado.~~ **No se deshabilita**: un botón deshabilitado no
+  dice por qué lo está, que es la regla que `account-page` ya fijó; al pulsarlo el foco va al
+  aviso y no se llama al servidor. Cambiado al implementar.
 - **El formulario es de una sola columna en móvil** y la línea de dirección se escribe entera.
 - **El borrado no estrena diálogo de confirmación**, como en HU-016, y no va junto al botón
   principal.
@@ -262,7 +264,7 @@ No entra:
   concurrentes un solo origen, y que un municipio inactivo sigue dejando leer el origen que lo
   apunta.
 - **De componente**: que el selector de municipio se puebla al elegir departamento; que sin
-  teléfono el botón está deshabilitado y el aviso enlaza al perfil; que un fallo de guardado
+  teléfono no se manda nada, el foco va al aviso y el aviso enlaza al perfil; que un fallo de guardado
   conserva lo escrito; que el foco va al primer campo con error; y que en `/mi-cuenta` la
   ciudad derivada se pinta como texto con enlace y no como campo.
 - **De la bandera**: que con `FEATURE_CHECKOUT` apagada las tres rutas responden 404 con

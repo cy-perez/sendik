@@ -393,7 +393,8 @@ class UsersControllerTest {
      */
     @Test
     void deberia_guardar_el_perfil_y_devolver_lo_normalizado_criterio_21() throws Exception {
-        when(perfil.execute(any())).thenReturn(conPerfil("Medellin", "+573001234567"));
+        // Lo que devuelve el caso de uso ya no lo lee nadie: el controlador relee el perfil
+        // (HU-017), y lo normalizado sale de esa relectura.
         when(lectura.execute(USUARIO))
                 .thenReturn(new ProfileView(conPerfil("Medellin", "+573001234567"), "Medellin", true));
 
@@ -412,7 +413,6 @@ class UsersControllerTest {
 
     @Test
     void deberia_dejar_quitar_la_ciudad_y_el_telefono_criterio_21() throws Exception {
-        when(perfil.execute(any())).thenReturn(conPerfil(null, null));
         when(lectura.execute(USUARIO)).thenReturn(new ProfileView(conPerfil(null, null), null, true));
 
         mvc.perform(put("/api/v1/users/me").contentType("application/json").content("""

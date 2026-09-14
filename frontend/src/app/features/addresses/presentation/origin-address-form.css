@@ -13,7 +13,10 @@
 
 /* El remitente es un bloque de solo lectura y se ve como tal: sin campo, con el enlace
    para cambiarlo donde siempre. */
+/* `anywhere` por lo mismo que en la tarjeta: un nombre de 80 caracteres sin espacios se
+   saldria a 360px. */
 .formulario-origen__remitente {
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: var(--esp-4);
@@ -31,4 +34,20 @@
   flex-wrap: wrap;
   gap: var(--esp-8);
   margin-top: var(--esp-8);
+}
+
+/* `.error` no es global: cada componente la define. Sin esto los avisos salen en el color
+   del texto corriente, y el del telefono que falta (criterio 5) parecia una pista. Lo cazo
+   la revision de accesibilidad. */
+.error {
+  color: var(--color-error);
+  margin: 0;
+}
+
+.formulario-origen__remitente a {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: var(--destino-tactil);
+  color: var(--color-primario);
 }

@@ -448,7 +448,7 @@
           "phone": "Opcional. Con indicativo si es de otro país, por ejemplo +57 300 123 4567."
         },
         "cityFromOrigin": "Viene de tu dirección de origen.",
-        "changeCity": "Cambiarla allí",
+        "changeCity": "Cambiarla en mi dirección de origen",
         "errors": {
           "displayName": "Escribe un nombre de entre 2 y 80 caracteres.",
           "city": "La ciudad no puede pasar de 80 caracteres.",
