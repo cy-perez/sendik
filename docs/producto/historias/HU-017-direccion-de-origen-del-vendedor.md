@@ -1,7 +1,7 @@
 # HU-017 — Dirección de origen del vendedor
 
-**Fase:** 3 | **Estado:** pendiente
-**Reglas que aplica:** RN-039, RN-078, RN-100, RN-102, RN-103, RN-046, RN-049
+**Fase:** 3 | **Estado:** hecha
+**Reglas que aplica:** RN-039, RN-078, RN-100, RN-102, RN-103, RN-046, RN-049 · **Reglas que trajo:** RN-105 a RN-111 · **Decisión:** ADR-0042
 
 ## Objetivo
 

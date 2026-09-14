@@ -24,7 +24,7 @@ Si alguna no tiene respuesta, el campo no se crea.
 | Nivel | Datos | Trato |
 |---|---|---|
 | Publico | Nombre de vendedor, ciudad, publicaciones | Visible en el sitio |
-| Interno | Correo, telefono, fecha de nacimiento, historial de pedidos, favoritos, carrito, direcciones de entrega | Solo el titular y la operacion |
+| Interno | Correo, telefono, fecha de nacimiento, historial de pedidos, favoritos, carrito, direcciones de entrega, direccion de origen | Solo el titular y la operacion |
 | Sensible | Documento de identidad, selfie, cuenta bancaria | Cifrado, acceso restringido y auditado |
 | Secreto | Contrasenas, tokens | Nunca legibles, ni por la operacion |
 
@@ -64,6 +64,10 @@ Si alguna no tiene respuesta, el campo no se crea.
   no porque se consulte por el, que no se consulta. La consecuencia conviene
   decirla: en un volcado de esa tabla, en que municipio vive cada cuenta se lee sin
   ninguna clave. Es el mismo dato que la ciudad del perfil, que ademas es publica.
+- **La direccion de origen del vendedor se cifra igual** (HU-017, V22): los cuatro
+  campos libres -linea, complemento, indicaciones para la recogida y codigo postal-
+  en un solo documento, y el municipio en claro porque es clave foranea. Sin nombre
+  ni telefono dentro: el remitente es el titular y esos dos ya estan en `users`.
 - Las respuestas de la API devuelven solo los campos que la pantalla necesita.
   Un endpoint de perfil publico no incluye correo ni telefono.
 - Los datos de verificacion no viajan al frontend una vez aprobada la
@@ -249,6 +253,7 @@ la autorizacion. Operativamente:
 | Cuenta activa | Mientras exista la cuenta |
 | Favoritos | Mientras exista la cuenta. El cierre los borra en el acto |
 | Direcciones de entrega | Mientras exista la cuenta. El cierre las borra en el acto, en la misma transaccion que anonimiza (RN-102) |
+| Direccion de origen | Mientras exista la cuenta. El cierre la borra en el acto, en la misma transaccion (RN-110) |
 | Documentos de verificacion | Mientras el vendedor este activo y cinco anos mas |
 | Ordenes y facturas | Diez anos, por obligacion contable |
 | Registros tecnicos con IP | Seis meses |
@@ -322,6 +327,28 @@ entrega.
 no descubrirlo entonces: la politica necesita ganar al vendedor como destinatario,
 decir bajo que figura, y decir si hay transferencia internacional -que depende de
 las cuatro respuestas de Skydropx que siguen sin llegar-.
+
+### Lo que HU-017 decidio, y una discrepancia que destapo
+
+Anotado el 14 de septiembre de 2026, al construirse la direccion de origen del
+vendedor.
+
+**Es dato del titular y de nadie mas.** A diferencia de la de entrega, aqui no hay
+tercero: el remitente es la cuenta (RN-106), asi que el formulario no lleva frase de
+autorizacion ni casilla. Lo que se guarda es donde despacha una persona, cifrado como
+la de entrega, y no sale de Sendik: no hay cotizacion ni guia todavia (RN-108). Entra
+en la descarga de datos y el cierre la borra en la misma transaccion (RN-110).
+
+**Lo que la clasificacion dice y el codigo no hace.** La tabla de arriba pone la
+ciudad en nivel Publico y dice que «sale junto a las publicaciones». Hoy no sale en
+ninguna respuesta publica: el perfil publico del vendedor lleva nombre, foto y sello,
+y nada mas. HU-017 no lo cambia -publicar el municipio de origen es una decision
+aparte, anotada en la historia- y deja la clasificacion como esta, porque describe lo
+que el dato puede ser y no lo que se hace con el. El dia que se publique, lo que se
+muestra es la ciudad derivada del origen (RN-107, ADR-0042).
+
+**El telefono del perfil se muestra como remitente** en la pantalla del origen, solo a
+su titular. No cambia su nivel: sigue siendo Interno.
 
 ## Pendiente antes del lanzamiento
 

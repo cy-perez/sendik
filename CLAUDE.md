@@ -172,7 +172,15 @@ además era la única pieza que **produce** el dato que las demás consumen. El
 municipio se elige de la división político-administrativa del DANE y no se
 escribe (RN-100); guardar una dirección **no promete que se pueda entregar allí**
 (RN-103). Trajo siete reglas, RN-098 a RN-104, y dos decisiones: ADR-0039 y
-ADR-0040. Lo que sigue esperando es crear el pedido y el paso a pagar.
+ADR-0040.
+
+**HU-017, la dirección de origen del vendedor, quedó integrada el 14 de septiembre
+de 2026**, detrás de la misma bandera. Es la pareja de HU-016 al otro extremo del
+envío y se sacó de la línea de Skydropx con el mismo criterio: guardar desde dónde
+sale algo no necesita al agregador. Una por cuenta, el remitente es el titular con el
+teléfono de su perfil, y **la ciudad del perfil pasa a ser el municipio del origen**
+(ADR-0042). Trajo siete reglas, RN-105 a RN-111. Lo que sigue esperando es crear el
+pedido y el paso a pagar.
 
 La Fase 4 sigue sin abrir. El alcance por fase está en
 `docs/producto/alcance.md`.

@@ -29,7 +29,7 @@ PostgreSQL 17. Migraciones con Flyway en
 | email_verified_at | timestamptz | nulo mientras no verifique |
 | display_name | text | |
 | birth_date | date | RN-008: solo mayores de 18. Se guarda la fecha, no el resultado |
-| city | text | opcional. Dato público: sale junto a las publicaciones |
+| city | text | opcional. Dato público. **Texto libre solo mientras no hay dirección de origen**: al guardar el origen pasa a nulo y la ciudad se lee uniendo con `origin_addresses` y `municipalities` (RN-107, ADR-0042) |
 | phone | text | opcional. Dato interno: nunca en un perfil público |
 | avatar_key | text | opcional. Clave del archivo en el almacén público; la dirección se construye en el borde (V6, ADR-0018) |
 | avatar_url | text | **sin uso.** La sustituyó `avatar_key` en V6 y se elimina en una migración posterior: lo destructivo va en dos pasos |
@@ -353,6 +353,28 @@ es la predeterminada— la guarda mejor el índice único parcial.
 
 Lo que sí borra estas filas es **cerrar la cuenta**, en la misma transacción que
 anonimiza (RN-102).
+
+**origin_addresses** (`V22`, HU-017)
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| user_id | uuid | **PK** y FK a `users`, sin cascada. Es lo que hace de RN-105 —una por cuenta— una garantía de la base: el `ON CONFLICT (user_id)` del adaptador vive de esta restricción |
+| municipality_code | text | FK a `municipalities` con `ON DELETE RESTRICT`. El departamento se deriva (RN-100) |
+| details_cipher | text | JSON cifrado con la línea, el complemento, las indicaciones para la recogida y el código postal |
+| details_key_version | smallint | La versión de clave que lo cifró (ADR-0020) |
+| created_at, updated_at | timestamptz | |
+
+**Sin nombre ni teléfono**: el remitente es el titular y sus datos están en `users`
+(RN-106). **Sin índice aparte**: la única consulta es por cuenta y la clave primaria ya
+lo es. Se cifra por lo mismo que la de entrega, y el municipio queda en claro por lo
+mismo: es clave foránea.
+
+`users.city` no se toca en el esquema: con origen, el caso de uso la deja en nulo y la
+ciudad del perfil se lee uniendo (ADR-0042). No hay migración de datos: lo escrito a
+mano se conserva hasta que cada cuenta guarde su origen.
+
+Lo que sí borra esta fila es **cerrar la cuenta**, en la misma transacción (RN-110). El
+día que exista el pedido, copiará el origen igual que copia la dirección de entrega.
 
 **orders**: `id`, `buyer_id`, `seller_id`, `status`, `product_amount`,
 `shipping_amount`, `commission_amount`, `total_amount`, `shipping_address`
