@@ -59,6 +59,16 @@ describe('SessionStore', () => {
    * pendiente comprueba antes que haya alguien dentro, y devolver "no verificado"
    * a un visitante anonimo seria mentirle a esa comprobacion.
    */
+  it('sabe si quien esta dentro modera, y no lo dice de nadie sin sesion', () => {
+    expect(almacen.esModerador()).toBe(false);
+
+    almacen.set(SESION);
+    expect(almacen.esModerador()).toBe(false);
+
+    almacen.set({ ...SESION, user: { ...SESION.user, roles: ['MODERATOR'] } });
+    expect(almacen.esModerador()).toBe(true);
+  });
+
   it('no dice que falta verificar cuando no hay nadie dentro', () => {
     expect(almacen.emailVerified()).toBe(false);
 
