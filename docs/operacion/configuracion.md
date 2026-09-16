@@ -465,7 +465,7 @@ para `dev` y para `prod`.
 | `COMPANY_NAME` | `Sendik S.A.S.` | no, el pie lo omite si falta |
 | `COMPANY_TAX_ID` | `1054994043-9` | no, el pie lo omite si falta |
 | `COMPANY_ADDRESS` | `Medellín, Colombia` | no, el pie lo omite si falta |
-| `SUPPORT_EMAIL` | `hola@sendik.co` | no, el pie lo omite si falta |
+| `SUPPORT_EMAIL` | `contacto@sendik.co` | no, el pie lo omite si falta |
 | `COMMISSION_RATE` | `0.05` | no, RN-026 por omisión |
 | `CLAIM_WINDOW_DAYS` | `3` | no, RN-051 por omisión |
 | `LISTING_REVIEW_DAYS` | `2` | no, 2 por omisión |

@@ -26,7 +26,7 @@ class VerificationLinkTest {
         AppProperties app = new AppProperties(
                 URI.create(baseUrl),
                 URI.create(baseUrl + "/api/v1"),
-                "soporte@sendik.co",
+                "contacto@sendik.co",
                 List.of(baseUrl),
                 ZoneId.of("America/Bogota"));
 
