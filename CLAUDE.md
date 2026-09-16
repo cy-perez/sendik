@@ -186,8 +186,9 @@ La Fase 4 sigue sin abrir. El alcance por fase está en
 `docs/producto/alcance.md`.
 
 Lo que bloqueaba el lanzamiento dejó de hacerlo: los **textos legales** están
-publicados y vigentes en `dev` desde el 8 de septiembre —versión `2026-09-08b`—
-y el **correo transaccional** sale y se comprobó de punta a punta ese mismo día.
+publicados y vigentes en `dev` desde el 8 de septiembre —versión `2026-09-16` desde el
+16 de septiembre, que solo cambia el correo de contacto a `contacto@sendik.co`— y el
+**correo transaccional** sale y se comprobó de punta a punta el 8 de septiembre.
 Lo que sigue abierto es otra cosa: `prod` no se ha desplegado nunca, sus
 versiones legales siguen en `borrador-local`, la entrega del correo allí está sin
 comprobar y las tres banderas de la Fase 2 siguen apagadas

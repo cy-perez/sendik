@@ -112,7 +112,7 @@ class ResendMailSenderEnvioTest {
         return new AppProperties(
                 URI.create("https://sendik.co"),
                 URI.create("https://sendik.co/api/v1"),
-                "soporte@sendik.co",
+                "contacto@sendik.co",
                 List.of("https://sendik.co"),
                 ZoneId.of("America/Bogota"));
     }

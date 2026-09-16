@@ -36,6 +36,24 @@ enlazan (RN-057).
 
 ## Estado actual
 
+**Publicada la versión `2026-09-16` el 16 de septiembre de 2026**, en términos y en
+política de tratamiento de datos, en los dos idiomas. Es la `2026-09-08b` con un solo cambio:
+el correo de contacto oficial pasa de `soporte@sendik.co` a `contacto@sendik.co` en todas sus
+menciones, y el pie de versión dice `2026-09-16`. Va como versión nueva y no como edición
+porque la regla de arriba lo exige: hay consentimientos cuya evidencia apunta a la
+`2026-09-08b`, y el canal de atención es texto del documento como cualquier otro. El teléfono
+de atención sigue siendo `+57 313 885 5309`. La política de cookies no nombra ningún correo y
+se queda en `2026-09-06`.
+
+El mismo día se movió `SUPPORT_EMAIL` a `contacto@sendik.co` en `dev` y en `prod`, que es de
+donde el pie de página y la página de contacto toman el correo, para que el pie y los términos
+digan lo mismo. Las variables `LEGAL_TERMS_VERSION` y `LEGAL_PRIVACY_VERSION` de `dev` pasaron
+a `2026-09-16` en el mismo acto, comprobado contra el entorno. **Aviso de coherencia:** los
+archivos y las variables entraron por separado, y el flujo de despliegue aplica las variables
+al desplegar; el primer despliegue de `dev` que las lea tiene que llevar ya los archivos
+`*.2026-09-16.*.html`, o la página legal pedirá un archivo que no existe.
+
+
 **Publicada la versión `2026-09-08b` el 8 de septiembre de 2026**, en términos y en
 política de tratamiento de datos, en los dos idiomas. Recoge el cambio de modelo de envío:
 precio base y costo de envío como cifras separadas, con el flete a cargo del comprador, y

@@ -388,7 +388,8 @@ cerrar una fase no abre la siguiente.
 **Lo que la fase no arrastra.** Los dos frenos que bloqueaban el lanzamiento
 dejaron de estarlo antes de abrirla: los textos legales están publicados y
 vigentes en `dev` desde el 8 de septiembre —versión `2026-09-08b`, auditada
-contra la Ley 1480, el Decreto 1377 y la Circular 005 de 2017 de la SIC— y el
+contra la Ley 1480, el Decreto 1377 y la Circular 005 de 2017 de la SIC, y desde el
+16 de septiembre la `2026-09-16`, que solo cambia el correo de contacto— y el
 correo transaccional sale y se comprobó de punta a punta ese mismo día. Lo que
 queda abierto de lo legal es de abogado colegiado o de tercero, no de redacción.
 
