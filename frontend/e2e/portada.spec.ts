@@ -45,7 +45,7 @@ test.describe('portada', () => {
   test('el boton principal lleva al registro', async ({ page }) => {
     await page.goto('/');
 
-    await page.getByRole('link', { name: 'Crear cuenta' }).click();
+    await page.getByRole('link', { name: 'Empieza a vender' }).click();
 
     await expect(page).toHaveURL('/registro');
   });
@@ -126,7 +126,7 @@ test.describe('portada', () => {
    * puede no pintar el anillo y dejar sin sentido la prueba que lo mide.
    */
   const tabularHastaElCta = async (page: Page) => {
-    const cta = page.getByRole('link', { name: 'Crear cuenta' });
+    const cta = page.getByRole('link', { name: 'Empieza a vender' });
     for (let intento = 0; intento < 15; intento += 1) {
       await page.keyboard.press('Tab');
       if ((await page.locator(':focus').getAttribute('href')) === '/registro') {

@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -27,17 +28,17 @@ interface Confianza {
  */
 @Component({
   selector: 'sendik-home-page',
-  imports: [RouterLink, TranslocoPipe],
+  imports: [NgOptimizedImage, RouterLink, TranslocoPipe],
   templateUrl: './home-page.html',
   styleUrl: './home-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomePage {
   /**
-   * El enlace al catalogo solo se pinta con FEATURE_CATALOG encendida: HU-004 prohibe
+   * El boton de comprar solo se pinta con FEATURE_CATALOG encendida: HU-004 prohibe
    * enlazar desde la portada lo que no funciona, y con la bandera apagada la API
    * responde 404 (ADR-0041). Sigue habiendo una sola llamada a la accion con relleno
-   * -crear cuenta-; esto es un enlace de texto.
+   * -empezar a vender-; comprar es el secundario, de contorno.
    */
   protected readonly banderas = inject(APP_CONFIG).features;
 

@@ -175,9 +175,10 @@
     "hero": {
       "title": "Compra y vende de forma ágil y segura",
       "body": "El pago queda retenido hasta que confirmas que la prenda llegó como la viste.",
-      "cta": "Crear cuenta",
+      "sell": "Empieza a vender",
+      "buy": "Empieza a comprar",
       "note": "Publicar es gratis. Solo cobramos cuando vendes.",
-      "browse": "Ver lo que se está vendiendo"
+      "imageAlt": "Dos personas caminan por una calle comercial con bolsas de compra, un teléfono y una tableta, frente a una vitrina de moda y tecnología."
     },
     "steps": {
       "title": "Cómo funciona",

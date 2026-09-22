@@ -95,6 +95,24 @@ esta historia debe poder recibir la rejilla debajo del hero sin rehacerse.
     mínimo de 4.5:1 en texto normal y foco visible de 3px en todo lo
     interactivo.
 
+### Criterios ajustados después de cerrar la historia
+
+- **El hero cambió de composición el 22 de septiembre de 2026.** Pasa de texto
+  centrado a dos columnas en escritorio: texto a la izquierda y una foto a la
+  derecha (`frontend/public/hero.webp`, precargada como imagen principal de la
+  primera pantalla, con `alt` real en `home.hero.imageAlt`). En móvil y tableta
+  se apila con el texto arriba. La foto va en rectángulo y no con corte
+  diagonal: el corte del isotipo es la firma y en esta pantalla ya la gasta el
+  borde superior del pie.
+- **Dos botones en vez de uno, y el criterio 2 se mantiene.** «Empieza a
+  vender» es el primario y el único relleno de la pantalla; sigue llevando a
+  `/registro`. «Empieza a comprar» es el secundario, de contorno, lleva a
+  `/catalogo` y solo se pinta con `FEATURE_CATALOG` encendida (ADR-0041).
+  Reemplaza al enlace de texto que entró con esa ADR.
+- **La etiqueta del criterio 3 ya no dice «crear cuenta».** La prohibición de
+  nombrar «publicar» existía porque publicar no existía en Fase 1; desde la
+  Fase 2 existe. El destino no cambia.
+
 ### Criterios retirados durante la implementación
 
 - **El botón principal según la sesión.** Decía que con sesión abierta llevara a

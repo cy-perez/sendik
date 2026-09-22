@@ -116,6 +116,10 @@ describe('HomePage', () => {
    * invierte a relleno claro con tinta encima, porque un boton en tinta sobre
    * fondo de tinta no se veria.
    *
+   * <p>Desde el 22 de septiembre de 2026 el hero tiene dos botones, vender y
+   * comprar, pero el criterio no cambia: solo vender lleva el relleno; comprar es
+   * el secundario, de contorno.
+   *
    * <p>Aqui se cuenta dentro de la portada; que tampoco haya otro en la cabecera
    * ni en el pie se comprueba sobre la pagina completa en e2e/portada.spec.ts.
    */
@@ -132,10 +136,15 @@ describe('HomePage', () => {
    * <p>Lleva siempre a /registro, tambien con sesion abierta: el servidor no
    * puede saber si la hay, y un destino condicional dejaria el hero sin boton en
    * el HTML servido (criterio 15) o lo cambiaria al hidratar.
+   *
+   * <p>La etiqueta dice «empieza a vender» y ya no «crear cuenta»: el criterio
+   * original la prohibia porque publicar no existia en Fase 1, y desde la Fase 2
+   * existe. Lo que se pide sigue siendo lo que ocurre al pulsarlo: registrarse
+   * es el primer paso para vender.
    */
   it('el boton principal es un enlace al registro', async () => {
     const fixture = await render();
-    const cta = enlace(fixture.nativeElement, 'Crear cuenta');
+    const cta = enlace(fixture.nativeElement, 'Empieza a vender');
 
     expect(cta?.tagName).toBe('A');
     expect(cta?.getAttribute('href')).toBe('/registro');
@@ -144,7 +153,25 @@ describe('HomePage', () => {
   it('el boton principal es el que lleva el relleno', async () => {
     const fixture = await render();
 
-    expect(enlace(fixture.nativeElement, 'Crear cuenta')?.classList).toContain('btn-primario');
+    expect(enlace(fixture.nativeElement, 'Empieza a vender')?.classList).toContain('btn-primario');
+  });
+
+  /**
+   * La foto del hero. Con `priority` NgOptimizedImage la marca como la imagen
+   * mas grande de la primera pantalla y la precarga; sin ancho y alto el texto
+   * saltaria al llegar la foto. El alt no es vacio porque la foto dice algo que
+   * el titular no dice: que aqui se compra moda y tecnologia.
+   */
+  it('muestra la foto del hero con texto alternativo y tamano declarado', async () => {
+    const fixture = await render();
+    const hero = fixture.nativeElement.querySelector('.hero') as HTMLElement;
+    const foto = hero.querySelector('img') as HTMLImageElement;
+
+    expect(foto).not.toBeNull();
+    expect(foto.getAttribute('alt')).toMatch(/moda y tecnolog/i);
+    expect(foto.getAttribute('width')).toBe('1200');
+    expect(foto.getAttribute('height')).toBe('900');
+    expect(foto.getAttribute('fetchpriority')).toBe('high');
   });
 
   /** Criterio 4: publicar es gratis y solo se cobra al vender. */
@@ -202,14 +229,16 @@ describe('HomePage', () => {
    */
   /**
    * La entrada a la tienda. Con FEATURE_CATALOG encendida la portada enlaza el
-   * catalogo como texto, sin sumar otro relleno de accion principal; con la bandera
-   * apagada no lo enlaza, porque llevaria a un 404 (criterio 2 y ADR-0041).
+   * catalogo con el boton de comprar, que es secundario para no sumar otro relleno
+   * de accion principal; con la bandera apagada no lo enlaza, porque llevaria a un
+   * 404 (criterio 2 y ADR-0041).
    */
-  it('enlaza el catalogo como texto cuando su bandera esta encendida', async () => {
+  it('enlaza el catalogo con el boton secundario cuando su bandera esta encendida', async () => {
     const fixture = await render();
-    const destino = enlace(fixture.nativeElement, 'Ver lo que se está vendiendo');
+    const destino = enlace(fixture.nativeElement, 'Empieza a comprar');
 
     expect(destino?.getAttribute('href')).toBe('/catalogo');
+    expect(destino?.classList).toContain('btn-secundario');
     expect(destino?.classList).not.toContain('btn-primario');
     expect(fixture.nativeElement.querySelectorAll('.btn-primario')).toHaveLength(1);
   });

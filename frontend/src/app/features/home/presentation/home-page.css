@@ -36,55 +36,99 @@
   }
 }
 
+/* Una columna hasta 1024px: texto arriba, foto debajo. A partir de ahi dos
+   columnas, texto a la izquierda y foto a la derecha, con el texto un poco mas
+   ancho porque es lo que se lee. minmax con 0 evita que el titular en ingles
+   ensanche su columna y empuje la foto fuera del carril. */
+.hero-rejilla {
+  display: grid;
+  gap: var(--esp-32);
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    text-align: left;
+  }
+
+  .hero-rejilla {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    gap: var(--esp-48);
+  }
+}
+
 /* 52ch: por encima de eso la linea se vuelve incomoda de leer, y el hero es
-   justo donde mas gente lee de verdad. */
+   justo donde mas gente lee de verdad. Centrado mientras el texto va centrado;
+   pegado a la izquierda cuando la rejilla lo alinea asi. */
 .hero-cuerpo {
   max-width: 52ch;
   margin: var(--esp-16) auto 0;
 }
 
+@media (min-width: 1024px) {
+  .hero-cuerpo {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+/* Los dos botones: apilados y a todo el ancho en movil, porque dos botones de
+   44px lado a lado no caben con margen a 320px; en fila a partir de 640px.
+   Siguen la alineacion del texto: centrados hasta 1024px y a la izquierda
+   despues. */
+.hero-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-12);
+  margin-top: var(--esp-24);
+}
+
+@media (min-width: 640px) {
+  .hero-acciones {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-acciones {
+    justify-content: flex-start;
+  }
+}
+
 /**
- * Solo la caja. El relleno y el color del texto los pone .btn-primario de
- * marca.css, que dentro de .franja-tinta se invierte solo: la franja redefine
- * --color-primario y --color-sobre-primario, asi que el boton pasa a relleno
- * claro con tinta encima. Un boton en tinta sobre fondo de tinta no se veria, y
- * el manual prohibe resolverlo poniendolo en bronce.
- *
- * El color del texto ya NO se repite aqui. Hacia falta mientras
- * `.franja-tinta a` (0,1,1) le ganaba a `.btn-primario` (0,1,0) y dejaba el
- * boton con texto claro sobre relleno claro. La regla que lo arregla de verdad
- * —`.franja-tinta a.btn-primario`, (0,2,1)— ya vive en marca.css, que es del
- * proyecto: no hay motivo para parchearlo desde la portada.
+ * Solo la caja. El relleno y los colores los ponen .btn-primario y
+ * .btn-secundario de marca.css, que dentro de .franja-tinta se invierten: la
+ * franja redefine --color-primario, sus estados hover y pressed y
+ * --color-sobre-primario, asi que el primario pasa a relleno claro con tinta
+ * encima y el secundario a contorno claro (su hover lo resuelve una regla propia
+ * de marca.css). Un boton en tinta sobre fondo de tinta no se veria, y el manual
+ * prohibe resolverlo poniendolo en bronce.
  */
 .cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--destino-tactil);
-  margin-top: var(--esp-24);
-  padding: 0 var(--esp-32);
-  border: 1px solid transparent;
-  border-radius: var(--radio-md);
-  text-decoration: none;
-  cursor: pointer;
+  padding-left: var(--esp-32);
+  padding-right: var(--esp-32);
 }
 
 /* .tipo-secundario fija --color-texto-suave, que sobre la franja de tinta no
    pasa el contraste minimo. Aqui se hereda el color de la franja y el matiz de
-   nota lo da la opacidad, que si lo conserva. Los enlaces no necesitan esto:
-   marca.css ya los recolorea con `.franja-tinta a`. */
+   nota lo da la opacidad, que si lo conserva. */
 .hero-nota {
   color: inherit;
   opacity: 0.85;
   margin: var(--esp-16) 0 0;
 }
 
-/* Un enlace suelto tambien es un destino tactil: 44px. El color lo pone
-   `.franja-tinta a` desde marca.css, que es quien sabe que aqui el fondo es tinta. */
-.enlace-catalogo {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--destino-tactil);
+/* La foto ocupa su columna entera y conserva el 4:3 del archivo; el navegador
+   ya sabe su alto por width y height, asi que no hay salto al cargar. Esquinas
+   con el radio grande del sistema, sin corte diagonal: el corte del isotipo es
+   la firma y en esta pantalla ya la gasta el borde superior del pie. */
+.hero-foto {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radio-lg);
 }
 
 /* ---------- Bloques de contenido ---------- */
