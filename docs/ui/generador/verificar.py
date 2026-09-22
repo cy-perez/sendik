@@ -187,6 +187,10 @@ PARES = [
     # no en bronce"), asi que la salida es invertirlo, no cambiarle el color.
     ("Texto del boton dentro de la franja",   "--color-tinta",          "--color-primario-tinta", AA_TEXTO),
     ("Relleno del boton contra la franja",    "--color-primario-tinta", "--color-tinta",          AA_GRANDE),
+    # Y sus dos estados. Sin tokens propios, hover y active leian los del modo
+    # claro —tinta apenas mas oscura— y el boton desaparecia bajo el raton.
+    ("Texto del boton en hover dentro de la franja",  "--color-tinta", "--color-primario-tinta-hover",   AA_TEXTO),
+    ("Texto del boton pulsado dentro de la franja",   "--color-tinta", "--color-primario-tinta-pressed", AA_TEXTO),
 ]
 
 

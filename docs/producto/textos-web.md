@@ -110,13 +110,24 @@ Texto vigente, ya implementado. Cualquier cambio aquí reabre HU-004.
 |---|---|
 | `home.hero.title` | Compra y vende de forma ágil y segura |
 | `home.hero.body` | El pago queda retenido hasta que confirmas que la prenda llegó como la viste. |
-| `home.hero.cta` | Crear cuenta |
+| `home.hero.sell` | Empieza a vender |
+| `home.hero.buy` | Empieza a comprar |
 | `home.hero.note` | Publicar es gratis. Solo cobramos cuando vendes. |
+| `home.hero.imageAlt` | Dos personas caminan por una calle comercial con bolsas de compra, un teléfono y una tableta, frente a una vitrina de moda y tecnología. |
 
-El botón dice **crear cuenta**, no publicar, porque publicar no existe hasta
-Fase 2 y un botón nombra lo que ocurre al pulsarlo (HU-004, criterio 3). Es la
-única llamada a la acción de la pantalla, rellena en tinta. El porcentaje no se
-escribe: `home.hero.note` lo omite a propósito (RN-026, HU-004 criterio 4).
+**Desde el 22 de septiembre de 2026 el hero tiene dos botones y una foto.**
+Vender es el primario, el único relleno en tinta de la pantalla, y lleva a
+`/registro`: registrarse es el primer paso para vender. Comprar es el
+secundario, de contorno, y lleva a `/catalogo` solo con `FEATURE_CATALOG`
+encendida (ADR-0041); reemplaza al enlace de texto `home.hero.browse`, que
+desaparece. Hasta esa fecha el único botón decía **crear cuenta**, porque
+publicar no existía en Fase 1 (HU-004, criterio 3); desde la Fase 2 existe y el
+botón puede nombrar el fin y no el trámite. El porcentaje no se escribe:
+`home.hero.note` lo omite a propósito (RN-026, HU-004 criterio 4).
+
+La foto es `frontend/public/hero.webp`, a la derecha del texto en escritorio y
+debajo en móvil. Su `alt` no es vacío porque dice algo que el titular no dice:
+que aquí se compra moda y tecnología.
 
 *Nota de diseño:* la primera pantalla en móvil contiene titular, apoyo y botón.
 
@@ -578,7 +589,8 @@ Un verbo por acción, en todo el sitio.
 
 | Lugar | Texto | Fase |
 |---|---|---|
-| Hero de portada y cierre de páginas | Crear cuenta | 1 |
+| Hero de portada | Empieza a vender · Empieza a comprar | 1 |
+| Cierre de páginas | Crear cuenta | 1 |
 | Encabezado | Entrar | 1 |
 | Vendedor, una vez exista publicar | Publicar mi primera prenda | 2 |
 | Ficha de producto | Comprar | 3 |

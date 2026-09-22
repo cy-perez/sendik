@@ -1,42 +1,62 @@
 <!-- Criterios 1 a 4. .a-sangre pide el carril completo de la rejilla de <main>;
      .franja-tinta es tinta en los dos modos y redefine dentro del bloque el
      anillo de foco, el acento y el boton primario, que sobre tinta serian
-     invisibles: sin ella el foco del boton principal seria tinta sobre tinta. -->
+     invisibles: sin ella el foco del boton principal seria tinta sobre tinta.
+
+     Desde el 22 de septiembre de 2026 el hero es de dos columnas en escritorio:
+     el texto a la izquierda y una foto a la derecha. En movil y tableta se apila,
+     con el texto arriba, porque lo que convence es el titular y no la foto. -->
 <section class="hero a-sangre franja-tinta">
-  <div class="contenedor">
-    <h1 class="tipo-display">{{ 'home.hero.title' | transloco }}</h1>
-    <p class="tipo-entradilla hero-cuerpo">{{ 'home.hero.body' | transloco }}</p>
+  <div class="contenedor hero-rejilla">
+    <div class="hero-texto">
+      <h1 class="tipo-display">{{ 'home.hero.title' | transloco }}</h1>
+      <p class="tipo-entradilla hero-cuerpo">{{ 'home.hero.body' | transloco }}</p>
 
-    <!-- La unica llamada a la accion de la pantalla (criterio 2). Va en tinta
-         invertida, no en bronce: el manual de Sendik reserva el bronce para lo
-         verificado y lo garantizado, y dice explicitamente que el boton
-         principal va en tinta. Dentro de la franja se invierte solo.
+      <!-- Dos entradas, una por cada mitad del negocio, y un solo relleno de
+           accion principal (criterio 2): vender es el primario porque la portada
+           le habla al vendedor (textos-web.md); comprar es el secundario, que
+           dentro de la franja se dibuja como contorno claro.
 
-         Es un enlace y no un boton porque lo que hace es navegar: asi funciona
-         sin JavaScript, se puede abrir en otra pestana y el HTML del servidor
-         ya lo trae entero.
+           Son enlaces y no botones porque lo que hacen es navegar: asi funcionan
+           sin JavaScript, se pueden abrir en otra pestana y el HTML del servidor
+           ya los trae enteros.
 
-         Lleva siempre a /registro, tambien con sesion abierta. El servidor no
-         puede saber si hay sesion (el token vive en memoria y se recupera en el
-         navegador), asi que cualquier destino condicional dejaria el hero sin
-         boton en el HTML servido o lo cambiaria al hidratar. Quien ya entro
-         tiene su cuenta en la cabecera, que es donde el sitio la muestra. -->
-    <a class="btn-primario cta tipo-etiqueta-boton" routerLink="/registro">{{
-      'home.hero.cta' | transloco
-    }}</a>
+           Vender lleva siempre a /registro, tambien con sesion abierta. El
+           servidor no puede saber si hay sesion (el token vive en memoria y se
+           recupera en el navegador), asi que cualquier destino condicional
+           dejaria el hero sin boton en el HTML servido o lo cambiaria al
+           hidratar. Quien ya entro tiene su cuenta en la cabecera. -->
+      <div class="hero-acciones">
+        <a class="btn btn-primario cta tipo-etiqueta-boton" routerLink="/registro">{{
+          'home.hero.sell' | transloco
+        }}</a>
 
-    <p class="tipo-secundario hero-nota">{{ 'home.hero.note' | transloco }}</p>
+        <!-- La entrada a la tienda para quien viene a comprar. Solo con
+             FEATURE_CATALOG encendida (ADR-0041): con la bandera apagada la API
+             responde 404 y un boton roto en portada es peor que uno menos. -->
+        @if (banderas.catalog) {
+          <a class="btn btn-secundario cta tipo-etiqueta-boton" routerLink="/catalogo">{{
+            'home.hero.buy' | transloco
+          }}</a>
+        }
+      </div>
 
-    <!-- La entrada a la tienda para quien viene a mirar y no a registrarse. Es un
-         enlace de texto y no otro boton: el criterio 2 admite un solo relleno de
-         accion principal. Solo con FEATURE_CATALOG encendida (ADR-0041). -->
-    @if (banderas.catalog) {
-      <p class="hero-nota">
-        <a class="enlace-catalogo tipo-cuerpo" routerLink="/catalogo">
-          {{ 'home.hero.browse' | transloco }}
-        </a>
-      </p>
-    }
+      <p class="tipo-secundario hero-nota">{{ 'home.hero.note' | transloco }}</p>
+    </div>
+
+    <!-- La foto es lo mas grande de la primera pantalla: `priority` la precarga y
+         la marca como LCP. El tamano intrinseco es el del archivo, 4:3, para que
+         reserve su sitio antes de llegar y no mueva el texto al cargar. Lleva
+         alt real y no vacio porque dice algo que el titular no dice: que aqui
+         se compra moda y tecnologia. -->
+    <img
+      class="hero-foto"
+      ngSrc="/hero.webp"
+      width="1200"
+      height="900"
+      priority
+      [alt]="'home.hero.imageAlt' | transloco"
+    />
   </div>
 </section>
 

@@ -37,6 +37,8 @@ const VARIABLES = [
   '--color-texto',
   '--color-texto-suave',
   '--color-primario',
+  '--color-primario-hover',
+  '--color-primario-pressed',
   '--color-sobre-primario',
   '--color-primario-suave',
   '--color-acento',
@@ -125,6 +127,22 @@ const PARES_TINTA: readonly Par[] = [
   // resolverlo con bronce, asi que la salida es invertirlo.
   ['Texto del boton dentro de la franja', '--color-sobre-primario', '--color-primario', AA_TEXTO],
   ['Relleno del boton contra la franja', '--color-primario', '--color-tinta', AA_GRANDE],
+  // Y sus dos estados. Sin redefinirlos en la franja, hover y active leian los
+  // del modo claro —tinta apenas mas oscura— y el boton desaparecia bajo el
+  // raton. Se leen desde dentro de la franja, asi que lo que se comprueba es que
+  // la redefinicion aplica, no solo que el token exista.
+  [
+    'Texto del boton en hover dentro de la franja',
+    '--color-sobre-primario',
+    '--color-primario-hover',
+    AA_TEXTO,
+  ],
+  [
+    'Texto del boton pulsado dentro de la franja',
+    '--color-sobre-primario',
+    '--color-primario-pressed',
+    AA_TEXTO,
+  ],
 ];
 
 /** Canal a luz lineal, segun WCAG 2.x. */

@@ -175,9 +175,10 @@
     "hero": {
       "title": "Buy and sell quickly and safely",
       "body": "The payment is held until you confirm the item arrived as you saw it.",
-      "cta": "Create account",
+      "sell": "Start selling",
+      "buy": "Start buying",
       "note": "Listing is free. We only charge when you sell.",
-      "browse": "See what's for sale"
+      "imageAlt": "Two people walk down a shopping street with shopping bags, a phone and a tablet, in front of a fashion and tech storefront."
     },
     "steps": {
       "title": "How it works",

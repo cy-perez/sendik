@@ -63,6 +63,14 @@
      salida es invertirlo: relleno claro con tinta encima. */
   --color-primario-tinta: #ffffff;
 
+  /* Sus dos estados. Sin ellos, .btn-primario:hover y :active leian los
+     --color-primario-hover y -pressed del modo claro, que son tinta apenas mas
+     oscura, y el boton desaparecia bajo el raton: tinta sobre tinta, 1.02:1.
+     Son los mismos grises que ya usa el modo oscuro; 15.2:1 y 11.6:1 con la
+     tinta encima. */
+  --color-primario-tinta-hover: #e2e2e4;
+  --color-primario-tinta-pressed: #cbcbce;
+
   /* Destino tactil minimo. Es una medida del sistema y estaba copiada como
      44px suelto en la cabecera, el pie y las paginas informativas. */
   --destino-tactil: 44px;
@@ -206,6 +214,8 @@
   --color-foco: var(--color-foco-tinta);
   --color-acento: var(--color-acento-tinta);
   --color-primario: var(--color-primario-tinta);
+  --color-primario-hover: var(--color-primario-tinta-hover);
+  --color-primario-pressed: var(--color-primario-tinta-pressed);
   --color-sobre-primario: var(--color-tinta);
 }
 .franja-tinta a {
@@ -218,6 +228,16 @@
    Vive aqui y no en la hoja de la portada porque no es un problema de la
    portada: le pasa a cualquier boton-enlace que entre en el hero o en el pie. */
 .franja-tinta a.btn-primario {
+  color: var(--color-sobre-primario);
+}
+/* El secundario dentro de la franja: contorno claro sobre tinta, que ya le sale
+   solo porque --color-primario se redefine. Lo que NO le sale solo es el hover:
+   fuera de la franja rellena con --color-primario-suave, que es un gris claro, y
+   con el texto claro de aqui quedaria ilegible. Aqui pasa a relleno claro con
+   tinta encima, el mismo par que el primario en reposo, y asi no hace falta un
+   color nuevo. */
+.franja-tinta .btn-secundario:hover {
+  background: var(--color-primario);
   color: var(--color-sobre-primario);
 }
 

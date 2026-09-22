@@ -24,6 +24,7 @@ frontend/public/
   favicon.ico, favicon.svg, apple-touch-icon.png, favicon-*.png
   icon-192.png, icon-512.png, icon-512-maskable.png, site.webmanifest
   og-image.png, twitter-card.png
+  hero.webp       la foto del hero de la portada, 1200×900 (HU-004, 22-09-2026)
   logo-horizontal.svg, logo-mono-negativo.svg, isotipo.svg, isotipo-negativo.svg
   fuentes/        inter-latin, inter-latin-ext, archivo-latin,
                   archivo-latin-ext (.woff2) y sus licencias
