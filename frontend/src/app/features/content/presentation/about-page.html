@@ -2,11 +2,28 @@
 <p class="tipo-entradilla">{{ 'about.intro' | transloco }}</p>
 
 <section class="seccion">
-  <p class="tipo-cuerpo">{{ 'about.gathers' | transloco }}</p>
-  <!-- "No tocamos el dinero: lo recauda y lo retiene la pasarela" no es un
-       matiz de estilo. Sendik no custodia fondos de terceros (RN-031) y decir lo
-       contrario describe una figura financiera que no ejerce. -->
+  <p class="tipo-cuerpo">{{ 'about.today' | transloco }}</p>
+  <p class="tipo-cuerpo">{{ 'about.born' | transloco }}</p>
+  <p class="tipo-cuerpo">{{ 'about.space' | transloco }}</p>
+</section>
+
+<section class="seccion">
+  <p class="tipo-cuerpo">{{ 'about.trust' | transloco }}</p>
+  <!-- "Se gestiona a través de una pasarela de pagos y el dinero permanece
+       retenido hasta que el comprador confirma" no es un matiz de estilo.
+       Sendik no custodia fondos de terceros (RN-031) y decir lo contrario
+       describe una figura financiera que no ejerce. -->
+  <p class="tipo-cuerpo">{{ 'about.payment' | transloco }}</p>
+</section>
+
+<section class="seccion">
   <p class="tipo-cuerpo">{{ 'about.notUs' | transloco }}</p>
+  <p class="tipo-cuerpo">{{ 'about.rules' | transloco }}</p>
+</section>
+
+<section class="seccion" aria-labelledby="nueva-forma">
+  <h2 class="tipo-h2" id="nueva-forma">{{ 'about.closing.title' | transloco }}</h2>
+  <p class="tipo-cuerpo">{{ 'about.closing.body' | transloco }}</p>
 </section>
 
 @if (hayDatosDeEmpresa) {
