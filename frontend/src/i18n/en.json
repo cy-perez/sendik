@@ -637,10 +637,19 @@
     }
   },
   "about": {
-    "title": "Why Sendik exists",
-    "intro": "A great deal of second-hand clothing is bought and sold in Colombia, but it happens in Facebook groups, Instagram stories and WhatsApp chats. The buyer transfers and waits. The seller ships and waits. Both take on a risk nobody is covering.",
-    "gathers": "Sendik gathers that scattered supply into a single catalogue and adds four things a chat does not have: sellers verified with an identity document, every listing reviewed before it appears, photos that show the item from eight angles, and a payment that does not reach the seller until the buyer confirms they received what was listed.",
-    "notUs": "We do not make clothing and we do not resell it, and we do not touch the money: the payment gateway collects and holds it. We are the place where one person buys from another under rules that are clear to both.",
+    "title": "Why does Sendik exist?",
+    "intro": "Buying and selling between people should be a simple, transparent and, above all, trustworthy experience.",
+    "today": "Today, many of these transactions happen on social networks, in groups and in private conversations. The buyer has to trust the photographs and the seller's word, while the seller also takes on the uncertainty of receiving a payment and completing a transaction without a process that backs both sides.",
+    "born": "Sendik was created to do things differently.",
+    "space": "We created a space where people can discover, buy and sell new or used products in good condition, under clear conditions and with processes designed to build more trust in every transaction.",
+    "trust": "At Sendik, trust is not left solely in people's hands. Sellers go through an identity verification process and listings are reviewed before they become visible on the platform. In addition, every product comes with detailed photographs from different angles, so the buyer has a fuller view of what they are buying.",
+    "payment": "The payment process is also designed to give more peace of mind: the transaction is handled through a payment gateway and the money is held until the buyer confirms receipt of the product in the condition in which it was listed.",
+    "notUs": "Sendik does not make, buy or resell the products. We are the meeting point between those who have something to offer and those who are looking for something to buy.",
+    "rules": "We create the space, set the rules and accompany the process so that buying and selling between people is a clearer, safer and more trustworthy experience.",
+    "closing": {
+      "title": "Sendik is a new way to buy and sell.",
+      "body": "New or used products in good condition. Real people. Clear rules. More trust in every transaction."
+    },
     "company": {
       "title": "Who stands behind Sendik",
       "taxId": "Tax ID"

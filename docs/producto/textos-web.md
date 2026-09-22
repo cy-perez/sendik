@@ -313,24 +313,62 @@ llamada a la acción de la página, rellena en tinta (HU-005, Diseño).
 vende dispersa en redes, con vendedores verificados, publicaciones revisadas y el
 pago retenido hasta que el comprador confirma la entrega.
 
-**H1** (`about.title`): Por qué existe Sendik
+**H1** (`about.title`): ¿Por qué existe Sendik?
 
-**Texto** (`about.body`):
+**Entradilla** (`about.intro`):
 
-En Colombia se compra y se vende muchísima ropa de segunda, pero ocurre en grupos
-de Facebook, en historias de Instagram y en chats de WhatsApp. El comprador
-transfiere y espera. El vendedor despacha y espera. Los dos asumen un riesgo que
-nadie está cubriendo.
+Comprar y vender entre personas debería ser una experiencia sencilla,
+transparente y, sobre todo, confiable.
 
-Sendik reúne esa oferta dispersa en un solo catálogo y pone cuatro cosas que en
-un chat no existen: vendedores verificados con documento de identidad, cada
-publicación revisada antes de aparecer, fotos que muestran la prenda desde ocho
-ángulos, y un pago que no llega al vendedor hasta que el comprador confirma que
-recibió lo que se publicó.
+**Texto**, un párrafo por clave, en este orden:
 
-No fabricamos ropa ni la revendemos, y no tocamos el dinero: lo recauda y lo
-retiene la pasarela de pagos. Somos el lugar donde una persona le compra a otra
-con reglas claras para las dos.
+`about.today`: Hoy, muchas de estas transacciones ocurren en redes sociales,
+grupos y conversaciones privadas. El comprador debe confiar en las fotografías y
+en la palabra del vendedor, mientras que quien vende también asume la
+incertidumbre de recibir un pago y completar una transacción sin un proceso que
+respalde a ambas partes.
+
+`about.born`: Sendik nace para hacer las cosas de una manera diferente.
+
+`about.space`: Creamos un espacio donde las personas pueden descubrir, comprar y
+vender productos nuevos o usados en buen estado, bajo condiciones claras y con
+procesos pensados para generar mayor confianza en cada transacción.
+
+`about.trust`: En Sendik, la confianza no queda únicamente en manos de las
+personas. Los vendedores pasan por un proceso de verificación de identidad y las
+publicaciones son revisadas antes de ser visibles en la plataforma. Además, cada
+producto cuenta con fotografías detalladas desde diferentes ángulos, para que el
+comprador tenga una visión más completa de lo que está adquiriendo.
+
+`about.payment`: El proceso de pago también está diseñado para brindar mayor
+tranquilidad: la transacción se gestiona a través de una pasarela de pagos y el
+dinero permanece retenido hasta que el comprador confirma la recepción del
+producto en las condiciones en las que fue publicado.
+
+`about.notUs`: Sendik no fabrica, compra ni revende los productos. Somos el punto
+de encuentro entre quienes tienen algo que ofrecer y quienes están buscando algo
+que comprar.
+
+`about.rules`: Creamos el espacio, establecemos las reglas y acompañamos el
+proceso para que comprar y vender entre personas sea una experiencia más clara,
+segura y confiable.
+
+**Cierre** (`about.closing.*`), como H2 y un párrafo:
+
+Sendik es una nueva forma de comprar y vender.
+
+Productos nuevos o usados en buen estado. Personas reales. Reglas claras. Más
+confianza en cada transacción.
+
+Texto vigente desde el 22 de septiembre de 2026; reemplazó al que solo hablaba de
+ropa de segunda y se había quedado corto cuando entró tecnología al catálogo. La
+pasarela aparece nombrada como quien gestiona el pago y retiene el dinero, que es
+lo que RN-031 exige no contradecir.
+
+⚠️ **«Usados en buen estado» no es lo que dice RN-064.** «Buen estado» es una de
+las cuatro condiciones admisibles en moda, así que la frase deja fuera «con
+detalles» y no dice que la tecnología se vende solo nueva. Se publicó así por
+decisión de producto; queda anotado por si se revisa.
 
 **Datos de empresa** (`about.company.*`): razón social `{{companyName}}`, NIT
 `{{companyTaxId}}`, dirección `{{companyAddress}}`. De configuración; se omiten

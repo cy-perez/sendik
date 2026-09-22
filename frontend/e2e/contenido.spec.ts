@@ -14,7 +14,7 @@ test.use({ locale: 'es-CO' });
 /** Direccion y titular de cada pagina, que es lo que las distingue. */
 const PAGINAS = [
   { ruta: '/como-funciona', h1: 'Cómo funciona Sendik' },
-  { ruta: '/sobre-sendik', h1: 'Por qué existe Sendik' },
+  { ruta: '/sobre-sendik', h1: '¿Por qué existe Sendik?' },
   { ruta: '/preguntas-frecuentes', h1: 'Preguntas frecuentes' },
   { ruta: '/contacto', h1: 'Escríbenos' },
 ] as const;
@@ -169,7 +169,11 @@ test.describe('paginas informativas, HTML servido', () => {
   test('las cuatro llegan traducidas al ingles en la misma direccion', async ({ request }) => {
     const enIngles = [
       { ruta: '/como-funciona', ingles: 'How Sendik works', espanol: 'Cómo funciona Sendik' },
-      { ruta: '/sobre-sendik', ingles: 'Why Sendik exists', espanol: 'Por qué existe Sendik' },
+      {
+        ruta: '/sobre-sendik',
+        ingles: 'Why does Sendik exist?',
+        espanol: '¿Por qué existe Sendik?',
+      },
       {
         ruta: '/preguntas-frecuentes',
         ingles: 'Frequently asked questions',
