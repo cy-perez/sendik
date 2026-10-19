@@ -30,7 +30,7 @@
     "@angular/ssr": "^21.2.22",
     "@jsverse/transloco": "^8.4.0",
     "@tanstack/angular-query-experimental": "5.101.4",
-    "express": "^5.1.0",
+    "express": "^5.3.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -38,18 +38,18 @@
     "@angular/build": "^21.2.22",
     "@angular/cli": "^21.2.22",
     "@angular/compiler-cli": "^21.2.22",
-    "@axe-core/playwright": "^4.13.0",
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.64.1",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.19",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.12",
     "angular-eslint": "^21.4.0",
-    "eslint": "^10.9.1",
+    "eslint": "^10.12.0",
     "jsdom": "^28.0.0",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.10",
     "typescript": "~5.9.2",
-    "typescript-eslint": "^8.68.0",
+    "typescript-eslint": "^8.71.2",
     "vitest": "^4.0.8"
   }
 }
